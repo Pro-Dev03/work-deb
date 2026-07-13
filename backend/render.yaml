@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: worktrack-api
+    env: docker
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # اللغة الافتراضية للردود عندما لا يرسل العميل أي تفضيل لغة (ar / he / en)
+      - key: DEFAULT_LANG
+        value: ar
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY
+        sync: false
+      - key: R2_SECRET_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false

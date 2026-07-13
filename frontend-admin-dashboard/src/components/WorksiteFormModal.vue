@@ -1,0 +1,501 @@
+<template>
+  <div class="modal-backdrop" @click.self="$emit('close')">
+    <div class="modal card">
+      <div class="modal-header">
+        <h3>📍 נקודת עבודה חדשה</h3>
+        <button class="modal-close" @click="$emit('close')">✕</button>
+      </div>
+
+      <p class="modal__hint">חפש עיר או רחוב (עברית، عربي، English)</p>
+
+      <form class="modal__form" @submit.prevent="handleSubmit">
+        <div v-if="error" class="alert alert-error">{{ error }}</div>
+        <div v-if="success" class="alert alert-success">{{ success }}</div>
+
+        <div class="form-group">
+          <label>📛 שם האתר <span class="required">*</span></label>
+          <input
+            v-model="form.name"
+            type="text"
+            placeholder="דוגמה: סניף תל אביב - יגאל אלון 90"
+            required
+            class="search-input"
+          />
+        </div>
+
+        <!-- ========================================== -->
+        <!-- البحث بالعبرية -->
+        <!-- ========================================== -->
+        <div class="form-group">
+          <label>📍 חיפוש כתובת <span class="required">*</span></label>
+          <div class="search-wrapper">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="חפש עיר או רחוב (למשל: יגאל אלון או ירושלים)"
+              @input="onSearch"
+              @focus="showResults = true"
+              class="search-input"
+              autocomplete="off"
+            />
+            <span v-if="loading" class="search-loading">⏳</span>
+          </div>
+
+          <!-- نتائج البحث بالعبرية -->
+          <div v-if="showResults && searchResults.length > 0" class="search-results">
+            <div
+              v-for="result in searchResults"
+              :key="result.id"
+              class="result-item"
+              @click="selectResult(result)"
+            >
+              <span class="result-icon">📍</span>
+              <div class="result-info">
+                <strong>{{ result.label_he || result.label || result.street || result.city }}</strong>
+                <span class="result-address">
+                  {{ result.city_he || result.city || '' }} 
+                  {{ result.street_he || result.street || '' }} 
+                  {{ result.house_number || '' }}
+                </span>
+              </div>
+              <span class="result-type">{{ getTypeLabel(result.type) }}</span>
+            </div>
+          </div>
+
+          <div v-if="showResults && searchQuery && searchResults.length === 0 && !loading" class="no-results">
+            <span>🔍</span>
+            <p>לא נמצאו תוצאות</p>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- الموقع المختار -->
+        <!-- ========================================== -->
+        <div v-if="selectedResult" class="selected-location">
+          <div class="selected-location__header">
+            <span>✅ {{ selectedResult.label_he || selectedResult.label || selectedResult.street || selectedResult.city }}</span>
+            <button type="button" class="selected-clear" @click="clearSelection">✕</button>
+          </div>
+          <div class="selected-location__details">
+            <p><strong>עיר:</strong> {{ selectedResult.city_he || selectedResult.city || '—' }}</p>
+            <p><strong>רחוב:</strong> {{ selectedResult.street_he || selectedResult.street || '—' }}</p>
+            <p><strong>מספר בניין:</strong> {{ selectedResult.house_number || '—' }}</p>
+            <p class="mono"><strong>קואורדינטות:</strong> {{ selectedResult.latitude }}, {{ selectedResult.longitude }}</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>⭕ רדיוס מותר (מטר) <span class="required">*</span></label>
+          <input
+            v-model.number="form.radius_meters"
+            type="number"
+            required
+            placeholder="100"
+            min="10"
+            class="search-input"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn--ghost" @click="$emit('close')">ביטול</button>
+          <button type="submit" class="btn btn--primary" :disabled="loading || !selectedResult">
+            {{ loading ? '⏳ שומר...' : '💾 שמור' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import api from '../services/api'
+
+const emit = defineEmits(['close', 'worksite-added'])
+
+const searchQuery = ref('')
+const searchResults = ref([])
+const loading = ref(false)
+const showResults = ref(false)
+const selectedResult = ref(null)
+
+const form = ref({
+  name: '',
+  radius_meters: 100,
+  latitude: '',
+  longitude: ''
+})
+
+const error = ref('')
+const success = ref('')
+const isSubmitting = ref(false)
+
+let searchTimeout = null
+
+function getTypeLabel(type) {
+  const types = {
+    'city': 'עיר',
+    'street': 'רחוב',
+    'address': 'כתובת',
+    'house': 'בית',
+    'landmark': 'ציון דרך',
+    'location': 'מיקום'
+  }
+  return types[type] || type || 'מיקום'
+}
+
+function onSearch() {
+  clearTimeout(searchTimeout)
+  
+  if (searchQuery.value.length < 2) {
+    searchResults.value = []
+    return
+  }
+
+  loading.value = true
+  searchTimeout = setTimeout(async () => {
+    try {
+      // استخدام اللغة العبرية
+      const lang = 'he'
+      const { data } = await api.get('/geocode/autocomplete', {
+        params: {
+          q: searchQuery.value.trim(),
+          lang: lang
+        }
+      })
+      
+      searchResults.value = data.results || []
+      showResults.value = true
+    } catch (error) {
+      console.error('❌ فشل البحث:', error)
+      searchResults.value = []
+    } finally {
+      loading.value = false
+    }
+  }, 600)
+}
+
+function selectResult(result) {
+  selectedResult.value = result
+  searchQuery.value = result.label_he || result.label || result.street || result.city
+  showResults.value = false
+  
+  form.value.name = result.label_he || result.label || result.street || result.city
+  form.value.latitude = result.latitude
+  form.value.longitude = result.longitude
+  
+  error.value = ''
+}
+
+function clearSelection() {
+  selectedResult.value = null
+  searchQuery.value = ''
+  searchResults.value = []
+  form.value.name = ''
+  form.value.latitude = ''
+  form.value.longitude = ''
+}
+
+function closeResults(e) {
+  const wrapper = document.querySelector('.modal__form')
+  if (wrapper && !wrapper.contains(e.target)) {
+    showResults.value = false
+  }
+}
+
+document.addEventListener('click', closeResults)
+
+async function handleSubmit() {
+  if (!selectedResult.value) {
+    error.value = 'אנא בחר כתובת מתוצאות החיפוש'
+    return
+  }
+
+  isSubmitting.value = true
+  error.value = ''
+  success.value = ''
+
+  try {
+    const payload = {
+      name: form.value.name || selectedResult.value.label,
+      address: selectedResult.value.label || '',
+      latitude: parseFloat(form.value.latitude || selectedResult.value.latitude),
+      longitude: parseFloat(form.value.longitude || selectedResult.value.longitude),
+      radius_meters: form.value.radius_meters,
+      city: selectedResult.value.city || '',
+      street: selectedResult.value.street || '',
+      street_number: selectedResult.value.house_number || ''
+    }
+
+    await api.post('/worksites', payload)
+    success.value = '✅ נקודת העבודה נוספה בהצלחה!'
+    
+    setTimeout(() => {
+      emit('worksite-added')
+      emit('close')
+    }, 1500)
+  } catch (err) {
+    error.value = err.response?.data?.error || '❌ השמירה נכשלה'
+    console.error('خطأ:', err)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+</script>
+
+<style scoped>
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  padding: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-header h3 {
+  font-size: 17px;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.modal__hint {
+  padding: 0 20px 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.modal__form {
+  padding: 0 20px 20px;
+}
+
+.form-group {
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.search-wrapper {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px;
+  padding-left: 40px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-body);
+  background: var(--surface);
+  transition: all 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+
+.search-loading {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+.required {
+  color: var(--signal-out);
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.2s;
+}
+
+.result-item:hover {
+  background: var(--brand-tint);
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.result-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.result-info strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.result-address {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.result-type {
+  font-size: 10px;
+  color: var(--brand);
+  background: var(--brand-tint);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.no-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.no-results span {
+  font-size: 24px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.no-results p {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.selected-location {
+  background: var(--brand-tint);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.selected-location__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.selected-clear {
+  background: none;
+  border: none;
+  color: var(--signal-out);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+}
+
+.selected-location__details p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.alert {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.alert-error {
+  background: var(--signal-out-tint);
+  color: var(--signal-out);
+}
+
+.alert-success {
+  background: var(--signal-in-tint);
+  color: var(--signal-in);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+</style>

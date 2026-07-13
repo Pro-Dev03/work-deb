@@ -1,0 +1,28 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated frontend output
+node_modules/
+dist/
+.vite/
+
+# Runtime data and local logs
+*.log
+uploads/
+
+# Editor, OS, and temporary files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# Local backup copies (the source file remains tracked)
+*.bak
+*.bak.*
+
+# Destructive local database utilities; never publish their sample credentials
+database_setup.sql
+reset_password.sql

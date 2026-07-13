@@ -1,0 +1,439 @@
+package handlers
+
+import (
+	"crypto/rand"
+	"database/sql"
+	"encoding/hex"
+	"log"
+	"net/http"
+
+	"worktrack/backend/internal/i18n"
+	"worktrack/backend/internal/services"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type AuthHandler struct {
+	DB          *sql.DB
+	AuthService *services.AuthService
+}
+
+func NewAuthHandler(db *sql.DB, authService *services.AuthService) *AuthHandler {
+	return &AuthHandler{DB: db, AuthService: authService}
+}
+
+// =============================================
+// 1. تسجيل دخول المدير
+// =============================================
+func (h *AuthHandler) Login(c *gin.Context) {
+	lang := i18n.Detect(c)
+
+	var req struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T(lang, "err_missing_login_fields")})
+		return
+	}
+
+	var userID, fullName, role, passwordHash string
+	err := h.DB.QueryRow(`
+		SELECT id, full_name, role, password_hash 
+		FROM users 
+		WHERE email = $1 AND is_active = TRUE
+	`, req.Email).Scan(&userID, &fullName, &role, &passwordHash)
+
+	if err != nil {
+		log.Printf("❌ مستخدم غير موجود: %v", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(lang, "err_invalid_credentials")})
+		return
+	}
+
+	if !h.AuthService.CheckPassword(req.Password, passwordHash) {
+		log.Printf("❌ كلمة مرور خاطئة")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(lang, "err_invalid_credentials")})
+		return
+	}
+
+	token, err := h.AuthService.GenerateToken(userID, role)
+	if err != nil {
+		log.Printf("❌ فشل إنشاء التوكن: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(lang, "err_session_create_failed")})
+		return
+	}
+
+	log.Printf("✅ تسجيل دخول ناجح: %s", fullName)
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+		"user": gin.H{
+			"id":        userID,
+			"full_name": fullName,
+			"role":      role,
+		},
+	})
+}
+
+// =============================================
+// 2. جلب جميع الموظفين
+// =============================================
+func (h *AuthHandler) ListEmployees(c *gin.Context) {
+	log.Println("📋 جلب قائمة الموظفين...")
+
+	rows, err := h.DB.Query(`
+		SELECT 
+			id, full_name, email, phone, role, is_active, created_at,
+			COALESCE(device_model, '') as device_model
+		FROM users 
+		ORDER BY created_at DESC
+	`)
+
+	if err != nil {
+		log.Printf("❌ خطأ في جلب الموظفين: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب الموظفين"})
+		return
+	}
+	defer rows.Close()
+
+	var employees []gin.H
+	for rows.Next() {
+		var id, fullName, email, phone, role, createdAt, deviceModel string
+		var isActive bool
+
+		if err := rows.Scan(&id, &fullName, &email, &phone, &role, &isActive, &createdAt, &deviceModel); err != nil {
+			log.Printf("⚠️ خطأ في القراءة: %v", err)
+			continue
+		}
+
+		employees = append(employees, gin.H{
+			"id":            id,
+			"full_name":     fullName,
+			"email":         email,
+			"phone":         phone,
+			"role":          role,
+			"is_active":     isActive,
+			"created_at":    createdAt,
+			"device_model":  deviceModel,
+			"is_registered": deviceModel != "",
+		})
+	}
+
+	log.Printf("✅ تم جلب %d موظف", len(employees))
+	c.JSON(http.StatusOK, employees)
+}
+
+// =============================================
+// 3. إنشاء موظف جديد
+// =============================================
+func (h *AuthHandler) CreateEmployeePhone(c *gin.Context) {
+	var req struct {
+		FullName string `json:"full_name" binding:"required"`
+		Phone    string `json:"phone" binding:"required"`
+		Role     string `json:"role"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
+		return
+	}
+
+	log.Printf("📝 إنشاء موظف: %s, %s", req.FullName, req.Phone)
+
+	var exists bool
+	err := h.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE phone = $1)`, req.Phone).Scan(&exists)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "حدث خطأ"})
+		return
+	}
+	if exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "رقم الهاتف مستخدم"})
+		return
+	}
+
+	id := uuid.NewString()
+	role := "employee"
+	if req.Role != "" {
+		role = req.Role
+	}
+
+	bytes := make([]byte, 8)
+	rand.Read(bytes)
+	password := hex.EncodeToString(bytes)
+	hash, _ := h.AuthService.HashPassword(password)
+	email := req.Phone + "@worktrack.com"
+
+	_, err = h.DB.Exec(`
+		INSERT INTO users (
+			id, full_name, email, phone, password_hash, 
+			role, is_active, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, TRUE, now(), now())
+	`, id, req.FullName, email, req.Phone, hash, role)
+
+	if err != nil {
+		log.Printf("❌ فشل إنشاء الموظف: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل إنشاء الموظف"})
+		return
+	}
+
+	log.Printf("✅ تم إنشاء موظف: %s", req.FullName)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":      id,
+		"message": "تم إنشاء الموظف بنجاح",
+		"user": gin.H{
+			"id":        id,
+			"full_name": req.FullName,
+			"phone":     req.Phone,
+			"email":     email,
+			"role":      role,
+		},
+	})
+}
+
+// =============================================
+// 4. تسجيل دخول الموظف (مع التحقق من نوع الجهاز)
+// =============================================
+func (h *AuthHandler) PhoneLogin(c *gin.Context) {
+	log.Println("========================================")
+	log.Println("📱 تسجيل دخول الموظف...")
+
+	var req struct {
+		Phone       string `json:"phone" binding:"required"`
+		DeviceID    string `json:"device_id" binding:"required"`
+		DeviceModel string `json:"device_model" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("❌ خطأ في البيانات: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
+		return
+	}
+
+	log.Printf("📱 رقم الهاتف: %s", req.Phone)
+	log.Printf("🆔 معرف الجهاز: %s", req.DeviceID)
+	log.Printf("📱 نوع الجهاز: %s", req.DeviceModel)
+
+	var userID, fullName, role, storedDeviceID, storedDeviceModel string
+	err := h.DB.QueryRow(`
+		SELECT 
+			id, 
+			full_name, 
+			role, 
+			COALESCE(device_id, ''), 
+			COALESCE(device_model, '') 
+		FROM users 
+		WHERE phone = $1 AND is_active = TRUE
+	`, req.Phone).Scan(&userID, &fullName, &role, &storedDeviceID, &storedDeviceModel)
+
+	if err != nil {
+		log.Printf("❌ المستخدم غير موجود: %s", req.Phone)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "رقم الهاتف غير مسجل"})
+		return
+	}
+
+	log.Printf("✅ تم العثور على المستخدم: %s", fullName)
+
+	// =============================================
+	// 🔒 طبقة أمان 1: التحقق من Device ID
+	// =============================================
+	if storedDeviceID != "" && storedDeviceID != req.DeviceID {
+		log.Printf("🚨 Device ID غير مطابق!")
+		log.Printf("   المسجل: %s", storedDeviceID)
+		log.Printf("   الحالي: %s", req.DeviceID)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":           "🚫 هذا الجهاز غير مصرح به",
+			"device_mismatch": true,
+		})
+		return
+	}
+
+	// =============================================
+	// 🔒 طبقة أمان 2: التحقق من Device Model (نوع الجهاز)
+	// =============================================
+	if storedDeviceModel != "" && storedDeviceModel != req.DeviceModel {
+		log.Printf("🚨 نوع الجهاز غير مطابق!")
+		log.Printf("   المسجل: %s", storedDeviceModel)
+		log.Printf("   الحالي: %s", req.DeviceModel)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":          "🚫 نوع الجهاز غير مصرح به",
+			"model_mismatch": true,
+		})
+		return
+	}
+
+	// =============================================
+	// تسجيل الجهاز إذا كان جديداً
+	// =============================================
+	if storedDeviceID == "" || storedDeviceModel == "" {
+		log.Println("📱 أول تسجيل دخول - تسجيل الجهاز...")
+
+		_, err = h.DB.Exec(`
+			UPDATE users 
+			SET 
+				device_id = $1,
+				device_model = $2,
+				phone_verified = TRUE,
+				updated_at = now()
+			WHERE id = $3
+		`, req.DeviceID, req.DeviceModel, userID)
+
+		if err != nil {
+			log.Printf("❌ فشل تسجيل الجهاز: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تسجيل الجهاز"})
+			return
+		}
+
+		log.Printf("✅ تم تسجيل الجهاز بنجاح!")
+		log.Printf("   Device ID: %s", req.DeviceID)
+		log.Printf("   Device Model: %s", req.DeviceModel)
+	}
+
+	// تحديث وقت آخر دخول
+	_, err = h.DB.Exec(`
+		UPDATE users 
+		SET updated_at = now()
+		WHERE id = $1
+	`, userID)
+	if err != nil {
+		log.Printf("⚠️ فشل تحديث وقت الدخول: %v", err)
+	}
+
+	// إنشاء التوكن
+	token, err := h.AuthService.GenerateToken(userID, role)
+	if err != nil {
+		log.Printf("❌ فشل إنشاء التوكن: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تسجيل الدخول"})
+		return
+	}
+
+	log.Printf("✅ تسجيل دخول ناجح: %s", fullName)
+	log.Printf("📱 نوع الجهاز المسجل: %s", req.DeviceModel)
+	log.Println("========================================")
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+		"user": gin.H{
+			"id":        userID,
+			"full_name": fullName,
+			"role":      role,
+			"phone":     req.Phone,
+		},
+		"device_registered": storedDeviceID != "",
+	})
+}
+
+// =============================================
+// 5. بيانات المستخدم الحالي
+// =============================================
+func (h *AuthHandler) Me(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+
+	var fullName, email, phone, role string
+	err := h.DB.QueryRow(`
+		SELECT full_name, email, phone, role 
+		FROM users WHERE id = $1
+	`, userID).Scan(&fullName, &email, &phone, &role)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "المستخدم غير موجود"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":        userID,
+		"full_name": fullName,
+		"email":     email,
+		"phone":     phone,
+		"role":      role,
+	})
+}
+
+// =============================================
+// 6. حذف موظف
+// =============================================
+func (h *AuthHandler) DeleteEmployee(c *gin.Context) {
+	id := c.Param("id")
+
+	if id == "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "لا يمكن حذف المدير الرئيسي"})
+		return
+	}
+
+	var exists bool
+	err := h.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`, id).Scan(&exists)
+	if err != nil || !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "المستخدم غير موجود"})
+		return
+	}
+
+	_, err = h.DB.Exec(`DELETE FROM users WHERE id = $1`, id)
+	if err != nil {
+		log.Printf("❌ فشل حذف الموظف: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل الحذف"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "تم حذف الموظف"})
+}
+
+// =============================================
+// 7. إعادة تعيين جهاز الموظف
+// =============================================
+func (h *AuthHandler) ResetDevice(c *gin.Context) {
+	var req struct {
+		UserID string `json:"user_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
+		return
+	}
+
+	_, err := h.DB.Exec(`
+		UPDATE users 
+		SET 
+			device_id = NULL,
+			device_model = NULL,
+			phone_verified = FALSE,
+			updated_at = now()
+		WHERE id = $1
+	`, req.UserID)
+
+	if err != nil {
+		log.Printf("❌ فشل إعادة تعيين الجهاز: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل إعادة تعيين الجهاز"})
+		return
+	}
+
+	log.Printf("✅ تم إعادة تعيين جهاز المستخدم: %s", req.UserID)
+	c.JSON(http.StatusOK, gin.H{"message": "تم إعادة تعيين الجهاز"})
+}
+
+// =============================================
+// 8. معلومات الجهاز
+// =============================================
+func (h *AuthHandler) GetDeviceInfo(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+
+	var deviceID, deviceModel string
+	err := h.DB.QueryRow(`
+		SELECT 
+			COALESCE(device_id, ''), 
+			COALESCE(device_model, '') 
+		FROM users WHERE id = $1
+	`, userID).Scan(&deviceID, &deviceModel)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب معلومات الجهاز"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"device_id":      deviceID,
+		"device_model":   deviceModel,
+		"is_registered":  deviceID != "" && deviceModel != "",
+	})
+}

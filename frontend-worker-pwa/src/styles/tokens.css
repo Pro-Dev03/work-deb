@@ -1,0 +1,137 @@
+/* ==========================================================================
+   WorkTrack - نظام التصميم المتجاوب للهواتف
+   ========================================================================== */
+
+:root {
+  /* ألوان */
+  --ink: #16232E;
+  direction: rtl;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  --ink-soft: #4C5C6B;
+  --canvas: #F3F6F4;
+  --surface: #FFFFFF;
+  --line: #DCE3DE;
+  --brand: #1F6F5C;
+  --brand-dark: #154D40;
+  --brand-tint: #E4F0EC;
+  --signal-in: #2E9B5D;
+  --signal-out: #D6493B;
+
+  /* أحجام */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* ظلال خفيفة للهواتف */
+  --shadow-sm: 0 1px 3px rgba(22,35,46,.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #app {
+  height: 100%;
+  font-size: 16px; /* أساسي للهواتف */
+}
+
+body {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  padding: 0;
+  margin: 0;
+}
+
+/* ==========================================================================
+   مكونات متجاوبة
+   ========================================================================== */
+
+/* أزرار كبيرة للمس */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 48px; /* مهم للهواتف */
+  width: 100%;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn--primary {
+  background: var(--brand);
+  color: #fff;
+}
+
+.btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--ghost {
+  background: transparent;
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+}
+
+/* بطاقات العمل */
+.worksite-card {
+  padding: 14px 12px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: right;
+  transition: 0.2s;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   تحسينات للشاشات الصغيرة جداً
+   ========================================================================== */
+@media (max-width: 380px) {
+  .worksites-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .timer-time {
+    font-size: 24px !important;
+  }
+  
+  .summary {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ==========================================================================
+   تحسينات للأجهزة التي تعمل باللمس
+   ========================================================================== */
+@media (hover: none) {
+  .worksite-card:hover {
+    transform: none;
+  }
+  
+  .btn:hover {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   دعم notch (الهواتف الحديثة)
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .tabbar {
+    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+}
