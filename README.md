@@ -35,7 +35,7 @@
 4. ابنِ كل واجهة وانشرها كـ Static Site (على Render أو مزود آخر) مع المتغير `VITE_API_BASE_URL=https://<api-name>.onrender.com/api/v1`.
 5. بعد معرفة روابط الواجهات النهائية، حدّث `ALLOWED_ORIGINS` في Render وأعد النشر.
 
-قبل أول نشر، جهّز قاعدة PostgreSQL بمراجعة وتنفيذ migrations الموجودة في `backend/internal/database/migrations/`. لا تستخدم ملفات SQL المحلية المستثناة من Git لإعداد إنتاج لأنها قد تكون مدمّرة للبيانات.
+قبل أول نشر، جهّز قاعدة PostgreSQL بتنفيذ migrations الموجودة في `backend/internal/database/migrations/` بالترتيب، بما فيها `000007_extend_production_schema.up.sql`. لا تستخدم ملفات SQL المحلية المستثناة من Git لإعداد إنتاج لأنها قد تكون مدمّرة للبيانات. لا تتضمن migrations حساب مدير أو كلمة مرور؛ أنشئ أول مدير بكلمة مرور خاصة وآمنة.
 
 > تنبيه: التخزين المحلي للملفات داخل Render مؤقت. رفع الصور في الكود الحالي يحتاج ربطاً فعلياً بتخزين دائم مثل Cloudflare R2 قبل الاعتماد عليه في الإنتاج.
 
