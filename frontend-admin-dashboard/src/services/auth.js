@@ -21,6 +21,11 @@ export async function login(email, password) {
   }
 }
 
+export async function getCurrentUser() {
+  const { data } = await api.get('/auth/me')
+  return data
+}
+
 export function logout() {
   localStorage.removeItem('worktrack_admin_token')
   localStorage.removeItem('worktrack_admin_user')

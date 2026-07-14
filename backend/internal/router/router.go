@@ -46,58 +46,63 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 
 	// المسارات المحمية (تتطلب توكن)
 	protected := api.Group("")
-	protected.Use(middleware.AuthMiddleware(authService), middleware.SubscriptionMiddleware(db))
+	protected.Use(middleware.AuthMiddleware(authService))
 	{
 		// المستخدم
 		protected.GET("/auth/me", authHandler.Me)
 		protected.GET("/auth/device", authHandler.GetDeviceInfo)
 
-		// نقاط العمل
-		protected.GET("/worksites", worksiteHandler.List)
-		protected.GET("/worksites/available", worksiteHandler.GetAvailableWorksites)
-
-		// الحضور
-		protected.POST("/attendance/check-in", attendanceHandler.CheckIn)
-		protected.POST("/attendance/check-out", attendanceHandler.CheckOut)
-		protected.GET("/attendance/current", attendanceHandler.GetCurrentAttendance)
-		protected.GET("/attendance/summary", attendanceHandler.GetAttendanceSummary)
-		protected.GET("/attendance/all-summary", attendanceHandler.GetAllAttendanceSummary)
-
-		// الموقع
-		protected.GET("/location/active", locationHandler.GetActiveEmployees)
-		protected.GET("/location/track/:id", locationHandler.GetEmployeeTrack)
-		protected.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)
-		protected.GET("/location/logs", locationHandler.GetLocationLogs)
-		protected.POST("/location/update", locationHandler.UpdateLocation)
-
-		// الإشعارات
-		protected.GET("/notifications", notificationHandler.List)
-
-		// طلبات الخدمة
-		protected.GET("/service/requests", serviceHandler.ListRequests)
-		protected.POST("/service/requests", serviceHandler.CreateRequest)
-		protected.PUT("/service/requests/:id/status", serviceHandler.UpdateStatus)
-
-		// مسارات المدير (تتطلب دور admin)
-		admin := protected.Group("")
-		admin.Use(middleware.RequireRole("admin"))
+		// المسارات التي تتطلب اشتراكاً نشطاً
+		paid := protected.Group("")
+		paid.Use(middleware.SubscriptionMiddleware(db))
 		{
-			// إدارة الموظفين
-			admin.POST("/auth/employee-phone", authHandler.CreateEmployeePhone)
-			admin.GET("/admin/employees", authHandler.ListEmployees)
-			admin.DELETE("/admin/employees/:id", authHandler.DeleteEmployee)
-			admin.POST("/admin/reset-device", authHandler.ResetDevice)
-
 			// نقاط العمل
-			admin.POST("/worksites", worksiteHandler.Create)
-			admin.DELETE("/worksites/:id", worksiteHandler.Delete)
-			admin.POST("/worksites/assign", worksiteHandler.AssignEmployee)
-			admin.GET("/worksites/employees", worksiteHandler.GetAvailableEmployees)
+			paid.GET("/worksites", worksiteHandler.List)
+			paid.GET("/worksites/available", worksiteHandler.GetAvailableWorksites)
 
-			// التقارير - مسارات جديدة
-			admin.GET("/reports/daily-summary", reportHandler.DailySummary)
-			admin.GET("/reports/pending-employees", reportHandler.GetPendingEmployees)
-			admin.GET("/reports/completed-employees", reportHandler.GetCompletedEmployees)
+			// الحضور
+			paid.POST("/attendance/check-in", attendanceHandler.CheckIn)
+			paid.POST("/attendance/check-out", attendanceHandler.CheckOut)
+			paid.GET("/attendance/current", attendanceHandler.GetCurrentAttendance)
+			paid.GET("/attendance/summary", attendanceHandler.GetAttendanceSummary)
+			paid.GET("/attendance/all-summary", attendanceHandler.GetAllAttendanceSummary)
+
+			// الموقع
+			paid.GET("/location/active", locationHandler.GetActiveEmployees)
+			paid.GET("/location/track/:id", locationHandler.GetEmployeeTrack)
+			paid.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)
+			paid.GET("/location/logs", locationHandler.GetLocationLogs)
+			paid.POST("/location/update", locationHandler.UpdateLocation)
+
+			// الإشعارات
+			paid.GET("/notifications", notificationHandler.List)
+
+			// طلبات الخدمة
+			paid.GET("/service/requests", serviceHandler.ListRequests)
+			paid.POST("/service/requests", serviceHandler.CreateRequest)
+			paid.PUT("/service/requests/:id/status", serviceHandler.UpdateStatus)
+
+			// مسارات المدير (تتطلب دور admin)
+			admin := paid.Group("")
+			admin.Use(middleware.RequireRole("admin"))
+			{
+				// إدارة الموظفين
+				admin.POST("/auth/employee-phone", authHandler.CreateEmployeePhone)
+				admin.GET("/admin/employees", authHandler.ListEmployees)
+				admin.DELETE("/admin/employees/:id", authHandler.DeleteEmployee)
+				admin.POST("/admin/reset-device", authHandler.ResetDevice)
+
+				// نقاط العمل
+				admin.POST("/worksites", worksiteHandler.Create)
+				admin.DELETE("/worksites/:id", worksiteHandler.Delete)
+				admin.POST("/worksites/assign", worksiteHandler.AssignEmployee)
+				admin.GET("/worksites/employees", worksiteHandler.GetAvailableEmployees)
+
+				// التقارير - مسارات جديدة
+				admin.GET("/reports/daily-summary", reportHandler.DailySummary)
+				admin.GET("/reports/pending-employees", reportHandler.GetPendingEmployees)
+				admin.GET("/reports/completed-employees", reportHandler.GetCompletedEmployees)
+			}
 		}
 	}
 

@@ -1,28 +1,53 @@
 <template>
   <div>
-    <div class="page-head"><h2>الإعدادات</h2></div>
+    <div class="page-head">
+      <h2>{{ t('settings') }}</h2>
+      <p class="page-subtitle">{{ t('settings_intro') }}</p>
+    </div>
+
+    <div class="card subscription-card">
+      <h3>{{ t('subscription_title') }}</h3>
+      <p class="settings-card__hint">{{ t('subscription_description') }}</p>
+      <SubscriptionStatusView />
+    </div>
 
     <div class="card settings-card">
-      <h3>اللغة الافتراضية للواجهات</h3>
+      <h3>{{ t('settings_language_title') }}</h3>
       <div class="settings-card__options">
-        <label class="field"><span>لوحة المدير وتطبيق الموظف</span>
-          <select><option>العربية</option><option>עברית</option><option>English</option></select>
+        <label class="field"><span>{{ t('settings_language_label') }}</span>
+          <select disabled>
+            <option>{{ t('ar') }}</option>
+            <option>{{ t('he') }}</option>
+            <option>{{ t('en') }}</option>
+          </select>
         </label>
       </div>
     </div>
 
     <div class="card settings-card">
-      <h3>نطاق التختيم الافتراضي</h3>
-      <p class="settings-card__hint">القيمة المستخدمة عند إنشاء نقطة عمل جديدة إن لم يُحدَّد نصف قطر مخصص</p>
-      <label class="field" style="max-width: 220px"><span>نصف القطر (متر)</span><input type="number" value="100" /></label>
+      <h3>{{ t('settings_geofence_title') }}</h3>
+      <p class="settings-card__hint">{{ t('settings_geofence_hint') }}</p>
+      <label class="field" style="max-width: 220px"><span>{{ t('settings_geofence_radius') }}</span><input type="number" value="100" disabled /></label>
     </div>
   </div>
 </template>
 
+<script setup>
+import { useI18n } from '../services/i18n'
+import SubscriptionStatusView from './SubscriptionStatusView.vue'
+
+const { t } = useI18n()
+</script>
+
 <style scoped>
 .page-head { margin-bottom: 18px; }
 .page-head h2 { font-size: 20px; }
+.page-subtitle { color: var(--ink-soft); margin: 6px 0 16px; font-size: 14px; }
 .settings-card { padding: 22px; margin-bottom: 16px; }
 .settings-card h3 { font-size: 15px; margin-bottom: 10px; }
 .settings-card__hint { font-size: 13px; color: var(--ink-soft); margin-bottom: 12px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field span { font-size: 13px; color: var(--ink-soft); }
+.field input,
+.field select { width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); }
 </style>
