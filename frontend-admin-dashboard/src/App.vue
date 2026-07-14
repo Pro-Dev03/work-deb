@@ -467,10 +467,22 @@ onMounted(() => {
    استجابة للشاشات الصغيرة
    ============================================= */
 @media (max-width: 768px) {
-  .sidebar {
-    width: 60px;
+  .shell {
+    flex-direction: column;
   }
-  
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-left: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .sidebar__brand {
+    padding: 10px 14px;
+  }
+
   .sidebar__brand .brand-text,
   .sidebar__nav .nav-label,
   .logout-text,
@@ -479,59 +491,74 @@ onMounted(() => {
   .footer-brand {
     display: none;
   }
-  
-  .sidebar__nav .nav-item {
-    justify-content: center;
-    padding: 12px;
+
+  .sidebar__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 10px;
   }
-  
+
+  .sidebar__nav .nav-item {
+    flex: 1 1 50%;
+    justify-content: center;
+    padding: 10px;
+  }
+
   .sidebar__nav .nav-icon {
     font-size: 20px;
     width: auto;
   }
-  
+
   .sidebar__footer {
-    padding: 8px;
+    padding: 10px 12px 12px;
   }
-  
+
   .sidebar__footer-top {
-    flex-direction: column;
-    gap: 4px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
   }
-  
+
+  .sidebar__footer-top .lang-switcher {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .theme-toggle {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
   }
-  
+
   .btn-logout {
-    padding: 6px 8px;
+    padding: 8px 10px;
     justify-content: center;
   }
-  
+
   .logout-icon {
     font-size: 16px;
   }
-  
+
   .devpro-brand {
     justify-content: center;
     padding: 4px;
   }
-  
+
   .devpro-logo {
     width: 24px;
     height: 24px;
   }
-  
+
   .content {
     padding: 16px;
   }
-  
+
   .topbar {
     padding: 12px 16px;
   }
-  
+
   .topbar__title {
     font-size: 16px;
   }
