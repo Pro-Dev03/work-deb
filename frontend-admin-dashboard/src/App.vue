@@ -170,7 +170,7 @@ onMounted(() => {
 }
 
 .sidebar {
-  width: 260px;
+  width: 220px;
   background: var(--surface);
   border-left: 1px solid var(--line);
   display: flex;
@@ -324,7 +324,7 @@ onMounted(() => {
 
 .sidebar__footer-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   width: 100%;
 }

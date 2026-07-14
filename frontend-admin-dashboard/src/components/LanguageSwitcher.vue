@@ -32,16 +32,17 @@ function changeLanguage(lang) {
 <style scoped>
 .lang-switcher {
   display: flex;
-  justify-content: center;
-  gap: 2px;
-  padding: 2px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
   background: var(--canvas, #f0f4fa);
   border-radius: 8px;
   flex: 1;
 }
 
 .lang-btn {
-  padding: 4px 6px;
+  padding: 6px 8px;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -49,7 +50,8 @@ function changeLanguage(lang) {
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: inherit;
-  min-width: 32px;
+  min-width: 0;
+  width: 100%;
 }
 
 .lang-btn:hover {
