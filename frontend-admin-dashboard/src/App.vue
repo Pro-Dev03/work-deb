@@ -442,18 +442,7 @@ onMounted(() => {
   color: var(--ink-soft);
 }
 
-.topbar__avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--brand-tint);
-  color: var(--brand);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-}
+
 
 .content {
   flex: 1;
@@ -468,8 +457,8 @@ onMounted(() => {
    ============================================= */
 @media (max-width: 768px) {
   .sidebar {
-    width: 100px;
-    min-width: 100px;
+    width: 60px;
+    min-width: 60px;
   }
 
   .sidebar__brand .brand-text,
