@@ -467,20 +467,9 @@ onMounted(() => {
    استجابة للشاشات الصغيرة
    ============================================= */
 @media (max-width: 768px) {
-  .shell {
-    flex-direction: column;
-  }
-
   .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    border-left: none;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .sidebar__brand {
-    padding: 10px 14px;
+    width: 100px;
+    min-width: 100px;
   }
 
   .sidebar__brand .brand-text,
@@ -493,16 +482,14 @@ onMounted(() => {
   }
 
   .sidebar__nav {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 4px;
-    padding: 8px 10px;
+    padding: 12px 8px;
   }
 
   .sidebar__nav .nav-item {
-    flex: 1 1 50%;
     justify-content: center;
-    padding: 10px;
+    padding: 12px 8px;
   }
 
   .sidebar__nav .nav-icon {
@@ -511,25 +498,18 @@ onMounted(() => {
   }
 
   .sidebar__footer {
-    padding: 10px 12px 12px;
+    padding: 10px 8px;
   }
 
   .sidebar__footer-top {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 8px;
   }
 
-  .sidebar__footer-top .lang-switcher {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
   .theme-toggle {
-    width: 34px;
-    height: 34px;
-    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
   }
 
   .btn-logout {
