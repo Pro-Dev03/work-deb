@@ -21,28 +21,44 @@
       <!-- إحصائيات سريعة -->
       <div class="stats-grid">
         <div class="stat-card">
-          <span class="stat-card__icon emoji-icon">👥</span>
+          <span class="stat-card__icon">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8.5 11A3.5 3.5 0 1 1 8.5 4 3.5 3.5 0 0 1 8.5 11ZM15.5 11A3.5 3.5 0 1 1 15.5 4 3.5 3.5 0 0 1 15.5 11ZM6 13.5C6 12.12 7.57 11 8.5 11h7c.93 0 2.5 1.12 2.5 2.5V16H6v-2.5Z" />
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ stats.total_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_total_employees') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--waiting">
-          <span class="stat-card__icon emoji-icon">⏳</span>
+          <span class="stat-card__icon">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 2h8v3l-3 3 3 3v3H8v-3l3-3-3-3V2zm2 2v1.5l2 2 2-2V4H10zm0 8l2 2 2-2V18H10v-6z" />
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ stats.waiting_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_waiting_employees') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--active">
-          <span class="stat-card__icon emoji-icon">🟢</span>
+          <span class="stat-card__icon">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="5" />
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ activeEmployees.length }}</span>
             <span class="stat-card__label">{{ t('stats_active_now') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--completed">
-          <span class="stat-card__icon emoji-icon">✅</span>
+          <span class="stat-card__icon">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ stats.completed_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_completed_today') }}</span>
@@ -53,9 +69,19 @@
       <!-- الخريطة -->
       <div class="card dashboard__map">
         <div class="card-header">
-          <h3>{{ t('dashboard_tracking_title') }}</h3>
+          <h3>
+            <span class="section-icon" aria-hidden="true">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" /></svg>
+            </span>
+            {{ t('dashboard_tracking_title') }}
+          </h3>
           <div class="card-header__actions">
-            <span class="badge badge--info"><span class="emoji-icon">🔄</span> {{ updateCount }} {{ t('update_badge') }}</span>
+            <span class="badge badge--info">
+              <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 4v6h6M20 20v-6h-6M5 9a7 7 0 0 1 14 0" />
+              </svg>
+              {{ updateCount }} {{ t('update_badge') }}
+            </span>
             <button class="btn btn--sm btn--primary" @click="refreshData">{{ t('refresh_button') }}</button>
           </div>
         </div>
@@ -74,28 +100,32 @@
           :class="{ active: activeTab === 'active' }"
           @click="activeTab = 'active'"
         >
-          <span class="emoji-icon">🟢</span> {{ t('tab_active') }} ({{ activeEmployees.length }})
+          <svg class="tab-icon icon-active" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" /></svg>
+          {{ t('tab_active') }} ({{ activeEmployees.length }})
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'waiting' }"
           @click="activeTab = 'waiting'"
         >
-          <span class="emoji-icon">⏳</span> {{ t('tab_waiting') }} ({{ waitingEmployees.length }})
+          <svg class="tab-icon icon-hourglass" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v3l-3 3 3 3v3H8v-3l3-3-3-3V2z" /></svg>
+          {{ t('tab_waiting') }} ({{ waitingEmployees.length }})
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'completed' }"
           @click="activeTab = 'completed'"
         >
-          <span class="emoji-icon">✅</span> {{ t('tab_completed') }} ({{ completedEmployees.length }})
+          <svg class="tab-icon icon-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
+          {{ t('tab_completed') }} ({{ completedEmployees.length }})
         </button>
         <button 
           class="tab-btn tab-btn--alert" 
           :class="{ active: activeTab === 'alerts' }"
           @click="activeTab = 'alerts'"
         >
-          <span class="emoji-icon">🚨</span> {{ t('tab_alerts') }} ({{ outsideCount }})
+          <svg class="tab-icon icon-alert" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 14H4L12 2zm0 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-4v3" /></svg>
+          {{ t('tab_alerts') }} ({{ outsideCount }})
         </button>
       </div>
 
@@ -128,10 +158,14 @@
               </div>
               <div class="employee-item__info">
                 <strong>{{ emp.full_name }}</strong>
-                <span class="employee-item__worksite emoji-icon">📍 {{ emp.worksite.name }}</span>
-                <span class="employee-item__time emoji-icon">
-                  🕐 {{ formatTime(emp.check_in_time) }} | 
-                  ⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة
+                <span class="employee-item__worksite">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" /></svg>
+                  {{ emp.worksite.name }}
+                </span>
+                <span class="employee-item__time">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" /></svg>
+                  {{ formatTime(emp.check_in_time) }} | 
+                  {{ emp.hours_worked.toFixed(1) }} ساعة
                 </span>
               </div>
               <div class="employee-item__status">
@@ -147,7 +181,7 @@
                 @click="showEmployeeDetails(emp)"
                 :title="t('view_details_title')"
               >
-                📋
+                <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3V5zm2 2v10h14V7H5zm2 2h10v2H7V9zm0 4h6v2H7v-2z"/></svg>
               </button>
             </div>
           </div>
@@ -176,10 +210,16 @@
               </div>
               <div class="employee-item__info">
                 <strong>{{ emp.full_name }}</strong>
-                <span class="employee-item__worksite emoji-icon">⏳ لم يبدأ العمل بعد</span>
+                <span class="employee-item__worksite">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v3l-3 3 3 3v3H8v-3l3-3-3-3V2z" /></svg>
+                  لم يبدأ العمل بعد
+                </span>
               </div>
               <div class="employee-item__status">
-                <span class="badge badge--warning emoji-icon">⏳ قيد الانتظار</span>
+                <span class="badge badge--warning">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v3l-3 3 3 3v3H8v-3l3-3-3-3V2z" /></svg>
+                  قيد الانتظار
+                </span>
               </div>
             </div>
           </div>
@@ -208,14 +248,21 @@
               </div>
               <div class="employee-item__info">
                 <strong>{{ emp.full_name }}</strong>
-                <span class="employee-item__worksite emoji-icon">📍 {{ emp.worksite_name }}</span>
-                <span class="employee-item__time emoji-icon">
-                  ✅ {{ formatTime(emp.check_out_time) }} | 
-                  ⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة
+                <span class="employee-item__worksite">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" /></svg>
+                  {{ emp.worksite_name }}
+                </span>
+                <span class="employee-item__time">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" /></svg>
+                  {{ formatTime(emp.check_out_time) }} | 
+                  {{ emp.hours_worked.toFixed(1) }} ساعة
                 </span>
               </div>
               <div class="employee-item__status">
-              <span class="badge badge--in emoji-icon">✅ مكتمل</span>
+             <span class="badge badge--in">
+               <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
+               مكتمل
+             </span>
               </div>
             </div>
           </div>
@@ -238,7 +285,9 @@
               :key="emp.id" 
               class="alert-item"
             >
-              <span class="alert-item__icon emoji-icon">🚨</span>
+              <span class="alert-item__icon">
+                <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 14H4L12 2zm0 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-4v3" /></svg>
+              </span>
               <div class="alert-item__info">
                 <strong>{{ emp.full_name }}</strong>
                 <span class="alert-item__message">
@@ -250,7 +299,7 @@
                 class="btn btn--sm btn--danger" 
                 @click="showEmployeeDetails(emp)"
               >
-                📋
+                <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3V5zm2 2v10h14V7H5zm2 2h10v2H7V9zm0 4h6v2H7v-2z"/></svg>
               </button>
             </div>
           </div>
@@ -277,25 +326,40 @@
             
             <div class="employee-detail__info">
               <div class="info-row">
-                <span class="info-label emoji-icon">📍 {{ t('worksite_label') }}</span>
+                <span class="info-label">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" /></svg>
+                  {{ t('worksite_label') }}
+                </span>
                 <span>{{ selectedEmployee.worksite?.name || t('undefined_text') }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label emoji-icon">📏 {{ t('distance_label') }}</span>
+                <span class="info-label">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 6a1 1 0 0 1 1 1v4h3a1 1 0 1 1 0 2h-4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" /></svg>
+                  {{ t('distance_label') }}
+                </span>
                 <span :class="selectedEmployee.status === 'inside' ? 'text-success' : 'text-danger'">
                   {{ formatDistance(selectedEmployee.worksite?.distance || 0) }}
                 </span>
               </div>
               <div class="info-row">
-                <span class="info-label emoji-icon">⏱️ {{ t('working_hours_label') }}</span>
+                <span class="info-label">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h8M9 10h6M10 13h4" /></svg>
+                  {{ t('working_hours_label') }}
+                </span>
                 <span>{{ (selectedEmployee.hours_worked || 0).toFixed(1) }} {{ t('hours') }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label emoji-icon">🕐 {{ t('last_update_label') }}</span>
+                <span class="info-label">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" /></svg>
+                  {{ t('last_update_label') }}
+                </span>
                 <span>{{ formatTime(selectedEmployee.last_update) }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label emoji-icon">📍 {{ t('location_label') }}</span>
+                <span class="info-label">
+                  <svg class="text-icon icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" /></svg>
+                  {{ t('location_label') }}
+                </span>
                 <span class="mono">{{ (selectedEmployee.latitude || 0).toFixed(6) }}, {{ (selectedEmployee.longitude || 0).toFixed(6) }}</span>
               </div>
             </div>
@@ -494,19 +558,58 @@ onUnmounted(() => {
 .stat-card--active { border-left: 4px solid var(--signal-in); }
 .stat-card--completed { border-left: 4px solid #22C55E; }
 
-.stat-card__icon { font-size: 28px; }
-.stat-card__value { font-size: 28px; font-weight: 700; display: block; }
-.stat-card__label { font-size: 13px; color: var(--ink-soft); }
-.emoji-icon {
-  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', 'Twemoji Mozilla', 'EmojiSymbols', var(--font-body);
-  line-height: 1;
+.stat-card__icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: var(--canvas);
+  flex-shrink: 0;
+}
+
+.icon-svg {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.text-icon {
+  width: 18px;
+  height: 18px;
+  margin-inline-end: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  flex-shrink: 0;
 }
+
+.section-icon,
+.tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-end: 8px;
+}
+
+.section-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.tab-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.stat-card__value { font-size: 28px; font-weight: 700; display: block; }
+.stat-card__label { font-size: 13px; color: var(--ink-soft); }
 
 
 /* ==========================================
