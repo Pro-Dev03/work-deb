@@ -21,28 +21,28 @@
       <!-- إحصائيات سريعة -->
       <div class="stats-grid">
         <div class="stat-card">
-          <span class="stat-card__icon">👥</span>
+          <span class="stat-card__icon emoji-icon">👥</span>
           <div>
             <span class="stat-card__value">{{ stats.total_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_total_employees') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--waiting">
-          <span class="stat-card__icon">⏳</span>
+          <span class="stat-card__icon emoji-icon">⏳</span>
           <div>
             <span class="stat-card__value">{{ stats.waiting_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_waiting_employees') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--active">
-          <span class="stat-card__icon">🟢</span>
+          <span class="stat-card__icon emoji-icon">🟢</span>
           <div>
             <span class="stat-card__value">{{ activeEmployees.length }}</span>
             <span class="stat-card__label">{{ t('stats_active_now') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--completed">
-          <span class="stat-card__icon">✅</span>
+          <span class="stat-card__icon emoji-icon">✅</span>
           <div>
             <span class="stat-card__value">{{ stats.completed_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_completed_today') }}</span>
@@ -55,7 +55,7 @@
         <div class="card-header">
           <h3>{{ t('dashboard_tracking_title') }}</h3>
           <div class="card-header__actions">
-            <span class="badge badge--info">🔄 {{ updateCount }} {{ t('update_badge') }}</span>
+            <span class="badge badge--info"><span class="emoji-icon">🔄</span> {{ updateCount }} {{ t('update_badge') }}</span>
             <button class="btn btn--sm btn--primary" @click="refreshData">{{ t('refresh_button') }}</button>
           </div>
         </div>
@@ -74,28 +74,28 @@
           :class="{ active: activeTab === 'active' }"
           @click="activeTab = 'active'"
         >
-          🟢 {{ t('tab_active') }} ({{ activeEmployees.length }})
+          <span class="emoji-icon">🟢</span> {{ t('tab_active') }} ({{ activeEmployees.length }})
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'waiting' }"
           @click="activeTab = 'waiting'"
         >
-          ⏳ {{ t('tab_waiting') }} ({{ waitingEmployees.length }})
+          <span class="emoji-icon">⏳</span> {{ t('tab_waiting') }} ({{ waitingEmployees.length }})
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'completed' }"
           @click="activeTab = 'completed'"
         >
-          ✅ {{ t('tab_completed') }} ({{ completedEmployees.length }})
+          <span class="emoji-icon">✅</span> {{ t('tab_completed') }} ({{ completedEmployees.length }})
         </button>
         <button 
           class="tab-btn tab-btn--alert" 
           :class="{ active: activeTab === 'alerts' }"
           @click="activeTab = 'alerts'"
         >
-          🚨 {{ t('tab_alerts') }} ({{ outsideCount }})
+          <span class="emoji-icon">🚨</span> {{ t('tab_alerts') }} ({{ outsideCount }})
         </button>
       </div>
 
@@ -128,8 +128,8 @@
               </div>
               <div class="employee-item__info">
                 <strong>{{ emp.full_name }}</strong>
-                <span class="employee-item__worksite">📍 {{ emp.worksite.name }}</span>
-                <span class="employee-item__time">
+                <span class="employee-item__worksite emoji-icon">📍 {{ emp.worksite.name }}</span>
+                <span class="employee-item__time emoji-icon">
                   🕐 {{ formatTime(emp.check_in_time) }} | 
                   ⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة
                 </span>
@@ -176,10 +176,10 @@
               </div>
               <div class="employee-item__info">
                 <strong>{{ emp.full_name }}</strong>
-                <span class="employee-item__worksite">⏳ لم يبدأ العمل بعد</span>
+                <span class="employee-item__worksite emoji-icon">⏳ لم يبدأ العمل بعد</span>
               </div>
               <div class="employee-item__status">
-                <span class="badge badge--warning">⏳ قيد الانتظار</span>
+                <span class="badge badge--warning emoji-icon">⏳ قيد الانتظار</span>
               </div>
             </div>
           </div>
@@ -208,14 +208,14 @@
               </div>
               <div class="employee-item__info">
                 <strong>{{ emp.full_name }}</strong>
-                <span class="employee-item__worksite">📍 {{ emp.worksite_name }}</span>
-                <span class="employee-item__time">
+                <span class="employee-item__worksite emoji-icon">📍 {{ emp.worksite_name }}</span>
+                <span class="employee-item__time emoji-icon">
                   ✅ {{ formatTime(emp.check_out_time) }} | 
                   ⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة
                 </span>
               </div>
               <div class="employee-item__status">
-                <span class="badge badge--in">✅ مكتمل</span>
+              <span class="badge badge--in emoji-icon">✅ مكتمل</span>
               </div>
             </div>
           </div>
@@ -238,7 +238,7 @@
               :key="emp.id" 
               class="alert-item"
             >
-              <span class="alert-item__icon">🚨</span>
+              <span class="alert-item__icon emoji-icon">🚨</span>
               <div class="alert-item__info">
                 <strong>{{ emp.full_name }}</strong>
                 <span class="alert-item__message">
@@ -277,25 +277,25 @@
             
             <div class="employee-detail__info">
               <div class="info-row">
-                <span class="info-label">📍 {{ t('worksite_label') }}</span>
+                <span class="info-label emoji-icon">📍 {{ t('worksite_label') }}</span>
                 <span>{{ selectedEmployee.worksite?.name || t('undefined_text') }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">📏 {{ t('distance_label') }}</span>
+                <span class="info-label emoji-icon">📏 {{ t('distance_label') }}</span>
                 <span :class="selectedEmployee.status === 'inside' ? 'text-success' : 'text-danger'">
                   {{ formatDistance(selectedEmployee.worksite?.distance || 0) }}
                 </span>
               </div>
               <div class="info-row">
-                <span class="info-label">⏱️ {{ t('working_hours_label') }}</span>
+                <span class="info-label emoji-icon">⏱️ {{ t('working_hours_label') }}</span>
                 <span>{{ (selectedEmployee.hours_worked || 0).toFixed(1) }} {{ t('hours') }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">🕐 {{ t('last_update_label') }}</span>
+                <span class="info-label emoji-icon">🕐 {{ t('last_update_label') }}</span>
                 <span>{{ formatTime(selectedEmployee.last_update) }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">📍 {{ t('location_label') }}</span>
+                <span class="info-label emoji-icon">📍 {{ t('location_label') }}</span>
                 <span class="mono">{{ (selectedEmployee.latitude || 0).toFixed(6) }}, {{ (selectedEmployee.longitude || 0).toFixed(6) }}</span>
               </div>
             </div>
@@ -497,6 +497,17 @@ onUnmounted(() => {
 .stat-card__icon { font-size: 28px; }
 .stat-card__value { font-size: 28px; font-weight: 700; display: block; }
 .stat-card__label { font-size: 13px; color: var(--ink-soft); }
+.emoji-icon {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', 'Twemoji Mozilla', 'EmojiSymbols', var(--font-body);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 
 /* ==========================================
    الخريطة
