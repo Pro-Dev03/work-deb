@@ -4,8 +4,10 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"worktrack/backend/internal/i18n"
 	"worktrack/backend/internal/services"
@@ -21,6 +23,26 @@ type AuthHandler struct {
 
 func NewAuthHandler(db *sql.DB, authService *services.AuthService) *AuthHandler {
 	return &AuthHandler{DB: db, AuthService: authService}
+}
+
+func (h *AuthHandler) checkSubscriptionStatus(userID string, status string, expiresAt sql.NullTime) error {
+	if status == "canceled" {
+		return errors.New("subscription canceled")
+	}
+
+	if status == "expired" {
+		return errors.New("subscription expired")
+	}
+
+	if expiresAt.Valid && time.Now().After(expiresAt.Time) {
+		_, err := h.DB.Exec(`UPDATE users SET subscription_status = 'expired' WHERE id = $1`, userID)
+		if err != nil {
+			log.Printf("⚠️ failed to mark subscription expired for user %s: %v", userID, err)
+		}
+		return errors.New("subscription expired")
+	}
+
+	return nil
 }
 
 // =============================================
@@ -39,12 +61,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	var userID, fullName, role, passwordHash string
+	var userID, fullName, role, passwordHash, subscriptionStatus string
+	var subscriptionExpiresAt sql.NullTime
 	err := h.DB.QueryRow(`
-		SELECT id, full_name, role, password_hash 
+		SELECT id, full_name, role, password_hash, subscription_status, subscription_expires_at
 		FROM users 
 		WHERE email = $1 AND is_active = TRUE
-	`, req.Email).Scan(&userID, &fullName, &role, &passwordHash)
+	`, req.Email).Scan(&userID, &fullName, &role, &passwordHash, &subscriptionStatus, &subscriptionExpiresAt)
 
 	if err != nil {
 		log.Printf("❌ مستخدم غير موجود: %v", err)
@@ -55,6 +78,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if !h.AuthService.CheckPassword(req.Password, passwordHash) {
 		log.Printf("❌ كلمة مرور خاطئة")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(lang, "err_invalid_credentials")})
+		return
+	}
+
+	if err := h.checkSubscriptionStatus(userID, subscriptionStatus, subscriptionExpiresAt); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(lang, "err_subscription_expired")})
 		return
 	}
 
@@ -70,9 +98,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,
 		"user": gin.H{
-			"id":        userID,
-			"full_name": fullName,
-			"role":      role,
+			"id":                  userID,
+			"full_name":           fullName,
+			"role":                role,
+			"subscription_status": subscriptionStatus,
+			"subscription_expires_at": func() interface{} {
+				if subscriptionExpiresAt.Valid {
+					return subscriptionExpiresAt.Time
+				}
+				return nil
+			}(),
 		},
 	})
 }
@@ -197,6 +232,7 @@ func (h *AuthHandler) CreateEmployeePhone(c *gin.Context) {
 // 4. تسجيل دخول الموظف (مع التحقق من نوع الجهاز)
 // =============================================
 func (h *AuthHandler) PhoneLogin(c *gin.Context) {
+	lang := i18n.Detect(c)
 	log.Println("========================================")
 	log.Println("📱 تسجيل دخول الموظف...")
 
@@ -216,17 +252,20 @@ func (h *AuthHandler) PhoneLogin(c *gin.Context) {
 	log.Printf("🆔 معرف الجهاز: %s", req.DeviceID)
 	log.Printf("📱 نوع الجهاز: %s", req.DeviceModel)
 
-	var userID, fullName, role, storedDeviceID, storedDeviceModel string
+	var userID, fullName, role, storedDeviceID, storedDeviceModel, subscriptionStatus string
+	var subscriptionExpiresAt sql.NullTime
 	err := h.DB.QueryRow(`
 		SELECT 
 			id, 
 			full_name, 
 			role, 
 			COALESCE(device_id, ''), 
-			COALESCE(device_model, '') 
+			COALESCE(device_model, ''),
+			subscription_status,
+			subscription_expires_at
 		FROM users 
 		WHERE phone = $1 AND is_active = TRUE
-	`, req.Phone).Scan(&userID, &fullName, &role, &storedDeviceID, &storedDeviceModel)
+	`, req.Phone).Scan(&userID, &fullName, &role, &storedDeviceID, &storedDeviceModel, &subscriptionStatus, &subscriptionExpiresAt)
 
 	if err != nil {
 		log.Printf("❌ المستخدم غير موجود: %s", req.Phone)
@@ -235,6 +274,11 @@ func (h *AuthHandler) PhoneLogin(c *gin.Context) {
 	}
 
 	log.Printf("✅ تم العثور على المستخدم: %s", fullName)
+
+	if err := h.checkSubscriptionStatus(userID, subscriptionStatus, subscriptionExpiresAt); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(lang, "err_subscription_expired")})
+		return
+	}
 
 	// =============================================
 	// 🔒 طبقة أمان 1: التحقق من Device ID
@@ -331,11 +375,12 @@ func (h *AuthHandler) PhoneLogin(c *gin.Context) {
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
-	var fullName, email, phone, role string
+	var fullName, email, phone, role, subscriptionStatus string
+	var subscriptionExpiresAt sql.NullTime
 	err := h.DB.QueryRow(`
-		SELECT full_name, email, phone, role 
+		SELECT full_name, email, phone, role, subscription_status, subscription_expires_at 
 		FROM users WHERE id = $1
-	`, userID).Scan(&fullName, &email, &phone, &role)
+	`, userID).Scan(&fullName, &email, &phone, &role, &subscriptionStatus, &subscriptionExpiresAt)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "المستخدم غير موجود"})
@@ -343,11 +388,18 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":        userID,
-		"full_name": fullName,
-		"email":     email,
-		"phone":     phone,
-		"role":      role,
+		"id":                  userID,
+		"full_name":           fullName,
+		"email":               email,
+		"phone":               phone,
+		"role":                role,
+		"subscription_status": subscriptionStatus,
+		"subscription_expires_at": func() interface{} {
+			if subscriptionExpiresAt.Valid {
+				return subscriptionExpiresAt.Time
+			}
+			return nil
+		}(),
 	})
 }
 
@@ -432,8 +484,8 @@ func (h *AuthHandler) GetDeviceInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"device_id":      deviceID,
-		"device_model":   deviceModel,
-		"is_registered":  deviceID != "" && deviceModel != "",
+		"device_id":     deviceID,
+		"device_model":  deviceModel,
+		"is_registered": deviceID != "" && deviceModel != "",
 	})
 }

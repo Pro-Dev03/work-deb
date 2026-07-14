@@ -46,7 +46,7 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 
 	// المسارات المحمية (تتطلب توكن)
 	protected := api.Group("")
-	protected.Use(middleware.AuthMiddleware(authService))
+	protected.Use(middleware.AuthMiddleware(authService), middleware.SubscriptionMiddleware(db))
 	{
 		// المستخدم
 		protected.GET("/auth/me", authHandler.Me)

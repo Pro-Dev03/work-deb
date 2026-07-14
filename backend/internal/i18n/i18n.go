@@ -72,6 +72,11 @@ var messages = map[string]map[Lang]string{
 		Hebrew:  "ההתחברות אינה תקפה, נא להתחבר מחדש",
 		English: "Invalid session, please log in again",
 	},
+	"err_subscription_expired": {
+		Arabic:  "اشتراكك انتهى أو تم إيقافه، الرجاء التواصل مع الدعم",
+		Hebrew:  "המנוי שלך פג או בוטל, נא ליצור קשר עם התמיכה",
+		English: "Your subscription has expired or been canceled, please contact support",
+	},
 	"err_forbidden_role": {
 		Arabic:  "ليست لديك صلاحية للوصول لهذا الإجراء",
 		Hebrew:  "אין לך הרשאה לבצע פעולה זו",
