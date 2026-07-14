@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"worktrack/backend/internal/i18n"
@@ -45,6 +46,21 @@ func (h *AuthHandler) checkSubscriptionStatus(userID string, status string, expi
 	return nil
 }
 
+func (h *AuthHandler) validatePassword(password, storedHash, email string) bool {
+	if h.AuthService.CheckPassword(password, storedHash) {
+		return true
+	}
+
+	var passwordMatches bool
+	err := h.DB.QueryRow(`SELECT crypt($1, password_hash) = password_hash FROM users WHERE email = $2`, password, email).Scan(&passwordMatches)
+	if err != nil {
+		log.Printf("⚠️ password fallback check failed for %s: %v", email, err)
+		return false
+	}
+
+	return passwordMatches
+}
+
 // =============================================
 // 1. تسجيل دخول المدير
 // =============================================
@@ -61,6 +77,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.TrimSpace(req.Email)
+	req.Password = strings.TrimSpace(req.Password)
+
 	var userID, fullName, role, passwordHash, subscriptionStatus string
 	var subscriptionExpiresAt sql.NullTime
 	err := h.DB.QueryRow(`
@@ -75,7 +94,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	if !h.AuthService.CheckPassword(req.Password, passwordHash) {
+	if !h.validatePassword(req.Password, passwordHash, req.Email) {
 		log.Printf("❌ كلمة مرور خاطئة")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T(lang, "err_invalid_credentials")})
 		return
