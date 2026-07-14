@@ -74,7 +74,6 @@
         <h1 class="topbar__title">{{ pageTitle }}</h1>
         <div class="topbar__user">
           <span class="topbar__name">{{ displayName }}</span>
-          <span class="topbar__avatar">{{ initials }}</span>
         </div>
       </header>
       <main class="content"><router-view /></main>
