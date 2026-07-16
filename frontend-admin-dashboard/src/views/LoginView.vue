@@ -33,12 +33,12 @@
       <form class="login-form" @submit.prevent="handleSubmit">
         <div class="field">
           <label>{{ $t('email') }}</label>
-          <input v-model="email" type="email" :placeholder="$t('email_placeholder')" required autocomplete="off" />
+          <input v-model="email" type="email" :placeholder="$t('email_placeholder')" required autocomplete="username" readonly @focus="removeReadonly" ref="emailInput" />
         </div>
          
         <div class="field">
           <label>{{ $t('password') }}</label>
-          <input v-model="password" type="password" :placeholder="$t('password_placeholder')" required autocomplete="off" />
+          <input v-model="password" type="password" :placeholder="$t('password_placeholder')" required autocomplete="current-password" />
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
@@ -72,6 +72,13 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 const debugInfo = ref('')
+const emailInput = ref(null)
+
+function removeReadonly() {
+  if (emailInput.value) {
+    emailInput.value.removeAttribute('readonly')
+  }
+}
 
 const languages = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
@@ -309,6 +316,12 @@ async function handleSubmit() {
   -webkit-box-shadow: 0 0 0 30px #F8FAFC inset !important;
   -webkit-text-fill-color: #1A2A3A !important;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Prevent autofill suggestion ghost text */
+.field input[readonly] {
+  background: #F8FAFC;
+  cursor: text;
 }
 
 .field input:focus {
