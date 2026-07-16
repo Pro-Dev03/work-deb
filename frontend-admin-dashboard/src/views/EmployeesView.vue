@@ -23,7 +23,8 @@
     </div>
 
     <div v-else class="card">
-      <div class="table-wrapper">
+      <!-- جدول للشاشات الكبيرة -->
+      <div class="table-wrapper desktop-only">
         <table class="table">
           <thead>
             <tr>
@@ -77,6 +78,54 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      
+      <!-- بطاقات للشاشات الصغيرة -->
+      <div class="mobile-cards mobile-only">
+        <div v-for="emp in employees" :key="emp.id" class="employee-card">
+          <div class="employee-card__header">
+            <div class="employee-card__person">
+              <span class="table__avatar">{{ emp.full_name?.slice(0, 1) || '?' }}</span>
+              <div class="employee-card__info">
+                <span class="employee-card__name">{{ emp.full_name }}</span>
+                <span class="employee-card__email mono">{{ emp.email }}</span>
+              </div>
+            </div>
+            <div class="employee-card__badges">
+              <span class="badge" :class="emp.role === 'admin' ? 'badge--gold' : ''">
+                {{ emp.role === 'admin' ? t('admin_role') : t('field_employee') }}
+              </span>
+              <span class="badge" :class="emp.is_active ? 'badge--in' : 'badge--out'">
+                {{ emp.is_active ? t('active_status') : t('suspended_status') }}
+              </span>
+            </div>
+          </div>
+          <div class="employee-card__body">
+            <div class="employee-card__row">
+              <span class="employee-card__label">{{ t('phone') }}</span>
+              <span class="employee-card__value mono">{{ emp.phone || '—' }}</span>
+            </div>
+            <div class="employee-card__row">
+              <span class="employee-card__label">{{ t('created_at') }}</span>
+              <span class="employee-card__value mono">{{ formatDate(emp.created_at) }}</span>
+            </div>
+          </div>
+          <div class="employee-card__actions">
+            <button 
+              class="btn btn--primary btn--sm" 
+              @click="showAttendanceHistory(emp)"
+            >
+              📊 {{ t('attendance_history') }}
+            </button>
+            <button 
+              class="btn btn--danger btn--sm" 
+              @click="confirmDelete(emp)"
+              :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
+            >
+              🗑️ {{ t('delete') }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -152,29 +201,60 @@
           <div v-else-if="attendanceHistory.length === 0" class="empty-state">
             <p>{{ t('no_attendance_records') }}</p>
           </div>
-          <div v-else class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>{{ t('date') }}</th>
-                  <th>{{ t('worksite') }}</th>
-                  <th>{{ t('check_in') }}</th>
-                  <th>{{ t('check_out') }}</th>
-                  <th>{{ t('worked_hours') }}</th>
-                  <th>{{ t('location') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="record in attendanceHistory" :key="record.id">
-                  <td class="mono">{{ formatDate(record.check_in_time) }}</td>
-                  <td>{{ record.worksite_name || '—' }}</td>
-                  <td class="mono">{{ formatTime(record.check_in_time) }}</td>
-                  <td class="mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</td>
-                  <td class="mono">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
-                  <td class="mono">{{ formatDistance(record.check_in_distance_meters) }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-else>
+            <!-- جدول للشاشات الكبيرة -->
+            <div class="table-wrapper desktop-only">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>{{ t('date') }}</th>
+                    <th>{{ t('worksite') }}</th>
+                    <th>{{ t('check_in') }}</th>
+                    <th>{{ t('check_out') }}</th>
+                    <th>{{ t('worked_hours') }}</th>
+                    <th>{{ t('location') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="record in attendanceHistory" :key="record.id">
+                    <td class="mono">{{ formatDate(record.check_in_time) }}</td>
+                    <td>{{ record.worksite_name || '—' }}</td>
+                    <td class="mono">{{ formatTime(record.check_in_time) }}</td>
+                    <td class="mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</td>
+                    <td class="mono">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
+                    <td class="mono">{{ formatDistance(record.check_in_distance_meters) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- بطاقات للشاشات الصغيرة -->
+            <div class="mobile-cards mobile-only">
+              <div v-for="record in attendanceHistory" :key="record.id" class="attendance-card">
+                <div class="attendance-card__header">
+                  <span class="attendance-card__date">{{ formatDate(record.check_in_time) }}</span>
+                  <span class="badge badge--info">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</span>
+                </div>
+                <div class="attendance-card__body">
+                  <div class="attendance-card__row">
+                    <span class="attendance-card__label">{{ t('worksite') }}</span>
+                    <span class="attendance-card__value">{{ record.worksite_name || '—' }}</span>
+                  </div>
+                  <div class="attendance-card__row">
+                    <span class="attendance-card__label">{{ t('check_in') }}</span>
+                    <span class="attendance-card__value mono">{{ formatTime(record.check_in_time) }}</span>
+                  </div>
+                  <div class="attendance-card__row">
+                    <span class="attendance-card__label">{{ t('check_out') }}</span>
+                    <span class="attendance-card__value mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</span>
+                  </div>
+                  <div class="attendance-card__row">
+                    <span class="attendance-card__label">{{ t('location') }}</span>
+                    <span class="attendance-card__value mono">{{ formatDistance(record.check_in_distance_meters) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -672,5 +752,162 @@ onMounted(fetchEmployees)
   .modal-lg {
     max-width: 100%;
   }
+  
+  .desktop-only { display: none; }
+  .mobile-only { display: block; }
+}
+
+@media (min-width: 769px) {
+  .desktop-only { display: block; }
+  .mobile-only { display: none; }
+}
+
+/* تصميم بطاقات سجل الحضور للهاتف */
+.mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attendance-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.attendance-card:hover {
+  border-color: var(--brand);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.attendance-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.attendance-card__date {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.attendance-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attendance-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attendance-card__label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.attendance-card__value {
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* تصميم بطاقات الموظفين للهاتف */
+.employee-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.employee-card:hover {
+  border-color: var(--brand);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.employee-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.employee-card__person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.employee-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.employee-card__name {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.employee-card__email {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.employee-card__badges {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.employee-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.employee-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.employee-card__label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.employee-card__value {
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.employee-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.employee-card__actions .btn {
+  flex: 1;
+  min-width: 120px;
 }
 </style>

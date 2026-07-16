@@ -60,4 +60,9 @@ onMounted(() => {
 .field span { font-size: 13px; color: var(--ink-soft); }
 .field input,
 .field select { width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); }
+
+@media (max-width: 768px) {
+  .settings-card { padding: 16px; }
+  .field { max-width: 100%; }
+}
 </style>

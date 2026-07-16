@@ -41,4 +41,11 @@ const summary = { completed: 27, in_progress: 6, pending: 9, late: 2 }
 .report-bar__legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 5px; }
 .report-bar__legend i.in { background: var(--signal-in); }
 .report-bar__legend i.out { background: var(--signal-out); }
+
+@media (max-width: 768px) {
+  .report-bar__legend {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
 </style>

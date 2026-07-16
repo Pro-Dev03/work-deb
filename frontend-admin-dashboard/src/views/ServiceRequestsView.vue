@@ -197,6 +197,7 @@ onMounted(fetchRequests)
   flex-wrap: wrap;
   gap: 10px;
 }
+
 .page-head h2 { font-size: 20px; margin-bottom: 4px; }
 .page-head p { font-size: 13px; color: var(--ink-soft); }
 .filters select {
@@ -205,6 +206,26 @@ onMounted(fetchRequests)
   border: 1px solid var(--line);
   background: var(--surface);
   font-family: var(--font-body);
+  min-width: 150px;
+}
+
+@media (max-width: 768px) {
+  .page-head { flex-direction: column; align-items: flex-start; }
+  .filters { width: 100%; }
+  .filters select { width: 100%; }
+  
+  .request-card__location {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .request-card__actions {
+    flex-direction: column;
+  }
+  
+  .request-card__actions .btn {
+    width: 100%;
+  }
 }
 
 .request-card {
