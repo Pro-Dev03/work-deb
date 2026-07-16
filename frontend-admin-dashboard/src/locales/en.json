@@ -293,5 +293,7 @@
   "cleanup_success": "Records cleanup successful",
   "cleanup_failed": "Records cleanup failed",
   "failed_to_fetch_attendance_history": "Failed to fetch attendance history",
-  "shift_restored": "🔄 Active shift restored"
+  "shift_restored": "🔄 Active shift restored",
+  "current_worksite": "Current Worksite",
+  "currently_working": "Currently Working"
 }

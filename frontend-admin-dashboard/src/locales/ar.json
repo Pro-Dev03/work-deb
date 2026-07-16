@@ -293,5 +293,7 @@
   "cleanup_success": "تم تنظيف السجلات بنجاح",
   "cleanup_failed": "فشل تنظيف السجلات",
   "failed_to_fetch_attendance_history": "فشل جلب سجل الحضور",
-  "shift_restored": "🔄 تم استعادة الوردية النشطة"
+  "shift_restored": "🔄 تم استعادة الوردية النشطة",
+  "current_worksite": "نقطة العمل الحالية",
+  "currently_working": "يعمل حالياً"
 }

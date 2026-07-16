@@ -293,5 +293,7 @@
   "cleanup_success": "ניקוי רשומות הצליח",
   "cleanup_failed": "ניקוי רשומות נכשל",
   "failed_to_fetch_attendance_history": "אחזור היסטוריית נוכחות נכשל",
-  "shift_restored": "🔄 המשמרת הפעילה שוחזרה"
+  "shift_restored": "🔄 המשמרת הפעילה שוחזרה",
+  "current_worksite": "אתר עבודה נוכחי",
+  "currently_working": "עובד כעת"
 }

@@ -295,7 +295,9 @@ const ar = {
   "confirm_cleanup_old_records": "هل أنت متأكد من حذف السجلات القديمة؟",
   "cleanup_success": "تم تنظيف السجلات بنجاح",
   "cleanup_failed": "فشل تنظيف السجلات",
-  "failed_to_fetch_attendance_history": "فشل جلب سجل الحضور"
+  "failed_to_fetch_attendance_history": "فشل جلب سجل الحضور",
+  "current_worksite": "نقطة العمل الحالية",
+  "currently_working": "يعمل حالياً"
 }
 
 const he = {
@@ -592,7 +594,9 @@ const he = {
   "confirm_cleanup_old_records": "האם אתה בטוח שברצונך למחוק רשומות ישנות?",
   "cleanup_success": "ניקוי רשומות הצליח",
   "cleanup_failed": "ניקוי רשומות נכשל",
-  "failed_to_fetch_attendance_history": "אחזור היסטוריית נוכחות נכשל"
+  "failed_to_fetch_attendance_history": "אחזור היסטוריית נוכחות נכשל",
+  "current_worksite": "אתר עבודה נוכחי",
+  "currently_working": "עובד כעת"
 }
 
 const en = {
@@ -889,7 +893,9 @@ const en = {
   "confirm_cleanup_old_records": "Are you sure you want to delete old records?",
   "cleanup_success": "Records cleanup successful",
   "cleanup_failed": "Records cleanup failed",
-  "failed_to_fetch_attendance_history": "Failed to fetch attendance history"
+  "failed_to_fetch_attendance_history": "Failed to fetch attendance history",
+  "current_worksite": "Current Worksite",
+  "currently_working": "Currently Working"
 }
 
 // =============================================
