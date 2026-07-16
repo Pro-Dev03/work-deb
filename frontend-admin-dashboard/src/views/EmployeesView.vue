@@ -369,6 +369,17 @@ async function showAttendanceHistory(employee) {
   selectedEmployee.value = employee
   showAttendanceModal.value = true
   await fetchAttendanceHistory()
+  
+  // تمرير سلس للمحتوى بعد التحميل
+  setTimeout(() => {
+    const attendanceContent = document.querySelector('.modal-body')
+    if (attendanceContent) {
+      attendanceContent.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    }
+  }, 100)
 }
 
 async function fetchAttendanceHistory() {
@@ -655,7 +666,12 @@ onMounted(fetchEmployees)
 .modal-header h3 { font-size: 17px; margin: 0; }
 .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ink-soft); }
 
-.modal-body { padding: 20px; }
+.modal-body { 
+  padding: 20px; 
+  overflow-y: auto;
+  max-height: 70vh;
+  scroll-behavior: smooth;
+}
 .modal-body p { margin-bottom: 8px; }
 .text-danger { color: var(--signal-out); font-weight: 600; }
 
@@ -909,5 +925,36 @@ onMounted(fetchEmployees)
 .employee-card__actions .btn {
   flex: 1;
   min-width: 120px;
+}
+
+/* تحسين شريط التمرير */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: var(--canvas);
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-soft);
+}
+
+/* تحسين التمرير على الهاتف */
+@media (max-width: 768px) {
+  .modal-body {
+    max-height: 60vh;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .modal-body::-webkit-scrollbar {
+    width: 4px;
+  }
 }
 </style>
