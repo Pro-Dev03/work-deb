@@ -25,5 +25,6 @@
   "cleanup_old_records": "מחיקת רשומות ישנות",
   "name": "שם",
   "worksite": "אתר עבודה",
-  "current_worksite": "אתר עבודה נוכחי"
+  "current_worksite": "אתר עבודה נוכחי",
+  "currently_working": "עובד כעת"
 }

@@ -19,11 +19,14 @@ func NewWorksiteHandler(db *sql.DB) *WorksiteHandler {
 	return &WorksiteHandler{DB: db}
 }
 
-// List - جلب جميع نقاط العمل
+// List - جلب جميع نقاط العمل مع الموظفين العاملين حالياً
 func (h *WorksiteHandler) List(c *gin.Context) {
 	rows, err := h.DB.Query(`
-		SELECT id, name, address, latitude, longitude, radius_meters, is_active, created_at
-		FROM worksites ORDER BY created_at DESC`)
+		SELECT w.id, w.name, w.address, w.latitude, w.longitude, w.radius_meters, w.is_active, w.created_at,
+			u.id as assigned_employee_id, u.full_name as assigned_employee_name
+		FROM worksites w
+		LEFT JOIN users u ON w.assigned_employee_id = u.id
+		ORDER BY w.created_at DESC`)
 	if err != nil {
 		log.Printf("❌ فشل جلب نقاط العمل: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب نقاط العمل"})
@@ -34,11 +37,13 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 	var worksites []gin.H
 	for rows.Next() {
 		var w models.Worksite
+		var assignedEmployeeID, assignedEmployeeName sql.NullString
 		if err := rows.Scan(&w.ID, &w.Name, &w.Address, &w.Latitude, &w.Longitude,
-			&w.RadiusMeters, &w.IsActive, &w.CreatedAt); err != nil {
+			&w.RadiusMeters, &w.IsActive, &w.CreatedAt, &assignedEmployeeID, &assignedEmployeeName); err != nil {
 			continue
 		}
-		worksites = append(worksites, gin.H{
+
+		worksite := gin.H{
 			"id":            w.ID,
 			"name":          w.Name,
 			"address":       w.Address,
@@ -47,8 +52,89 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 			"radius_meters": w.RadiusMeters,
 			"is_active":     w.IsActive,
 			"created_at":    w.CreatedAt,
-		})
+		}
+
+		if assignedEmployeeID.Valid && assignedEmployeeName.Valid {
+			worksite["assigned_to"] = gin.H{
+				"id":   assignedEmployeeID.String,
+				"name": assignedEmployeeName.String,
+			}
+		}
+
+		worksites = append(worksites, worksite)
 	}
+
+	// جلب الموظفين العاملين حالياً في كل نقطة عمل
+	for i, ws := range worksites {
+		if ws["id"] == "unassigned" {
+			continue
+		}
+		
+		workingRows, err := h.DB.Query(`
+			SELECT DISTINCT u.id, u.full_name
+			FROM users u
+			JOIN attendance a ON u.id = a.user_id
+			WHERE a.status = 'in_progress' 
+			AND a.worksite_id = $1
+			AND u.role = 'employee'
+		`, ws["id"])
+		
+		if err == nil {
+			var workingEmployees []gin.H
+			for workingRows.Next() {
+				var id, name string
+				if err := workingRows.Scan(&id, &name); err == nil {
+					workingEmployees = append(workingEmployees, gin.H{
+						"id":   id,
+						"name": name,
+					})
+				}
+			}
+			workingRows.Close()
+			worksites[i]["working_employees"] = workingEmployees
+		}
+	}
+
+	// إضافة خيار "غير معين" للموظفين الذين يعملون بدون نقطة عمل
+	unassignedRows, err := h.DB.Query(`
+		SELECT DISTINCT u.id, u.full_name
+		FROM users u
+		JOIN attendance a ON u.id = a.user_id
+		WHERE a.status = 'in_progress' 
+		AND (a.worksite_id IS NULL OR a.worksite_id = '')
+		AND u.role = 'employee'
+	`)
+	if err == nil {
+		var unassignedEmployees []gin.H
+		for unassignedRows.Next() {
+			var id, name string
+			if err := unassignedRows.Scan(&id, &name); err == nil {
+				unassignedEmployees = append(unassignedEmployees, gin.H{
+					"id":   id,
+					"name": name,
+				})
+			}
+		}
+		unassignedRows.Close()
+
+		if len(unassignedEmployees) > 0 {
+			worksites = append([]gin.H{
+				{
+					"id":                 "unassigned",
+					"name":               "غير معين",
+					"address":            "الموظفون الذين يعملون بدون نقطة عمل محددة",
+					"latitude":           0,
+					"longitude":          0,
+					"radius_meters":      0,
+					"is_active":          true,
+					"created_at":         "now()",
+					"is_unassigned":      true,
+					"working_employees":  unassignedEmployees,
+				},
+			}, worksites...)
+		}
+	}
+
 	c.JSON(http.StatusOK, worksites)
 }
 

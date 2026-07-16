@@ -16,10 +16,10 @@
     </div>
 
     <div v-else class="sites-grid">
-      <div v-for="site in worksites" :key="site.id" class="card site-card">
+      <div v-for="site in worksites" :key="site.id" class="card site-card" :class="{ 'site-card--unassigned': site.is_unassigned }">
         <div class="site-card__header">
           <h3>{{ site.name }}</h3>
-          <div class="site-card__actions">
+          <div class="site-card__actions" v-if="!site.is_unassigned">
             <button class="btn btn--primary btn--sm" @click="openAssignModal(site)">
               👤 {{ t('assign_employee') }}
             </button>
@@ -29,11 +29,13 @@
           </div>
         </div>
         <p class="site-card__address">{{ site.address || t('no_address') }}</p>
-        <div class="site-card__details">
+        <div class="site-card__details" v-if="!site.is_unassigned">
           <span class="mono">📍 {{ site.latitude?.toFixed(5) }}, {{ site.longitude?.toFixed(5) }}</span>
           <span class="site-card__radius mono">⭕ {{ site.radius_meters || 100 }} {{ t('meters_unit') }}</span>
         </div>
-        <div class="site-card__assigned">
+        
+        <!-- عرض الموظف المعين -->
+        <div class="site-card__assigned" v-if="!site.is_unassigned">
           <span v-if="site.assigned_to?.name" class="badge badge--in">
             👤 {{ site.assigned_to.name }}
           </span>
@@ -41,7 +43,20 @@
             ⚠️ {{ t('unassigned') }}
           </span>
         </div>
-        <span class="badge" :class="site.is_active ? 'badge--in' : 'badge--out'">
+        
+        <!-- عرض الموظفين العاملين حالياً -->
+        <div class="site-card__working" v-if="site.working_employees && site.working_employees.length > 0">
+          <div class="site-card__working-label">
+            {{ t('currently_working') }} ({{ site.working_employees.length }})
+          </div>
+          <div class="site-card__working-list">
+            <span v-for="emp in site.working_employees" :key="emp.id" class="badge badge--success badge--compact">
+              👤 {{ emp.name }}
+            </span>
+          </div>
+        </div>
+        
+        <span class="badge" :class="site.is_active ? 'badge--in' : 'badge--out'" v-if="!site.is_unassigned">
           {{ site.is_active ? t('active_status') : t('inactive_status') }}
         </span>
       </div>
@@ -274,6 +289,36 @@ onMounted(fetchWorksites)
 }
 
 .site-card__assigned { margin-bottom: 8px; }
+
+.site-card__working {
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--brand-tint);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--brand);
+}
+
+.site-card__working-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-dark);
+  margin-bottom: 6px;
+}
+
+.site-card__working-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.site-card--unassigned {
+  border: 2px solid var(--signal-out);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(239, 68, 68, 0.1) 100%);
+}
+
+.site-card--unassigned .site-card__header h3 {
+  color: var(--signal-out);
+}
 
 .modal-backdrop {
   position: fixed; inset: 0;
