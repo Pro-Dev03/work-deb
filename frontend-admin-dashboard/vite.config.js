@@ -9,5 +9,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['vue', 'vue-router', 'leaflet']
-  }
+  },
+  assetsInclude: ['**/*.json']
 })

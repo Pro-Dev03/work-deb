@@ -1,15 +1,15 @@
 <template>
   <div>
     <div class="page-head">
-      <h2>مهامي اليوم</h2>
-      <span class="badge">{{ tasksStore.items.length }} مهمة</span>
+      <h2>{{ t('my_tasks_today') }}</h2>
+      <span class="badge">{{ tasksStore.items.length }} {{ tasksStore.items.length === 1 ? t('task') : t('task_plural') }}</span>
     </div>
 
-    <div v-if="tasksStore.loading" class="empty-state"><p>جارٍ تحميل المهام...</p></div>
+    <div v-if="tasksStore.loading" class="empty-state"><p>{{ t('loading_tasks') }}</p></div>
 
     <div v-else-if="!tasksStore.items.length" class="empty-state">
-      <h3>لا توجد مهام حالياً</h3>
-      <p>سيتم إشعارك فور تكليفك بمهمة جديدة</p>
+      <h3>{{ t('no_tasks_currently') }}</h3>
+      <p>{{ t('will_notify_new_task') }}</p>
     </div>
 
     <template v-else>
@@ -20,8 +20,11 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useI18n } from '../services/i18n'
 import { tasksStore } from '../store/tasks'
 import TaskCard from '../components/TaskCard.vue'
+
+const { t } = useI18n()
 
 onMounted(() => tasksStore.fetchMine())
 </script>

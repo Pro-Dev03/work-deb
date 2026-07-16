@@ -1,74 +1,87 @@
 /* ==========================================================================
-   WorkTrack - نظام التصميم الاحترافي الكامل
+   WorkTrack - نظام التصميم الديناميكي والعصري لـ DevPro
    ========================================================================== */
 
 :root {
   /* ==========================================================================
-     الألوان الأساسية - مستوحاة من هوية شركة تطوير برمجيات
+     الألوان الأساسية - نظام ألوان ديناميكي
      ========================================================================== */
    
   direction: rtl;
   writing-mode: horizontal-tb;
   text-orientation: mixed;
+  
   /* الألوان المحايدة - للخلفيات والنصوص */
-  --ink: #0D1B2A;
-  --ink-soft: #415A77;
-  --ink-light: #778DA9;
-  --canvas: #F0F4FA;
-  --surface: #FFFFFF;
-  --line: #E2E8F0;
-  --line-strong: #CBD5E1;
+  --ink: #0f172a;
+  --ink-soft: #475569;
+  --ink-light: #94a3b8;
+  --canvas: #f1f5f9;
+  --surface: #ffffff;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
 
   /* ==========================================================================
-     ألوان العلامة التجارية - أزرق احترافي
+     ألوان العلامة التجارية - أزرق داكن مع لمسات ذهبية
      ========================================================================== */
-  --brand: #1E3A5F;
-  --brand-dark: #0D1B3E;
-  --brand-light: #2B6CB0;
-  --brand-tint: #E8F0FE;
-  --brand-glow: rgba(30, 58, 95, 0.12);
+  --brand: #1e3a8a;
+  --brand-dark: #172554;
+  --brand-light: #3b82f6;
+  --brand-tint: #dbeafe;
+  --brand-glow: rgba(59, 130, 246, 0.15);
+  
+  /* ألوان ذهبية أنيقة */
+  --gold: #d4af37;
+  --gold-dark: #b8960c;
+  --gold-light: #f4d03f;
+  --gold-tint: #fef9e7;
+  --gold-glow: rgba(212, 175, 55, 0.1);
 
   /* ==========================================================================
-     ألوان التميز - ذهبي أنيق
+     ألوان التميز - تدرجات عصرية
      ========================================================================== */
-  --gold: #C9A84C;
-  --gold-dark: #A8892E;
-  --gold-tint: #FBF5E6;
+  --accent: #6366f1;
+  --accent-dark: #4f46e5;
+  --accent-light: #818cf8;
+  --accent-tint: #e0e7ff;
+  --accent-glow: rgba(99, 102, 241, 0.15);
 
   /* ==========================================================================
      ألوان الحالات
      ========================================================================== */
-  --signal-in: #2F855A;
-  --signal-in-tint: #E6F7EE;
-  --signal-out: #C53030;
-  --signal-out-tint: #FDE8E8;
-  --signal-warning: #D69E2E;
-  --signal-warning-tint: #FDF6E6;
-  --signal-info: #3182CE;
-  --signal-info-tint: #EBF4FF;
+  --signal-in: #10b981;
+  --signal-in-tint: #d1fae5;
+  --signal-out: #ef4444;
+  --signal-out-tint: #fee2e2;
+  --signal-warning: #f59e0b;
+  --signal-warning-tint: #fef3c7;
+  --signal-info: #0ea5e9;
+  --signal-info-tint: #e0f2fe;
 
   /* ==========================================================================
      الأحجام والمسافات
      ========================================================================== */
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --radius-2xl: 32px;
 
   /* ==========================================================================
-     الظلال
+     الظلال - متقدمة وديناميكية
      ========================================================================== */
-  --shadow-sm: 0 1px 3px rgba(13, 27, 62, 0.06);
-  --shadow-md: 0 4px 16px rgba(13, 27, 62, 0.10);
-  --shadow-lg: 0 12px 40px rgba(13, 27, 62, 0.14);
-  --shadow-xl: 0 20px 60px rgba(13, 27, 62, 0.20);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+  --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.2);
 
   /* ==========================================================================
      الخطوط
      ========================================================================== */
-  --font-display: 'IBM Plex Sans Arabic', 'Tajawal', sans-serif;
-  --font-body: 'IBM Plex Sans Arabic', 'Tajawal', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --font-display: 'Cairo', 'Inter', sans-serif;
+  --font-body: 'Cairo', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* ==========================================================================
      الانتقالات
@@ -82,18 +95,22 @@
    الوضع الداكن
    ========================================================================== */
 [data-theme="dark"] {
-  --ink: #E8EDF2;
-  --ink-soft: #A0B0C0;
-  --ink-light: #6A7A8A;
-  --canvas: #0A1018;
-  --surface: #141C2B;
-  --line: #2A3A52;
-  --line-strong: #3A4A62;
-  --brand-tint: #1A2A40;
-  --gold-tint: #2A2218;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --ink: #f1f5f9;
+  --ink-soft: #cbd5e1;
+  --ink-light: #94a3b8;
+  --canvas: #0f172a;
+  --surface: #1e293b;
+  --line: #334155;
+  --line-strong: #475569;
+  --brand-tint: #1e3a8a;
+  --accent-tint: #7c3aed;
+  --gold-tint: #2a2218;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --brand-glow: rgba(59, 130, 246, 0.4);
+  --gold-glow: rgba(212, 175, 55, 0.3);
+  --accent-glow: rgba(99, 102, 241, 0.4);
 }
 
 /* ==========================================================================
@@ -148,11 +165,6 @@ a:hover {
   color: var(--brand-dark);
 }
 
-::selection {
-  background: var(--brand-tint);
-  color: var(--brand-dark);
-}
-
 /* ==========================================================================
    أشرطة التمرير
    ========================================================================== */
@@ -176,7 +188,7 @@ a:hover {
 }
 
 /* ==========================================================================
-   الأزرار
+   الأزرار - مع تأثيرات ديناميكية
    ========================================================================== */
 .btn {
   display: inline-flex;
@@ -190,10 +202,27 @@ a:hover {
   border-radius: var(--radius-md);
   border: 1.5px solid transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
+  background-clip: padding-box;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn:hover::before {
+  opacity: 1;
 }
 
 .btn:active {
@@ -201,22 +230,24 @@ a:hover {
 }
 
 .btn--primary {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: #fff;
   border-color: var(--brand);
+  box-shadow: var(--shadow-md), var(--brand-glow);
 }
 
 .btn--primary:hover {
-  background: var(--brand-dark);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
   border-color: var(--brand-dark);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
 .btn--primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn--ghost {
@@ -226,45 +257,63 @@ a:hover {
 }
 
 .btn--ghost:hover {
-  border-color: var(--brand);
+  border-color: var(--brand-light);
   background: var(--brand-tint);
+  transform: translateY(-1px);
+}
+
+.btn--accent {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md), var(--accent-glow);
+}
+
+.btn--accent:hover {
+  background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%);
+  border-color: var(--accent-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), 0 0 25px rgba(99, 102, 241, 0.4);
 }
 
 .btn--gold {
-  background: var(--gold);
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
   color: #fff;
   border-color: var(--gold);
+  box-shadow: var(--shadow-md), var(--gold-glow);
 }
 
 .btn--gold:hover {
-  background: var(--gold-dark);
+  background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
   border-color: var(--gold-dark);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg), var(--shadow-gold);
 }
 
 .btn--danger {
-  background: var(--signal-out);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: #fff;
-  border-color: var(--signal-out);
+  border-color: #ef4444;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn--danger:hover {
-  background: #DC2626;
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn--success {
-  background: var(--signal-in);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
-  border-color: var(--signal-in);
+  border-color: #10b981;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn--success:hover {
-  background: #059669;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn--sm {
@@ -284,7 +333,7 @@ a:hover {
 }
 
 /* ==========================================================================
-   البطاقات
+   البطاقات - مع تأثيرات حركية
    ========================================================================== */
 .card {
   background: var(--surface);
@@ -293,11 +342,29 @@ a:hover {
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
   overflow: hidden;
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent) 50%, var(--gold) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 /* ==========================================================================
@@ -336,8 +403,8 @@ a:hover {
 }
 
 .badge--gold {
-  background: var(--gold-tint);
-  color: var(--gold-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 /* ==========================================================================
@@ -445,7 +512,7 @@ a:hover {
 .mb-5 { margin-bottom: 24px; }
 
 /* ==========================================================================
-   التحريك
+   التحريك - تأثيرات حركية متقدمة
    ========================================================================== */
 @keyframes fadeIn {
   from {
@@ -469,6 +536,81 @@ a:hover {
 
 .pulse {
   animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, 
+    var(--line) 0%, 
+    var(--line-strong) 50%, 
+    var(--line) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--brand-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--brand-glow), 0 0 30px var(--brand-glow);
+  }
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease forwards;
 }
 
 /* ==========================================================================
@@ -498,4 +640,422 @@ a:hover {
     font-size: 10px;
     padding: 3px 10px;
   }
+  
+  .card:hover {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   أنماط إضافية للتصميم العصري
+   ========================================================================== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 50%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .glass-effect {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.active {
+  background: var(--signal-in);
+  box-shadow: 0 0 8px var(--signal-in);
+}
+
+.status-dot.inactive {
+  background: var(--signal-out);
+  box-shadow: 0 0 8px var(--signal-out);
+}
+
+.status-dot.warning {
+  background: var(--signal-warning);
+  box-shadow: 0 0 8px var(--signal-warning);
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.5s ease;
+  transform-origin: 50% 50%;
+}
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast);
+  z-index: 100;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* ==========================================================================
+   إصلاح الأيقونات في الوضع الليلي
+   ========================================================================== */
+[data-theme="dark"] svg {
+  color: inherit;
+}
+
+[data-theme="dark"] .nav-icon svg {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .nav-item--active .nav-icon svg {
+  color: var(--gold-light);
+}
+
+[data-theme="dark"] .stat-card__icon svg {
+  color: var(--brand);
+}
+
+/* تلوين الأيقونات حسب نوع البطاقة */
+.stat-card--waiting .stat-card__icon svg {
+  color: var(--signal-warning);
+}
+
+.stat-card--active .stat-card__icon svg {
+  color: var(--signal-in);
+}
+
+.stat-card--completed .stat-card__icon svg {
+  color: #22c55e;
+}
+
+/* إصلاحات إضافية للأيقونات في الوضع الليلي */
+[data-theme="dark"] .stat-card__icon svg *[stroke] {
+  stroke: currentColor !important;
+}
+
+[data-theme="dark"] .stat-card__icon svg *[fill] {
+  fill: currentColor !important;
+}
+
+/* إصلاح خاص لإجمالي الموظفين في الوضع الليلي */
+[data-theme="dark"] .stat-card .stat-card__icon svg {
+  color: var(--brand) !important;
+}
+
+[data-theme="dark"] .stat-card--waiting .stat-card__icon svg {
+  color: var(--signal-warning) !important;
+}
+
+[data-theme="dark"] .stat-card--active .stat-card__icon svg {
+  color: var(--signal-in) !important;
+}
+
+[data-theme="dark"] .stat-card--completed .stat-card__icon svg {
+  color: #22c55e !important;
+}
+
+/* إصلاح الألوان المباشرة في SVG للوضع الليلي */
+[data-theme="dark"] .stat-card .stat-card__icon svg[stroke="#3b82f6"] {
+  stroke: #60a5fa !important;
+}
+
+[data-theme="dark"] .stat-card .stat-card__icon svg[stroke="#3b82f6"] circle[fill="#3b82f6"] {
+  fill: #60a5fa !important;
+}
+
+[data-theme="dark"] .stat-card--waiting .stat-card__icon svg[stroke="#f59e0b"] {
+  stroke: #fbbf24 !important;
+}
+
+[data-theme="dark"] .stat-card--waiting .stat-card__icon svg[stroke="#f59e0b"] circle[fill="#f59e0b"] {
+  fill: #fbbf24 !important;
+}
+
+[data-theme="dark"] .stat-card--active .stat-card__icon svg[stroke="#10b981"] {
+  stroke: #34d399 !important;
+}
+
+[data-theme="dark"] .stat-card--active .stat-card__icon svg[stroke="#10b981"] circle[fill="#10b981"] {
+  fill: #34d399 !important;
+}
+
+[data-theme="dark"] .stat-card--completed .stat-card__icon svg[stroke="#22c55e"] {
+  stroke: #4ade80 !important;
+}
+
+[data-theme="dark"] .stat-card--completed .stat-card__icon svg[stroke="#22c55e"] rect[stroke="#22c55e"] {
+  stroke: #4ade80 !important;
+}
+
+/* إصلاح صور الموظفين في الوضع الليلي */
+[data-theme="dark"] .employee-item__avatar {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #f59e0b !important;
+  border: 2px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item.status-waiting .employee-item__avatar {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #f59e0b !important;
+  border: 2px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item.status-inside .employee-item__avatar {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #10b981 !important;
+  border: 2px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item.status-outside .employee-item__avatar {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+  border: 2px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item.status-completed .employee-item__avatar {
+  background: rgba(34, 197, 94, 0.2) !important;
+  color: #22c55e !important;
+  border: 2px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+/* إصلاح نقاط الحالة في الوضع الليلي */
+[data-theme="dark"] .status-dot {
+  border-color: var(--surface) !important;
+}
+
+[data-theme="dark"] .status-dot.waiting {
+  background: #f59e0b !important;
+  border-color: var(--surface) !important;
+}
+
+[data-theme="dark"] .status-dot.inside {
+  background: #10b981 !important;
+  border-color: var(--surface) !important;
+}
+
+[data-theme="dark"] .status-dot.outside {
+  background: #ef4444 !important;
+  border-color: var(--surface) !important;
+}
+
+[data-theme="dark"] .status-dot.completed {
+  background: #22c55e !important;
+  border-color: var(--surface) !important;
+}
+
+/* إصلاح عناصر الموظفين في الوضع الليلي */
+[data-theme="dark"] .employee-item {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+[data-theme="dark"] .employee-item.status-waiting {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item.status-inside {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item.status-outside {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item.status-completed {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+[data-theme="dark"] .employee-item__info strong {
+  color: var(--ink) !important;
+}
+
+[data-theme="dark"] .employee-item__worksite {
+  color: var(--ink-soft) !important;
+}
+
+[data-theme="dark"] .badge--warning {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--in {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--out {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--info {
+  background: rgba(14, 165, 233, 0.2) !important;
+  color: #0ea5e9 !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--gold {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #818cf8 !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+}
+
+
+
+[data-theme="dark"] .tab__icon svg {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .tab--active .tab__icon svg {
+  color: var(--brand);
+}
+
+[data-theme="dark"] .brand-mark svg {
+  color: var(--brand);
+}
+
+[data-theme="dark"] .theme-toggle svg {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .theme-toggle:hover svg {
+  color: var(--brand);
+}
+
+[data-theme="dark"] .logout-icon svg {
+  color: var(--signal-out);
+}
+
+[data-theme="dark"] .btn-logout:hover .logout-icon svg {
+  color: white;
+}
+
+/* إصلاحات إضافية للأيقونات في القوائم والأزرار */
+[data-theme="dark"] .btn svg {
+  color: inherit;
+}
+
+[data-theme="dark"] .btn:hover svg {
+  color: inherit;
+}
+
+[data-theme="dark"] .card svg {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .card:hover svg {
+  color: var(--brand);
+}
+
+/* إصلاح للأيقونات في العناصر التفاعلية */
+[data-theme="dark"] button svg,
+[data-theme="dark"] a svg {
+  color: inherit;
+}
+
+[data-theme="dark"] button:hover svg,
+[data-theme="dark"] a:hover svg {
+  color: inherit;
+}
+
+/* ==========================================================================
+   إصلاح أزرار النقر وحالات التفاعل
+   ========================================================================== */
+button:active,
+.btn:active {
+  transform: scale(0.97);
+}
+
+button:focus,
+.btn:focus,
+a:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+.btn:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+[data-theme="dark"] button:focus,
+[data-theme="dark"] .btn:focus,
+[data-theme="dark"] a:focus {
+  outline-color: var(--brand-light);
+}
+
+/* إصلاح اختيار النصوص */
+::selection {
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+}
+
+[data-theme="dark"] ::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: var(--ink);
+}
+
+/* إصلاح الخطوط في العناصر النشطة */
+button:active,
+.btn:active,
+a:active {
+  font-weight: inherit;
+  color: inherit;
+}
+
+[data-theme="dark"] button:active,
+[data-theme="dark"] .btn:active,
+[data-theme="dark"] a:active {
+  color: inherit;
+}
+
+/* ==========================================================================
+   إصلاح الأيقونات الرمزية (Emoji) في الوضع الليلي
+   ========================================================================== */
+[data-theme="dark"] .alert-item__icon {
+  filter: brightness(1.3) contrast(1.2);
+}
+
+[data-theme="dark"] .note-item__icon {
+  filter: brightness(1.3) contrast(1.2);
 }

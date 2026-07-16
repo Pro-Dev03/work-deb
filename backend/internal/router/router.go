@@ -29,13 +29,17 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 	reportHandler := handlers.NewReportHandler(db)
 	notificationHandler := handlers.NewNotificationHandler(db)
 	serviceHandler := handlers.NewServiceHandler(db)
-	locationHandler := handlers.NewLocationHandler(db)
+	wsHandler := handlers.NewWSHandler()
+	locationHandler := handlers.NewLocationHandler(db, wsHandler)
 	geocodingHandler := handlers.NewGeocodingHandler(geocodingService)
 
 	r.GET("/health", func(c *gin.Context) {
 		lang := i18n.Detect(c)
 		c.JSON(200, gin.H{"status": "ok", "message": i18n.T(lang, "msg_health_ok")})
 	})
+
+	// WebSocket endpoint للتتبع اللحظي
+	r.GET("/ws", wsHandler.HandleWebSocket)
 
 	api := r.Group("/api/v1")
 
@@ -52,31 +56,38 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 		protected.GET("/auth/me", authHandler.Me)
 		protected.GET("/auth/device", authHandler.GetDeviceInfo)
 
-		// المسارات التي تتطلب اشتراكاً نشطاً
+		// المسارات المتاحة للموظفين (بدون التحقق من الاشتراك)
+		employee := protected.Group("")
+		{
+			// نقاط العمل
+			employee.GET("/worksites", worksiteHandler.List)
+			employee.GET("/worksites/available", worksiteHandler.GetAvailableWorksites)
+
+			// الحضور
+			employee.POST("/attendance/check-in", attendanceHandler.CheckIn)
+			employee.POST("/attendance/check-out", attendanceHandler.CheckOut)
+			employee.GET("/attendance/current", attendanceHandler.GetCurrentAttendance)
+			employee.GET("/attendance/summary", attendanceHandler.GetAttendanceSummary)
+			employee.GET("/attendance/all-summary", attendanceHandler.GetAllAttendanceSummary)
+			employee.GET("/attendance/my-history", attendanceHandler.GetMyAttendanceHistory)
+			employee.GET("/attendance/my-monthly-summary", attendanceHandler.GetMyMonthlySummary)
+			employee.GET("/attendance/history", attendanceHandler.GetMyAttendanceHistory)
+
+			// الموقع
+			employee.GET("/location/active", locationHandler.GetActiveEmployees)
+			employee.GET("/location/track/:id", locationHandler.GetEmployeeTrack)
+			employee.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)
+			employee.GET("/location/logs", locationHandler.GetLocationLogs)
+			employee.POST("/location/update", locationHandler.UpdateLocation)
+
+			// الإشعارات
+			employee.GET("/notifications", notificationHandler.List)
+		}
+
+		// المسارات التي تتطلب اشتراكاً نشطاً (للمديرين فقط)
 		paid := protected.Group("")
 		paid.Use(middleware.SubscriptionMiddleware(db))
 		{
-			// نقاط العمل
-			paid.GET("/worksites", worksiteHandler.List)
-			paid.GET("/worksites/available", worksiteHandler.GetAvailableWorksites)
-
-			// الحضور
-			paid.POST("/attendance/check-in", attendanceHandler.CheckIn)
-			paid.POST("/attendance/check-out", attendanceHandler.CheckOut)
-			paid.GET("/attendance/current", attendanceHandler.GetCurrentAttendance)
-			paid.GET("/attendance/summary", attendanceHandler.GetAttendanceSummary)
-			paid.GET("/attendance/all-summary", attendanceHandler.GetAllAttendanceSummary)
-
-			// الموقع
-			paid.GET("/location/active", locationHandler.GetActiveEmployees)
-			paid.GET("/location/track/:id", locationHandler.GetEmployeeTrack)
-			paid.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)
-			paid.GET("/location/logs", locationHandler.GetLocationLogs)
-			paid.POST("/location/update", locationHandler.UpdateLocation)
-
-			// الإشعارات
-			paid.GET("/notifications", notificationHandler.List)
-
 			// طلبات الخدمة
 			paid.GET("/service/requests", serviceHandler.ListRequests)
 			paid.POST("/service/requests", serviceHandler.CreateRequest)
@@ -102,6 +113,11 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 				admin.GET("/reports/daily-summary", reportHandler.DailySummary)
 				admin.GET("/reports/pending-employees", reportHandler.GetPendingEmployees)
 				admin.GET("/reports/completed-employees", reportHandler.GetCompletedEmployees)
+
+				// سجل الحضور للموظفين
+				admin.GET("/attendance/employee/:id/history", attendanceHandler.GetEmployeeAttendanceHistory)
+				admin.GET("/attendance/employee/:id/monthly-summary", attendanceHandler.GetEmployeeMonthlySummary)
+				admin.POST("/attendance/cleanup-old-records", attendanceHandler.CleanupOldRecords)
 			}
 		}
 	}

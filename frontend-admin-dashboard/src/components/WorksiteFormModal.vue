@@ -2,37 +2,37 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal card">
       <div class="modal-header">
-        <h3>📍 נקודת עבודה חדשה</h3>
+        <h3>📍 {{ t('new_worksite') }}</h3>
         <button class="modal-close" @click="$emit('close')">✕</button>
       </div>
 
-      <p class="modal__hint">חפש עיר או רחוב (עברית، عربي، English)</p>
+      <p class="modal__hint">{{ t('search_worldwide') }} - {{ t('search_language_hint') }}</p>
 
       <form class="modal__form" @submit.prevent="handleSubmit">
         <div v-if="error" class="alert alert-error">{{ error }}</div>
         <div v-if="success" class="alert alert-success">{{ success }}</div>
 
         <div class="form-group">
-          <label>📛 שם האתר <span class="required">*</span></label>
+          <label>📛 {{ t('worksite_name') }} <span class="required">*</span></label>
           <input
             v-model="form.name"
             type="text"
-            placeholder="דוגמה: סניף תל אביב - יגאל אלון 90"
+            :placeholder="t('worksite_name_placeholder')"
             required
             class="search-input"
           />
         </div>
 
         <!-- ========================================== -->
-        <!-- البحث بالعبرية -->
+        <!-- البحث العالمي متعدد اللغات -->
         <!-- ========================================== -->
         <div class="form-group">
-          <label>📍 חיפוש כתובת <span class="required">*</span></label>
+          <label>📍 {{ t('search_address') }} <span class="required">*</span></label>
           <div class="search-wrapper">
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="חפש עיר או רחוב (למשל: יגאל אלון או ירושלים)"
+              :placeholder="t('search_address_placeholder')"
               @input="onSearch"
               @focus="showResults = true"
               class="search-input"
@@ -41,7 +41,7 @@
             <span v-if="loading" class="search-loading">⏳</span>
           </div>
 
-          <!-- نتائج البحث بالعبرية -->
+          <!-- نتائج البحث متعددة اللغات -->
           <div v-if="showResults && searchResults.length > 0" class="search-results">
             <div
               v-for="result in searchResults"
@@ -51,11 +51,9 @@
             >
               <span class="result-icon">📍</span>
               <div class="result-info">
-                <strong>{{ result.label_he || result.label || result.street || result.city }}</strong>
+                <strong>{{ getLocalizedLabel(result) }}</strong>
                 <span class="result-address">
-                  {{ result.city_he || result.city || '' }} 
-                  {{ result.street_he || result.street || '' }} 
-                  {{ result.house_number || '' }}
+                  {{ getLocalizedAddress(result) }}
                 </span>
               </div>
               <span class="result-type">{{ getTypeLabel(result.type) }}</span>
@@ -64,7 +62,7 @@
 
           <div v-if="showResults && searchQuery && searchResults.length === 0 && !loading" class="no-results">
             <span>🔍</span>
-            <p>לא נמצאו תוצאות</p>
+            <p>{{ t('no_results_found') }}</p>
           </div>
         </div>
 
@@ -73,19 +71,19 @@
         <!-- ========================================== -->
         <div v-if="selectedResult" class="selected-location">
           <div class="selected-location__header">
-            <span>✅ {{ selectedResult.label_he || selectedResult.label || selectedResult.street || selectedResult.city }}</span>
+            <span>✅ {{ getLocalizedLabel(selectedResult) }}</span>
             <button type="button" class="selected-clear" @click="clearSelection">✕</button>
           </div>
           <div class="selected-location__details">
-            <p><strong>עיר:</strong> {{ selectedResult.city_he || selectedResult.city || '—' }}</p>
-            <p><strong>רחוב:</strong> {{ selectedResult.street_he || selectedResult.street || '—' }}</p>
-            <p><strong>מספר בניין:</strong> {{ selectedResult.house_number || '—' }}</p>
-            <p class="mono"><strong>קואורדינטות:</strong> {{ selectedResult.latitude }}, {{ selectedResult.longitude }}</p>
+            <p><strong>{{ t('city') }}:</strong> {{ getLocalizedCity(selectedResult) }}</p>
+            <p><strong>{{ t('street') }}:</strong> {{ getLocalizedStreet(selectedResult) }}</p>
+            <p><strong>{{ t('building_number') }}:</strong> {{ selectedResult.house_number || '—' }}</p>
+            <p class="mono"><strong>{{ t('coordinates') }}:</strong> {{ selectedResult.latitude }}, {{ selectedResult.longitude }}</p>
           </div>
         </div>
 
         <div class="form-group">
-          <label>⭕ רדיוס מותר (מטר) <span class="required">*</span></label>
+          <label>⭕ {{ t('allowed_radius') }} <span class="required">*</span></label>
           <input
             v-model.number="form.radius_meters"
             type="number"
@@ -97,9 +95,9 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn--ghost" @click="$emit('close')">ביטול</button>
+          <button type="button" class="btn btn--ghost" @click="$emit('close')">{{ t('cancel') }}</button>
           <button type="submit" class="btn btn--primary" :disabled="loading || !selectedResult">
-            {{ loading ? '⏳ שומר...' : '💾 שמור' }}
+            {{ loading ? `⏳ ${t('saving')}` : `💾 ${t('save')}` }}
           </button>
         </div>
       </form>
@@ -110,7 +108,9 @@
 <script setup>
 import { ref } from 'vue'
 import api from '../services/api'
+import { useI18n } from '../services/i18n'
 
+const { t, currentLang } = useI18n()
 const emit = defineEmits(['close', 'worksite-added'])
 
 const searchQuery = ref('')
@@ -132,16 +132,56 @@ const isSubmitting = ref(false)
 
 let searchTimeout = null
 
+function getLocalizedLabel(result) {
+  const lang = currentLang.value
+  if (lang === 'he' && result.label_he) return result.label_he
+  if (lang === 'ar' && result.label_ar) return result.label_ar
+  return result.label || result.street || result.city
+}
+
+function getLocalizedAddress(result) {
+  const lang = currentLang.value
+  let city = ''
+  let street = ''
+  
+  if (lang === 'he') {
+    city = result.city_he || result.city || ''
+    street = result.street_he || result.street || ''
+  } else if (lang === 'ar') {
+    city = result.city_ar || result.city || ''
+    street = result.street_ar || result.street || ''
+  } else {
+    city = result.city || ''
+    street = result.street || ''
+  }
+  
+  return `${city} ${street} ${result.house_number || ''}`.trim()
+}
+
+function getLocalizedCity(result) {
+  const lang = currentLang.value
+  if (lang === 'he') return result.city_he || result.city || '—'
+  if (lang === 'ar') return result.city_ar || result.city || '—'
+  return result.city || '—'
+}
+
+function getLocalizedStreet(result) {
+  const lang = currentLang.value
+  if (lang === 'he') return result.street_he || result.street || '—'
+  if (lang === 'ar') return result.street_ar || result.street || '—'
+  return result.street || '—'
+}
+
 function getTypeLabel(type) {
   const types = {
-    'city': 'עיר',
-    'street': 'רחוב',
-    'address': 'כתובת',
-    'house': 'בית',
-    'landmark': 'ציון דרך',
-    'location': 'מיקום'
+    'city': t('type_city'),
+    'street': t('type_street'),
+    'address': t('type_address'),
+    'house': t('type_house'),
+    'landmark': t('type_landmark'),
+    'location': t('type_location')
   }
-  return types[type] || type || 'מיקום'
+  return types[type] || type || t('type_location')
 }
 
 function onSearch() {
@@ -155,8 +195,8 @@ function onSearch() {
   loading.value = true
   searchTimeout = setTimeout(async () => {
     try {
-      // استخدام اللغة العبرية
-      const lang = 'he'
+      // استخدام اللغة الحالية
+      const lang = currentLang.value
       const { data } = await api.get('/geocode/autocomplete', {
         params: {
           q: searchQuery.value.trim(),
@@ -177,10 +217,10 @@ function onSearch() {
 
 function selectResult(result) {
   selectedResult.value = result
-  searchQuery.value = result.label_he || result.label || result.street || result.city
+  searchQuery.value = getLocalizedLabel(result)
   showResults.value = false
   
-  form.value.name = result.label_he || result.label || result.street || result.city
+  form.value.name = getLocalizedLabel(result)
   form.value.latitude = result.latitude
   form.value.longitude = result.longitude
   
@@ -207,7 +247,7 @@ document.addEventListener('click', closeResults)
 
 async function handleSubmit() {
   if (!selectedResult.value) {
-    error.value = 'אנא בחר כתובת מתוצאות החיפוש'
+    error.value = t('select_address_required')
     return
   }
 
@@ -217,25 +257,25 @@ async function handleSubmit() {
 
   try {
     const payload = {
-      name: form.value.name || selectedResult.value.label,
-      address: selectedResult.value.label || '',
+      name: form.value.name || getLocalizedLabel(selectedResult.value),
+      address: getLocalizedLabel(selectedResult.value),
       latitude: parseFloat(form.value.latitude || selectedResult.value.latitude),
       longitude: parseFloat(form.value.longitude || selectedResult.value.longitude),
       radius_meters: form.value.radius_meters,
-      city: selectedResult.value.city || '',
-      street: selectedResult.value.street || '',
+      city: getLocalizedCity(selectedResult.value),
+      street: getLocalizedStreet(selectedResult.value),
       street_number: selectedResult.value.house_number || ''
     }
 
     await api.post('/worksites', payload)
-    success.value = '✅ נקודת העבודה נוספה בהצלחה!'
+    success.value = '✅ ' + t('worksite_added_successfully')
     
     setTimeout(() => {
       emit('worksite-added')
       emit('close')
     }, 1500)
   } catch (err) {
-    error.value = err.response?.data?.error || '❌ השמירה נכשלה'
+    error.value = err.response?.data?.error || '❌ ' + t('save_failed')
     console.error('خطأ:', err)
   } finally {
     isSubmitting.value = false

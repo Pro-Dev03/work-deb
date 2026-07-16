@@ -17,7 +17,7 @@
   "error": "Error",
   "success": "Success",
   "no_worksites": "No worksites available",
-  "select_location": "Select Location",
+  "select_location": "Set your location",
   "worksite_name": "Worksite Name",
   "worksite_address": "Address",
   "hours_today": "Today",
@@ -63,5 +63,6 @@
   "inactive": "Inactive",
   "status": "Status",
   "actions": "Actions",
-  "created_at": "Created At"
+  "created_at": "Created At",
+  "shift_restored": "🔄 Active shift restored"
 }

@@ -14,9 +14,9 @@ import { useI18n } from '../services/i18n'
 const { t } = useI18n()
 
 const notifications = [
-  { id: 1, text: 'محاولة تختيم مرفوضة خارج النطاق — سارة قدورة', time: 'اليوم، 08:47', tone: 'out' },
-  { id: 2, text: 'تم إنشاء حساب موظف جديد — منى الحوراني', time: 'أمس، 17:20', tone: 'neutral' },
-  { id: 3, text: 'اكتملت جميع مهام اليوم في برج الأمل', time: 'أمس، 16:40', tone: 'in' },
+  { id: 1, text: `${t('notification_punch_out')} — سارة قدورة`, time: `${t('today')}, 08:47`, tone: 'out' },
+  { id: 2, text: `${t('notification_new_employee')} — منى الحوراني`, time: `${t('yesterday')}, 17:20`, tone: 'neutral' },
+  { id: 3, text: `${t('notification_tasks_completed')} في برج الأمل`, time: `${t('yesterday')}, 16:40`, tone: 'in' },
 ]
 </script>
 

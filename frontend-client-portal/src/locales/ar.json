@@ -17,7 +17,7 @@
   "error": "حدث خطأ",
   "success": "تم بنجاح",
   "no_worksites": "لا توجد نقاط عمل متاحة",
-  "select_location": "تحديد موقعي",
+  "select_location": "تحديد موقعك",
   "worksite_name": "اسم الموقع",
   "worksite_address": "العنوان",
   "hours_today": "اليوم",
@@ -63,5 +63,6 @@
   "inactive": "غير نشط",
   "status": "الحالة",
   "actions": "إجراءات",
-  "created_at": "تاريخ الإنشاء"
+  "created_at": "تاريخ الإنشاء",
+  "shift_restored": "🔄 تم استعادة الوردية النشطة"
 }

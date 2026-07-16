@@ -25,27 +25,64 @@
 
       <nav class="sidebar__nav">
         <router-link to="/dashboard" class="nav-item" active-class="nav-item--active">
-          <span class="nav-icon">📊</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+          </span>
           <span class="nav-label">{{ t('dashboard') }}</span>
         </router-link>
         <router-link to="/service-requests" class="nav-item" active-class="nav-item--active">
-          <span class="nav-icon">📋</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </span>
           <span class="nav-label">{{ t('service_requests') }}</span>
         </router-link>
         <router-link to="/employees" class="nav-item" active-class="nav-item--active">
-          <span class="nav-icon">👥</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </span>
           <span class="nav-label">{{ t('employees') }}</span>
         </router-link>
         <router-link to="/worksites" class="nav-item" active-class="nav-item--active">
-          <span class="nav-icon">📍</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </span>
           <span class="nav-label">{{ t('worksites') }}</span>
         </router-link>
         <router-link to="/reports" class="nav-item" active-class="nav-item--active">
-          <span class="nav-icon">📈</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </span>
           <span class="nav-label">{{ t('reports') }}</span>
         </router-link>
         <router-link to="/settings" class="nav-item" active-class="nav-item--active">
-          <span class="nav-icon">⚙️</span>
+          <span class="nav-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </span>
           <span class="nav-label">{{ t('settings') }}</span>
         </router-link>
       </nav>
@@ -54,11 +91,30 @@
         <div class="sidebar__footer-top">
           <LanguageSwitcher />
           <button class="theme-toggle" @click="toggleTheme" :title="isDark ? t('theme_light') : t('theme_dark')">
-            {{ isDark ? '☀️' : '🌙' }}
+            <svg v-if="!isDark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
           </button>
         </div>
         <button class="btn-logout" @click="handleLogout">
-          <span class="logout-icon">🚪</span>
+          <span class="logout-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </span>
           <span class="logout-text">{{ t('logout') }}</span>
         </button>
         <div class="footer-brand">
@@ -122,12 +178,12 @@ const displayName = computed(() => {
 
 const pageTitle = computed(() => {
   const titles = {
-    '/dashboard': `📊 ${t('dashboard')}`,
-    '/service-requests': `📋 ${t('service_requests')}`,
-    '/employees': `👥 ${t('employees')}`,
-    '/worksites': `📍 ${t('worksites')}`,
-    '/reports': `📈 ${t('reports')}`,
-    '/settings': `⚙️ ${t('settings')}`,
+    '/dashboard': t('dashboard'),
+    '/service-requests': t('service_requests'),
+    '/employees': t('employees'),
+    '/worksites': t('worksites'),
+    '/reports': t('reports'),
+    '/settings': t('settings'),
   }
   return titles[route.path] || t('app_name')
 })
@@ -179,7 +235,12 @@ onMounted(() => {
   top: 0;
   height: 100vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-base);
+}
+
+.sidebar:hover {
+  box-shadow: var(--shadow-lg);
 }
 
 .sidebar__brand {
@@ -281,29 +342,61 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 500;
   color: var(--ink-soft);
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.nav-item:hover::before {
+  opacity: 1;
 }
 
 .nav-item:hover {
   background: var(--brand-tint);
   color: var(--brand);
+  transform: translateX(-4px);
 }
 
 .nav-item--active {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
   color: white;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md), var(--brand-glow);
 }
 
 .nav-item--active:hover {
-  background: var(--brand-dark);
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
   color: white;
+  transform: translateX(-4px);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
 .nav-icon {
-  font-size: 18px;
   width: 28px;
-  text-align: center;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
+}
+
+.nav-item--active .nav-icon {
+  color: var(--gold-light);
 }
 
 .nav-label {
@@ -341,19 +434,21 @@ onMounted(() => {
   border-radius: 50%;
   border: 1px solid var(--line);
   background: var(--surface);
-  font-size: 18px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: var(--ink-soft);
 }
 
 .theme-toggle:hover {
   background: var(--brand-tint);
   border-color: var(--brand);
-  transform: scale(1.05);
+  transform: scale(1.1);
+  color: var(--brand);
+  box-shadow: var(--shadow-md), var(--brand-glow);
 }
 
 .btn-logout {
@@ -370,18 +465,43 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-logout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-logout:hover::before {
+  opacity: 1;
 }
 
 .btn-logout:hover {
   background: var(--signal-out);
   color: white;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
 }
 
-.logout-icon { font-size: 16px; }
+.logout-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .logout-text { font-size: 12px; }
 
 .footer-brand {
@@ -423,22 +543,40 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
+.topbar:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .topbar__title {
   font-size: 18px;
   font-weight: 600;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .topbar__user {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.topbar__user:hover {
+  background: var(--brand-tint);
 }
 
 .topbar__name {
   font-size: 13px;
   color: var(--ink-soft);
+  font-weight: 500;
 }
 
 
@@ -449,6 +587,7 @@ onMounted(() => {
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
+  animation: fadeIn 0.4s ease;
 }
 
 /* =============================================

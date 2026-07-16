@@ -1,6 +1,6 @@
 <template>
   <div v-if="task">
-    <router-link to="/tasks" class="back-link">← العودة إلى المهام</router-link>
+    <router-link to="/tasks" class="back-link">{{ t('back_to_tasks') }}</router-link>
 
     <div class="card task-detail">
       <span class="badge" :class="badgeClass">{{ statusLabels[task.status] }}</span>
@@ -10,34 +10,36 @@
     </div>
 
     <router-link to="/attendance" class="btn btn--primary btn--block attendance-cta">
-      تسجيل حضور / انصراف لهذه المهمة
+      {{ t('register_attendance_for_task') }}
     </router-link>
   </div>
   <div v-else class="empty-state">
-    <h3>لم يتم العثور على المهمة</h3>
+    <h3>{{ t('task_not_found') }}</h3>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from '../services/i18n'
 import { tasksStore } from '../store/tasks'
 
+const { t } = useI18n()
 const route = useRoute()
 const task = computed(() => tasksStore.find(route.params.id))
 
-const statusLabels = { 
-  pending: 'قيد الانتظار', 
-  in_progress: 'جارية', 
-  completed: 'مكتملة', 
-  late: 'متأخرة' 
-}
+const statusLabels = computed(() => ({
+  pending: t('status_pending'),
+  in_progress: t('status_in_progress'),
+  completed: t('status_completed'),
+  late: t('status_late')
+}))
 
-const badgeMap = { 
-  pending: '', 
-  in_progress: 'badge--gold', 
-  completed: 'badge--in', 
-  late: 'badge--out' 
+const badgeMap = {
+  pending: '',
+  in_progress: 'badge--gold',
+  completed: 'badge--in',
+  late: 'badge--out'
 }
 
 const badgeClass = computed(() => (task.value ? badgeMap[task.value.status] : ''))

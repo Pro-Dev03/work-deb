@@ -2,25 +2,25 @@
   <div>
     <div class="page-head">
       <div>
-        <h2>📋 طلبات الخدمة</h2>
-        <p>إدارة طلبات العملاء وتعيين الموظفين</p>
+        <h2>📋 {{ t('service_requests') }}</h2>
+        <p>{{ t('service_requests_description') }}</p>
       </div>
       <div class="filters">
         <select v-model="filterStatus" @change="fetchRequests">
-          <option value="">جميع الحالات</option>
-          <option value="pending">قيد الانتظار</option>
-          <option value="assigned">تم التعيين</option>
-          <option value="in_progress">قيد التنفيذ</option>
-          <option value="completed">مكتملة</option>
+          <option value="">{{ t('all_statuses') }}</option>
+          <option value="pending">{{ t('status_pending') }}</option>
+          <option value="assigned">{{ t('status_assigned') }}</option>
+          <option value="in_progress">{{ t('status_in_progress') }}</option>
+          <option value="completed">{{ t('status_completed') }}</option>
         </select>
       </div>
     </div>
 
-    <div v-if="loading" class="empty-state"><p>⏳ جارٍ التحميل...</p></div>
+    <div v-if="loading" class="empty-state"><p>⏳ {{ t('loading') }}...</p></div>
 
     <div v-else-if="requests.length === 0" class="empty-state">
-      <h3>📭 لا توجد طلبات</h3>
-      <p>سيظهر هنا طلبات العملاء الجديدة</p>
+      <h3>📭 {{ t('no_service_requests') }}</h3>
+      <p>{{ t('no_service_requests_hint') }}</p>
     </div>
 
     <div v-else>
@@ -41,28 +41,28 @@
         <p class="request-card__desc">{{ req.description }}</p>
 
         <div class="request-card__info">
-          <span>👤 {{ req.client_name || 'عميل' }}</span>
+          <span>👤 {{ req.client_name || t('client') }}</span>
           <span>📞 {{ req.client_phone || req.phone || '—' }}</span>
-          <span>📍 {{ req.address || 'لا يوجد عنوان' }}</span>
+          <span>📍 {{ req.address || t('no_address') }}</span>
         </div>
 
         <div class="request-card__location">
-          <span class="mono">خط العرض: {{ req.latitude.toFixed(5) }}</span>
-          <span class="mono">خط الطول: {{ req.longitude.toFixed(5) }}</span>
+          <span class="mono">{{ t('latitude') }}: {{ req.latitude.toFixed(5) }}</span>
+          <span class="mono">{{ t('longitude') }}: {{ req.longitude.toFixed(5) }}</span>
         </div>
 
         <div class="request-card__actions">
           <button v-if="req.status === 'pending'" class="btn btn--primary btn--sm" @click="openAssignModal(req)">
-            👤 تعيين موظف
+            👤 {{ t('assign_employee') }}
           </button>
           <button v-if="req.status === 'assigned'" class="btn btn--ghost btn--sm">
-            ⏳ في انتظار الموظف
+            ⏳ {{ t('waiting_for_employee') }}
           </button>
           <button v-if="req.status === 'in_progress'" class="btn btn--gold btn--sm">
-            🔄 قيد التنفيذ
+            🔄 {{ t('in_execution') }}
           </button>
           <button v-if="req.status === 'completed'" class="btn btn--success btn--sm">
-            ✅ مكتمل
+            ✅ {{ t('status_completed') }}
           </button>
         </div>
       </div>
@@ -71,10 +71,10 @@
     <!-- مودال تعيين الموظف -->
     <div v-if="showAssignModal" class="modal-backdrop" @click.self="showAssignModal = false">
       <div class="modal card">
-        <h3>👤 تعيين موظف</h3>
-        <p>اختر موظفاً لتنفيذ طلب الخدمة</p>
+        <h3>👤 {{ t('assign_employee_modal') }}</h3>
+        <p>{{ t('assign_employee_hint') }}</p>
 
-        <div v-if="loadingEmployees" class="empty-state"><p>⏳ جارٍ تحميل الموظفين...</p></div>
+        <div v-if="loadingEmployees" class="empty-state"><p>⏳ {{ t('loading_employees') }}...</p></div>
 
         <div v-else class="employees-list">
           <button
@@ -91,7 +91,7 @@
           </button>
         </div>
 
-        <button class="btn btn--ghost btn--block" @click="showAssignModal = false">إلغاء</button>
+        <button class="btn btn--ghost btn--block" @click="showAssignModal = false">{{ t('cancel') }}</button>
       </div>
     </div>
   </div>
@@ -100,6 +100,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '../services/api'
+import { useI18n } from '../services/i18n'
+
+const { t } = useI18n()
 
 const requests = ref([])
 const employees = ref([])
@@ -120,7 +123,7 @@ async function fetchRequests() {
     const { data } = await api.get('/service/requests')
     requests.value = data || []
   } catch (error) {
-    console.error('فشل جلب الطلبات:', error)
+    console.error(t('failed_to_fetch_requests'), error)
   } finally {
     loading.value = false
   }
@@ -132,7 +135,7 @@ async function fetchEmployees() {
     const { data } = await api.get('/service/employees')
     employees.value = data || []
   } catch (error) {
-    console.error('فشل جلب الموظفين:', error)
+    console.error(t('failed_to_fetch_employees'), error)
   } finally {
     loadingEmployees.value = false
   }

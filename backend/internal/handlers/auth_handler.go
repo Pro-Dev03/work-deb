@@ -294,9 +294,14 @@ func (h *AuthHandler) PhoneLogin(c *gin.Context) {
 
 	log.Printf("✅ تم العثور على المستخدم: %s", fullName)
 
-	if err := h.checkSubscriptionStatus(userID, subscriptionStatus, subscriptionExpiresAt); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(lang, "err_subscription_expired")})
-		return
+	// =============================================
+	// التحقق من الاشتراك للمديرين فقط
+	// =============================================
+	if role == "admin" {
+		if err := h.checkSubscriptionStatus(userID, subscriptionStatus, subscriptionExpiresAt); err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": i18n.T(lang, "err_subscription_expired")})
+			return
+		}
 	}
 
 	// =============================================
@@ -394,10 +399,11 @@ func (h *AuthHandler) PhoneLogin(c *gin.Context) {
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
-	var fullName, email, phone, role, subscriptionStatus string
+	var fullName, email, role, subscriptionStatus string
+	var phone sql.NullString
 	var subscriptionExpiresAt sql.NullTime
 	err := h.DB.QueryRow(`
-		SELECT full_name, email, phone, role, subscription_status, subscription_expires_at 
+		SELECT full_name, email, phone, role, subscription_status, subscription_expires_at
 		FROM users WHERE id = $1
 	`, userID).Scan(&fullName, &email, &phone, &role, &subscriptionStatus, &subscriptionExpiresAt)
 
@@ -410,7 +416,12 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		"id":                  userID,
 		"full_name":           fullName,
 		"email":               email,
-		"phone":               phone,
+		"phone":               func() interface{} {
+			if phone.Valid {
+				return phone.String
+			}
+			return ""
+		}(),
 		"role":                role,
 		"subscription_status": subscriptionStatus,
 		"subscription_expires_at": func() interface{} {

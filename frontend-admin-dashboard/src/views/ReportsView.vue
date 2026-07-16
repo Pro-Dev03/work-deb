@@ -1,20 +1,20 @@
 <template>
   <div>
-    <div class="page-head"><h2>التقارير</h2><p>ملخص الأداء اليومي لكل الفرق الميدانية</p></div>
+    <div class="page-head"><h2>{{ t('reports') }}</h2><p>{{ t('reports_description') }}</p></div>
 
     <div class="card report-card">
       <TaskDistributionChart v-bind="summary" />
     </div>
 
     <div class="card report-card">
-      <h3>الالتزام بالنطاق الجغرافي</h3>
-      <p class="report-card__hint">نسبة عمليات التختيم المقبولة مقابل المرفوضة بسبب الخروج عن نطاق نقطة العمل</p>
+      <h3>{{ t('range_compliance') }}</h3>
+      <p class="report-card__hint">{{ t('range_compliance_hint') }}</p>
       <div class="report-bar">
         <span class="report-bar__accepted" style="width: 92%"></span>
       </div>
       <div class="report-bar__legend">
-        <span><i class="in"></i> مقبولة 92٪</span>
-        <span><i class="out"></i> مرفوضة 8٪</span>
+        <span><i class="in"></i> {{ t('accepted') }} 92٪</span>
+        <span><i class="out"></i> {{ t('rejected') }} 8٪</span>
       </div>
     </div>
   </div>
@@ -22,7 +22,9 @@
 
 <script setup>
 import TaskDistributionChart from '../components/TaskDistributionChart.vue'
+import { useI18n } from '../services/i18n'
 
+const { t } = useI18n()
 const summary = { completed: 27, in_progress: 6, pending: 9, late: 2 }
 </script>
 

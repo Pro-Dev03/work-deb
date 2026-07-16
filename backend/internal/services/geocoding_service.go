@@ -19,13 +19,16 @@ type GeocodeResult struct {
 	ID          string  `json:"id"`
 	Label       string  `json:"label"`
 	LabelHe     string  `json:"label_he"`      // الاسم بالعبرية
+	LabelAr     string  `json:"label_ar"`      // الاسم بالعربية
 	Language    string  `json:"language"`
 	CountryCode string  `json:"country_code"`
 	State       string  `json:"state"`
 	City        string  `json:"city"`
 	CityHe      string  `json:"city_he"`       // المدينة بالعبرية
+	CityAr      string  `json:"city_ar"`       // المدينة بالعربية
 	Street      string  `json:"street"`
 	StreetHe    string  `json:"street_he"`     // الشارع بالعبرية
+	StreetAr    string  `json:"street_ar"`     // الشارع بالعربية
 	HouseNumber string  `json:"house_number"`
 	PostalCode  string  `json:"postal_code"`
 	Latitude    float64 `json:"latitude"`
@@ -45,19 +48,19 @@ func (s *GeocodingService) Autocomplete(query, language string) ([]GeocodeResult
 		return nil, nil
 	}
 
-	log.Printf("🔍 البحث: %s (اللغة: %s)", query, language)
+	log.Printf("🔍 البحث العالمي: %s (اللغة: %s)", query, language)
 
-	// Geoapify API - مع دعم العبرية
+	// Geoapify API - بحث عالمي
 	url := "https://api.geoapify.com/v1/geocode/autocomplete"
 	
-	// استخدام اللغة العبرية للبحث
-	searchLang := "he"
+	// استخدام اللغة المطلوبة
+	searchLang := "en"
 	if language == "ar" {
 		searchLang = "ar"
-	} else if language == "en" {
-		searchLang = "en"
+	} else if language == "he" {
+		searchLang = "he"
 	} else {
-		searchLang = "he" // افتراضي عبري
+		searchLang = "en" // افتراضي إنجليزي
 	}
 	
 	resp, err := s.client.R().
@@ -66,7 +69,7 @@ func (s *GeocodingService) Autocomplete(query, language string) ([]GeocodeResult
 			"apiKey": s.apiKey,
 			"limit":  "15",
 			"lang":   searchLang,
-			"filter": "countrycode:il",
+			// إزالة فلتر الدولة للبحث العالمي
 		}).
 		Get(url)
 
@@ -96,7 +99,7 @@ func (s *GeocodingService) Autocomplete(query, language string) ([]GeocodeResult
 				ResultType  string `json:"result_type"`
 				Lat         float64 `json:"lat"`
 				Lon         float64 `json:"lon"`
-				// أسماء بالعبرية من المصدر
+				// أسماء من المصدر
 				Name        string `json:"name"`
 			} `json:"properties"`
 			Geometry struct {
@@ -124,9 +127,11 @@ func (s *GeocodingService) Autocomplete(query, language string) ([]GeocodeResult
 			lon = props.Lon
 		}
 
-		// استخراج الأسماء بالعبرية
+		// استخراج الأسماء بناءً على اللغة
 		cityHe := props.City
 		streetHe := props.Street
+		cityAr := props.City
+		streetAr := props.Street
 		
 		// إذا كان الاسم فارغاً، استخدم المنسق
 		labelHe := props.AddressLine1
@@ -143,17 +148,23 @@ func (s *GeocodingService) Autocomplete(query, language string) ([]GeocodeResult
 			labelHe = props.Formatted
 		}
 
+		// نفس الشيء للعربية
+		labelAr := labelHe // Geoapify يعيد نفس الاسم عادة
+
 		results = append(results, GeocodeResult{
 			ID:          props.PlaceID,
-			Label:       labelHe,
+			Label:       props.Formatted,
 			LabelHe:     labelHe,
+			LabelAr:     labelAr,
 			Language:    searchLang,
 			CountryCode: props.CountryCode,
 			State:       props.State,
 			City:        props.City,
 			CityHe:      cityHe,
+			CityAr:      cityAr,
 			Street:      props.Street,
 			StreetHe:    streetHe,
+			StreetAr:    streetAr,
 			HouseNumber: props.HouseNumber,
 			PostalCode:  props.Postcode,
 			Latitude:    lat,
@@ -162,6 +173,6 @@ func (s *GeocodingService) Autocomplete(query, language string) ([]GeocodeResult
 		})
 	}
 
-	log.Printf("✅ تم العثور على %d نتيجة", len(results))
+	log.Printf("✅ تم العثور على %d نتيجة عالمية", len(results))
 	return results, nil
 }

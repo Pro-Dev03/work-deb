@@ -15,10 +15,10 @@
       <h3>{{ t('settings_language_title') }}</h3>
       <div class="settings-card__options">
         <label class="field"><span>{{ t('settings_language_label') }}</span>
-          <select disabled>
-            <option>{{ t('ar') }}</option>
-            <option>{{ t('he') }}</option>
-            <option>{{ t('en') }}</option>
+          <select v-model="currentLang" @change="changeLanguage">
+            <option value="ar">{{ t('ar') }}</option>
+            <option value="he">{{ t('he') }}</option>
+            <option value="en">{{ t('en') }}</option>
           </select>
         </label>
       </div>
@@ -33,10 +33,20 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useI18n } from '../services/i18n'
 import SubscriptionStatusView from './SubscriptionStatusView.vue'
 
-const { t } = useI18n()
+const { t, setLang, currentLang: computedLang } = useI18n()
+const currentLang = ref(computedLang.value)
+
+const changeLanguage = () => {
+  setLang(currentLang.value)
+}
+
+onMounted(() => {
+  currentLang.value = computedLang.value
+})
 </script>
 
 <style scoped>

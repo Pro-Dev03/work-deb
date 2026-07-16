@@ -16,10 +16,11 @@ import (
 
 type LocationHandler struct {
 	DB *sql.DB
+	WS *WSHandler
 }
 
-func NewLocationHandler(db *sql.DB) *LocationHandler {
-	return &LocationHandler{DB: db}
+func NewLocationHandler(db *sql.DB, wsHandler *WSHandler) *LocationHandler {
+	return &LocationHandler{DB: db, WS: wsHandler}
 }
 
 // UpdateLocation - تحديث موقع المستخدم
@@ -50,6 +51,28 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 
 	// التحقق من الخروج عن النطاق
 	go h.checkGeofenceViolation(userID.(string), req.Latitude, req.Longitude)
+
+	// إرسال تحديث فوري عبر WebSocket
+	if h.WS != nil {
+		go func() {
+			// جلب معلومات الموظف
+			var fullName, email string
+			h.DB.QueryRow(`
+				SELECT full_name, email FROM users WHERE id = $1
+			`, userID).Scan(&fullName, &email)
+
+			// إرسال التحديث
+			h.WS.BroadcastLocationUpdate(map[string]interface{}{
+				"user_id":    userID,
+				"full_name":  fullName,
+				"email":      email,
+				"latitude":   req.Latitude,
+				"longitude":  req.Longitude,
+				"accuracy":   req.Accuracy,
+				"immediate":  true, // تحديث فوري من المستخدم
+			})
+		}()
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "تم تحديث الموقع"})
 }

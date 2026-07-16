@@ -1,7 +1,7 @@
 import { reactive, computed } from 'vue'
-import ar from '../locales/ar.json'
-import he from '../locales/he.json'
-import en from '../locales/en.json'
+import ar from '../i18n/ar.json'
+import he from '../i18n/he.json'
+import en from '../i18n/en.json'
 
 // =============================================
 // المفتاح الموحد للغة في جميع التطبيقات
@@ -78,3 +78,5 @@ export default {
     app.provide('i18n', i18nState)
   }
 }
+
+export { i18nState }

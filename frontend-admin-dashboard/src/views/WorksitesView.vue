@@ -31,7 +31,7 @@
         <p class="site-card__address">{{ site.address || t('no_address') }}</p>
         <div class="site-card__details">
           <span class="mono">📍 {{ site.latitude?.toFixed(5) }}, {{ site.longitude?.toFixed(5) }}</span>
-          <span class="site-card__radius mono">⭕ {{ site.radius_meters || 100 }} م</span>
+          <span class="site-card__radius mono">⭕ {{ site.radius_meters || 100 }} {{ t('meters_unit') }}</span>
         </div>
         <div class="site-card__assigned">
           <span v-if="site.assigned_to?.name" class="badge badge--in">
@@ -137,7 +137,7 @@ async function fetchWorksites() {
     const { data } = await api.get('/worksites')
     worksites.value = data || []
   } catch (error) {
-    console.error('فشل جلب نقاط العمل:', error)
+    console.error('❌ ' + t('failed_to_fetch_worksites'), error)
   } finally {
     loading.value = false
   }
@@ -157,8 +157,8 @@ async function deleteWorksite() {
     showDeleteModal.value = false
     await fetchWorksites()
   } catch (error) {
-    console.error('فشل حذف نقطة العمل:', error)
-    alert(error.response?.data?.error || 'فشل الحذف')
+    console.error('❌ ' + t('failed_to_delete_worksite'), error)
+    alert(error.response?.data?.error || t('failed_to_delete_worksite'))
   } finally {
     deleting.value = false
   }
@@ -176,7 +176,7 @@ async function fetchEmployees() {
     const { data } = await api.get('/worksites/employees')
     employees.value = data || []
   } catch (error) {
-    console.error('فشل جلب الموظفين:', error)
+    console.error('❌ ' + t('failed_to_fetch_employees'), error)
     employees.value = []
   } finally {
     loadingEmployees.value = false
@@ -194,11 +194,11 @@ async function assignEmployee(employeeId) {
     })
     
     showAssignModal.value = false
-    alert('✅ ' + (response.data.message || 'تم تعيين الموظف بنجاح!'))
+    alert('✅ ' + (response.data.message || t('employee_assigned_successfully')))
     await fetchWorksites()
   } catch (error) {
-    console.error('فشل التعيين:', error)
-    const msg = error.response?.data?.error || 'فشل التعيين'
+    console.error('❌ ' + t('failed_to_assign_employee'), error)
+    const msg = error.response?.data?.error || t('failed_to_assign_employee')
     alert('❌ ' + msg)
   } finally {
     assigning.value = false

@@ -1,37 +1,30 @@
 <template>
   <div>
-    <div class="page-head">
-      <h2>{{ t('subscription_title') }}</h2>
-      <p class="page-subtitle">{{ t('subscription_intro') }}</p>
+    <div v-if="loading" class="subscription-loading">
+      {{ t('loading_data') }}
     </div>
 
-    <div class="card subscription-card">
-      <div v-if="loading" class="subscription-loading">
-        {{ t('loading_data') }}
+    <div v-else-if="error" class="error">
+      {{ error }}
+    </div>
+
+    <div v-else>
+      <div class="field-row">
+        <span>{{ t('subscription_status_label') }}</span>
+        <strong :class="['status-badge', `status-badge--${statusClass}`]">{{ subscriptionText }}</strong>
       </div>
 
-      <div v-else-if="error" class="error">
-        {{ error }}
+      <div class="field-row">
+        <span>{{ t('subscription_expires_at_label') }}</span>
+        <strong>{{ expiresLabel }}</strong>
       </div>
 
-      <div v-else>
-        <div class="field-row">
-          <span>{{ t('subscription_status_label') }}</span>
-          <strong :class="['status-badge', `status-badge--${statusClass}`]">{{ subscriptionText }}</strong>
-        </div>
+      <div v-if="subscriptionStatus !== 'active'" class="subscription-note">
+        {{ t('subscription_expired_message') }}
+      </div>
 
-        <div class="field-row">
-          <span>{{ t('subscription_expires_at_label') }}</span>
-          <strong>{{ expiresLabel }}</strong>
-        </div>
-
-        <div v-if="subscriptionStatus !== 'active'" class="subscription-note">
-          {{ t('subscription_expired_message') }}
-        </div>
-
-        <div v-if="subscriptionStatus === 'active'" class="subscription-note subscription-note--active">
-          {{ t('subscription_active_message') }}
-        </div>
+      <div v-if="subscriptionStatus === 'active'" class="subscription-note subscription-note--active">
+        {{ t('subscription_active_message') }}
       </div>
     </div>
   </div>
@@ -64,7 +57,7 @@ const subscriptionText = computed(() => {
 
 const expiresLabel = computed(() => {
   if (!subscriptionExpiresAt.value) {
-    return t('undefined_text')
+    return t('subscription_lifetime')
   }
   return new Date(subscriptionExpiresAt.value).toLocaleDateString()
 })
@@ -83,30 +76,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page-head {
-  margin-bottom: 18px;
-}
-
-.page-head h2 {
-  font-size: 18px;
-  margin-bottom: 6px;
-}
-
-.page-subtitle {
-  color: var(--ink-soft);
-  margin: 0;
-  font-size: 13px;
-}
-
-.subscription-card {
-  padding: 22px;
-  margin-bottom: 16px;
-}
-
 .subscription-loading,
 .error {
   font-size: 14px;
   color: var(--ink-soft);
+  padding: 22px;
 }
 
 .field-row {

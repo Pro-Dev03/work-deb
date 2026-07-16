@@ -21,28 +21,53 @@
       <!-- إحصائيات سريعة -->
       <div class="stats-grid">
         <div class="stat-card">
-          <span class="stat-card__icon">👥</span>
+          <span class="stat-card__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4" fill="#3b82f6" fill-opacity="0.2"/>
+              <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8"/>
+              <circle cx="18" cy="6" r="2" fill="#3b82f6" fill-opacity="0.15"/>
+              <path d="M16 14c1.5-1.5 3-2 4-2" stroke-opacity="0.6"/>
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ stats.total_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_total_employees') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--waiting">
-          <span class="stat-card__icon">⏳</span>
+          <span class="stat-card__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 6v6l4 2"/>
+              <circle cx="12" cy="12" r="2" fill="#f59e0b" fill-opacity="0.2"/>
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ stats.waiting_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_waiting_employees') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--active">
-          <span class="stat-card__icon">🟢</span>
+          <span class="stat-card__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 2v4m0 12v4m8-8h-4M6 12H2m15.07-7.07l-2.83 2.83M9.76 14.24l-2.83 2.83m0-10.66l2.83 2.83m4.48 4.48l2.83 2.83"/>
+              <circle cx="12" cy="12" r="3" fill="#10b981" fill-opacity="0.2"/>
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ activeEmployees.length }}</span>
             <span class="stat-card__label">{{ t('stats_active_now') }}</span>
           </div>
         </div>
         <div class="stat-card stat-card--completed">
-          <span class="stat-card__icon">✅</span>
+          <span class="stat-card__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4"/>
+              <path d="M8 12l3 3 7-7" stroke-width="2.5"/>
+              <circle cx="12" cy="12" r="8" stroke-width="1" stroke-opacity="0.3"/>
+            </svg>
+          </span>
           <div>
             <span class="stat-card__value">{{ stats.completed_employees || 0 }}</span>
             <span class="stat-card__label">{{ t('stats_completed_today') }}</span>
@@ -74,28 +99,45 @@
           :class="{ active: activeTab === 'active' }"
           @click="activeTab = 'active'"
         >
-          🟢 {{ t('tab_active') }} ({{ activeEmployees.length }})
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          {{ t('tab_active') }} ({{ activeEmployees.length }})
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'waiting' }"
           @click="activeTab = 'waiting'"
         >
-          ⏳ {{ t('tab_waiting') }} ({{ waitingEmployees.length }})
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          {{ t('tab_waiting') }} ({{ waitingEmployees.length }})
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'completed' }"
           @click="activeTab = 'completed'"
         >
-          ✅ {{ t('tab_completed') }} ({{ completedEmployees.length }})
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          {{ t('tab_completed') }} ({{ completedEmployees.length }})
         </button>
         <button 
           class="tab-btn tab-btn--alert" 
           :class="{ active: activeTab === 'alerts' }"
           @click="activeTab = 'alerts'"
         >
-          🚨 {{ t('tab_alerts') }} ({{ outsideCount }})
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          {{ t('tab_alerts') }} ({{ outsideCount }})
         </button>
       </div>
 
@@ -130,8 +172,8 @@
                 <strong>{{ emp.full_name }}</strong>
                 <span class="employee-item__worksite">📍 {{ emp.worksite.name }}</span>
                 <span class="employee-item__time">
-                  🕐 {{ formatTime(emp.check_in_time) }} | 
-                  ⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة
+                  🕐 {{ formatTime(emp.check_in_time) }} |
+                  ⏱️ {{ emp.hours_worked.toFixed(1) }} {{ t('hours') }}
                 </span>
               </div>
               <div class="employee-item__status">
@@ -176,10 +218,10 @@
               </div>
               <div class="employee-item__info">
                 <strong>{{ emp.full_name }}</strong>
-                <span class="employee-item__worksite">⏳ لم يبدأ العمل بعد</span>
+                <span class="employee-item__worksite">⏳ {{ t('has_not_started_work') }}</span>
               </div>
               <div class="employee-item__status">
-                <span class="badge badge--warning">⏳ قيد الانتظار</span>
+                <span class="badge badge--warning">⏳ {{ t('waiting_status') }}</span>
               </div>
             </div>
           </div>
@@ -210,12 +252,12 @@
                 <strong>{{ emp.full_name }}</strong>
                 <span class="employee-item__worksite">📍 {{ emp.worksite_name }}</span>
                 <span class="employee-item__time">
-                  ✅ {{ formatTime(emp.check_out_time) }} | 
-                  ⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة
+                  ✅ {{ formatTime(emp.check_out_time) }} |
+                  ⏱️ {{ emp.hours_worked.toFixed(1) }} {{ t('hours') }}
                 </span>
               </div>
               <div class="employee-item__status">
-                <span class="badge badge--in">✅ مكتمل</span>
+                <span class="badge badge--in">✅ {{ t('completed_status') }}</span>
               </div>
             </div>
           </div>
@@ -331,6 +373,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../services/api'
 import RealMap from '../components/RealMap.vue'
 import { useI18n } from '../services/i18n'
+import wsService from '../services/websocket'
 
 const { t } = useI18n()
 
@@ -365,19 +408,20 @@ const outsideCount = computed(() => {
 // ==========================================
 function formatTime(date) {
   if (!date) return '—'
-  return new Date(date).toLocaleTimeString('ar-SA', { 
+  return new Date(date).toLocaleTimeString('en-GB', { 
     hour: '2-digit', 
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    hour12: false
   })
 }
 
 function formatDistance(meters) {
-  if (!meters) return '0 م'
+  if (!meters) return '0 ' + t('meters')
   if (meters >= 1000) {
-    return (meters / 1000).toFixed(2) + ' كيلومتر'
+    return (meters / 1000).toFixed(2) + ' ' + t('kilometers')
   }
-  return Math.round(meters) + ' متر'
+  return Math.round(meters) + ' ' + t('meters')
 }
 
 // ==========================================
@@ -401,7 +445,7 @@ async function fetchData() {
     updateCount.value++
     
   } catch (error) {
-    console.error('❌ فشل جلب البيانات:', error)
+    console.error('❌ ' + t('failed_to_fetch_data'), error)
   } finally {
     loading.value = false
   }
@@ -424,7 +468,7 @@ async function showEmployeeDetails(employee) {
     const { data } = await api.get(`/location/security/${employee.id}`)
     securityNotes.value = data || []
   } catch (error) {
-    console.error('❌ فشل جلب الملاحظات الأمنية:', error)
+    console.error('❌ ' + t('failed_to_fetch_security_notes'), error)
     securityNotes.value = []
   }
 }
@@ -435,19 +479,118 @@ async function showEmployeeDetails(employee) {
 onMounted(async () => {
   await fetchData()
   
-  // تحديث كل 10 ثواني
-  refreshInterval = setInterval(fetchData, 10000)
+  // تحديث كل 3 ثوانٍ للتتبع اللحظي
+  refreshInterval = setInterval(fetchData, 3000)
+  
+  // الاتصال بـ WebSocket للتحديثات الفورية
+  connectWebSocket()
 })
 
 onUnmounted(() => {
   if (refreshInterval) {
     clearInterval(refreshInterval)
   }
+  
+  // إغلاق WebSocket
+  disconnectWebSocket()
 })
+
+// ==========================================
+// WebSocket للتتبع اللحظي
+// ==========================================
+function connectWebSocket() {
+  // Use the same host as the API, but with WebSocket protocol
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+  const apiHost = apiBaseUrl.replace('/api/v1', '')
+  const wsUrl = apiHost.replace('http://', 'ws://').replace('https://', 'wss://') + '/ws'
+  console.log('🔌 Attempting to connect to WebSocket:', wsUrl)
+  wsService.connect(wsUrl)
+  
+  wsService.onMessage((data) => {
+    if (data.type === 'location_update') {
+      console.log('📍 تحديث موقع فوري:', data.data)
+      handleImmediateLocationUpdate(data.data)
+    } else if (data.type === 'employee_status') {
+      console.log('👤 تحديث حالة موظف:', data.data)
+      handleEmployeeStatusUpdate(data.data)
+    } else if (data.type === 'connected') {
+      console.log('✅ تم الاتصال بـ WebSocket')
+    } else if (data.type === 'disconnected') {
+      console.log('❌ انقطع الاتصال بـ WebSocket')
+    }
+  })
+}
+
+function disconnectWebSocket() {
+  wsService.disconnect()
+}
+
+function handleImmediateLocationUpdate(locationData) {
+  // تحديث الموظف في القائمة إذا كان موجوداً
+  const employeeIndex = activeEmployees.value.findIndex(
+    emp => emp.id === locationData.user_id
+  )
+  
+  if (employeeIndex !== -1) {
+    // تحديث موقع الموظف فوراً
+    activeEmployees.value[employeeIndex].latitude = locationData.latitude
+    activeEmployees.value[employeeIndex].longitude = locationData.longitude
+    activeEmployees.value[employeeIndex].last_update = new Date()
+    
+    // إعادة حساب المسافة من نقطة العمل
+    if (activeEmployees.value[employeeIndex].worksite) {
+      const worksite = activeEmployees.value[employeeIndex].worksite
+      const distance = calculateDistance(
+        locationData.latitude,
+        locationData.longitude,
+        worksite.latitude,
+        worksite.longitude
+      )
+      
+      activeEmployees.value[employeeIndex].worksite.distance = distance
+      activeEmployees.value[employeeIndex].worksite.is_inside = distance <= worksite.radius
+      
+      if (distance <= worksite.radius) {
+        activeEmployees.value[employeeIndex].status = 'inside'
+        activeEmployees.value[employeeIndex].status_text = '✅ داخل النطاق'
+      } else {
+        activeEmployees.value[employeeIndex].status = 'outside'
+        activeEmployees.value[employeeIndex].status_text = '❌ خارج النطاق'
+      }
+    }
+    
+    updateCount.value++
+    console.log('🔄 تم تحديث موقع الموظف فوراً على الخريطة')
+  }
+}
+
+function handleEmployeeStatusUpdate(statusData) {
+  // التعامل مع تحديثات حالة الموظف
+  console.log('تحديث حالة:', statusData)
+  // يمكن إضافة منطق إضافي هنا
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371 // نصف قطر الأرض بالكيلومتر
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  const d = R * c
+  return d * 1000 // تحويل إلى متر
+}
 </script>
 
 <style scoped>
-.dashboard { display: flex; flex-direction: column; gap: 22px; }
+.dashboard { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 22px; 
+  animation: fadeIn 0.6s ease;
+}
 
 .loading-state {
   text-align: center; padding: 60px 20px;
@@ -483,19 +626,63 @@ onUnmounted(() => {
   gap: 14px;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent) 50%, var(--gold) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
 .stat-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  border-color: var(--line-strong);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
 }
 
 .stat-card--waiting { border-left: 4px solid var(--signal-warning); }
 .stat-card--active { border-left: 4px solid var(--signal-in); }
 .stat-card--completed { border-left: 4px solid #22C55E; }
 
-.stat-card__icon { font-size: 28px; }
-.stat-card__value { font-size: 28px; font-weight: 700; display: block; }
+.stat-card__icon { 
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-tint);
+  border-radius: var(--radius-md);
+  color: var(--brand);
+  transition: all var(--transition-base);
+}
+
+.stat-card:hover .stat-card__icon {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md), var(--brand-glow);
+}
+
+.stat-card__value { 
+  font-size: 28px; 
+  font-weight: 700; 
+  display: block;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .stat-card__label { font-size: 13px; color: var(--ink-soft); }
 
 /* ==========================================
@@ -530,20 +717,44 @@ onUnmounted(() => {
   color: var(--ink-soft);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   font-family: var(--font-body);
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.tab-btn:hover::before {
+  opacity: 1;
 }
 
 .tab-btn:hover {
   border-color: var(--brand);
   color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .tab-btn.active {
   border-color: var(--brand);
-  background: var(--brand-tint);
-  color: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: white;
+  box-shadow: var(--shadow-md), var(--brand-glow);
 }
 
 .tab-btn--alert {
@@ -554,12 +765,14 @@ onUnmounted(() => {
 .tab-btn--alert:hover {
   background: var(--signal-out-tint);
   border-color: var(--signal-out);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .tab-btn--alert.active {
-  background: var(--signal-out-tint);
-  border-color: var(--signal-out);
-  color: var(--signal-out);
+  background: linear-gradient(135deg, var(--signal-out) 0%, #dc2626 100%);
+  color: white;
+  box-shadow: var(--shadow-md);
 }
 
 /* ==========================================
@@ -843,7 +1056,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   border-radius: 999px;
-  border: 1px solid rgba(30, 58, 95, 0.1);
+  border: 1px solid rgba(30, 58, 130, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   z-index: 5;
   pointer-events: none;
@@ -866,8 +1079,8 @@ onUnmounted(() => {
 
 .watermark-text {
   font-size: 11px;
-  color: #1E3A5F;
-  font-weight: 500;
+  color: #1e3a8a;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -909,7 +1122,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   border-radius: 999px;
-  border: 1px solid rgba(30, 58, 95, 0.1);
+  border: 1px solid rgba(30, 58, 130, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   z-index: 5;
   pointer-events: none;
@@ -932,8 +1145,8 @@ onUnmounted(() => {
 
 .watermark-text {
   font-size: 11px;
-  color: #1E3A5F;
-  font-weight: 500;
+  color: #1e3a8a;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -975,7 +1188,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   border-radius: 999px;
-  border: 1px solid rgba(30, 58, 95, 0.1);
+  border: 1px solid rgba(30, 58, 130, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   z-index: 5;
   pointer-events: none;
@@ -998,8 +1211,8 @@ onUnmounted(() => {
 
 .watermark-text {
   font-size: 11px;
-  color: #1E3A5F;
-  font-weight: 500;
+  color: #1e3a8a;
+  font-weight: 600;
   white-space: nowrap;
 }
 

@@ -79,7 +79,7 @@ const { t, currentLang, setLang } = useI18n()
 const router = useRouter()
 
 const user = computed(() => authStore.user)
-const initials = computed(() => (user.value?.full_name || 'م ع').trim().slice(0, 1))
+const initials = computed(() => (user.value?.full_name || t('initials')).trim().slice(0, 1))
 
 const showNotifications = ref(false)
 const showHistory = ref(false)
@@ -119,7 +119,7 @@ async function fetchNotifications() {
     const { data } = await api.get('/notifications')
     notifications.value = data || []
   } catch (error) {
-    console.error('فشل جلب الإشعارات:', error)
+    console.error(t('failed_fetch_notifications'), error)
   }
 }
 
@@ -128,7 +128,7 @@ async function fetchAttendanceHistory() {
     const { data } = await api.get('/attendance/history')
     attendanceHistory.value = data || []
   } catch (error) {
-    console.error('فشل جلب سجل الحضور:', error)
+    console.error(t('failed_fetch_attendance_history'), error)
   }
 }
 

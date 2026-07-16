@@ -3,7 +3,7 @@
     <h2 class="page-title">⏱️ {{ t('attendance') }}</h2>
 
     <!-- نقاط العمل -->
-    <div class="card worksites-section">
+    <div v-if="!isWorking" class="card worksites-section">
       <h3>📍 {{ t('select_worksite') }}</h3>
       <div v-if="loadingWorksites" class="loading">{{ t('loading') }}</div>
       <div v-else-if="availableWorksites.length === 0" class="empty">
@@ -19,13 +19,23 @@
         >
           <span class="ws-name">{{ site.name }}</span>
           <span class="ws-address">{{ site.address || t('address') }}</span>
-          <span class="ws-radius">⭕ {{ site.radius_meters }} م</span>
+          <span class="ws-radius">⭕ {{ site.radius_meters }} {{ t('meter') }}</span>
         </button>
       </div>
     </div>
 
+    <!-- نقطة العمل النشطة (أثناء العمل) -->
+    <div v-if="isWorking" class="card active-worksite-card">
+      <h3>📍 {{ t('current_worksite') }}</h3>
+      <div class="active-worksite-info">
+        <div class="active-worksite-name">{{ worksiteName }}</div>
+        <div class="active-worksite-address">{{ selectedWorksite?.address || '' }}</div>
+        <div class="active-worksite-status">✅ {{ t('working_at_this_location') }}</div>
+      </div>
+    </div>
+
     <!-- الموقع المختار + زر الملاحة -->
-    <div v-if="selectedWorksiteId" class="card navigation-card">
+    <div v-if="selectedWorksiteId && !isWorking" class="card navigation-card">
       <div class="nav-info">
         <span class="nav-icon">📍</span>
         <div>
@@ -56,6 +66,13 @@
       <div class="summary-item"><span class="num">{{ monthHours.toFixed(1) }}</span><span>{{ t('hours_month') }}</span></div>
     </div>
 
+    <!-- زر سجل الحضور -->
+    <div class="card">
+      <button class="btn btn--primary btn--full" @click="showAttendanceHistoryModal = true">
+        📊 {{ t('my_attendance_history') }}
+      </button>
+    </div>
+
     <!-- حالة القرب + عنوان الموقع -->
     <div class="card attendance-card">
       <!-- الموقع الحالي والعنوان -->
@@ -75,7 +92,7 @@
           <span class="distance-text">
             {{ t('distance') }}: <strong>{{ formatDistance(distance) }}</strong>
             <span v-if="selectedWorksiteId" class="distance-range">
-              ({{ t('radius') }}: {{ radius }} م)
+              ({{ t('radius') }}: {{ radius }} {{ t('meter') }})
             </span>
           </span>
         </div>
@@ -91,7 +108,7 @@
           </p>
           <p class="status-distance">
             {{ t('distance') }}: <span class="mono">{{ formatDistance(distance) }}</span>
-            ({{ t('radius') }}: <span class="mono">{{ radius }}</span> م)
+            ({{ t('radius') }}: <span class="mono">{{ radius }}</span> {{ t('meter') }})
           </p>
         </div>
       </div>
@@ -144,6 +161,75 @@
       <p v-if="success" class="success">{{ success }}</p>
       <p v-if="debugInfo" class="debug-info mono">{{ debugInfo }}</p>
     </div>
+
+    <!-- مودال سجل الحضور -->
+    <div v-if="showAttendanceHistoryModal" class="modal-backdrop" @click.self="showAttendanceHistoryModal = false">
+      <div class="modal card">
+        <div class="modal-header">
+          <h3>📊 {{ t('my_attendance_history') }}</h3>
+          <button class="modal-close" @click="showAttendanceHistoryModal = false">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- فلاتر الشهر والسنة -->
+          <div class="filters">
+            <div class="filter-group">
+              <label>{{ t('year') }}</label>
+              <select v-model="selectedYear" @change="fetchMyAttendanceHistory" class="form-select">
+                <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>{{ t('month') }}</label>
+              <select v-model="selectedMonth" @change="fetchMyAttendanceHistory" class="form-select">
+                <option v-for="month in availableMonths" :key="month.value" :value="month.value">{{ month.label }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ملخص الشهر -->
+          <div v-if="myMonthlySummary" class="monthly-summary">
+            <div class="summary-card">
+              <span class="summary-label">{{ t('total_hours') }}</span>
+              <span class="summary-value">{{ myMonthlySummary.summary?.total_hours?.toFixed(1) || 0 }} {{ t('hours') }}</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">{{ t('work_days') }}</span>
+              <span class="summary-value">{{ myMonthlySummary.summary?.work_days || 0 }} {{ t('days') }}</span>
+            </div>
+          </div>
+
+          <!-- جدول سجل الحضور -->
+          <div v-if="loadingMyHistory" class="loading-state">
+            <p>{{ t('loading') }}</p>
+          </div>
+          <div v-else-if="myAttendanceHistory.length === 0" class="empty-state">
+            <p>{{ t('no_attendance_records') }}</p>
+          </div>
+          <div v-else class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>{{ t('date') }}</th>
+                  <th>{{ t('worksite') }}</th>
+                  <th>{{ t('check_in') }}</th>
+                  <th>{{ t('check_out') }}</th>
+                  <th>{{ t('worked_hours') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="record in myAttendanceHistory" :key="record.id">
+                  <td class="mono">{{ formatDate(record.check_in_time) }}</td>
+                  <td>{{ record.worksite_name || '—' }}</td>
+                  <td class="mono">{{ formatTime(record.check_in_time) }}</td>
+                  <td class="mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</td>
+                  <td class="mono">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -151,6 +237,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from '../services/i18n'
 import api from '../services/api'
+import { i18nState } from '../services/i18n'
 
 const { t, currentLang } = useI18n()
 
@@ -175,6 +262,40 @@ const hasClickedLocation = ref(false)
 const error = ref(''), success = ref(''), debugInfo = ref('')
 let timerInterval = null, locationInterval = null
 
+// سجل الحضور الشخصي
+const showAttendanceHistoryModal = ref(false)
+const myAttendanceHistory = ref([])
+const myMonthlySummary = ref(null)
+const loadingMyHistory = ref(false)
+const selectedYear = ref(new Date().getFullYear())
+const selectedMonth = ref(String(new Date().getMonth() + 1))
+
+const availableYears = ref([])
+const availableMonths = ref([])
+
+// دالة لتحديث أسماء الشهور حسب اللغة
+function updateMonthNames() {
+  const monthKeys = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+  availableMonths.value = monthKeys.map((key, index) => ({
+    value: String(index + 1),
+    label: t(key)
+  }))
+}
+
+// توليد السنوات المتاحة
+const currentYear = new Date().getFullYear()
+for (let i = currentYear; i >= currentYear - 2; i--) {
+  availableYears.value.push(i)
+}
+
+// تحديث أسماء الشهور عند التحميل
+updateMonthNames()
+
+// مراقبة تغيير اللغة لتحديث أسماء الشهور
+watch(currentLang, () => {
+  updateMonthNames()
+})
+
 const withinRange = computed(() => distance.value <= radius.value)
 const elapsedTime = computed(() => {
   const s = elapsedSeconds.value
@@ -193,10 +314,11 @@ watch(currentLang, () => {
 // دالة تنسيق المسافة
 // ==========================================
 function formatDistance(meters) {
+  if (!meters) return '0 ' + t('meters')
   if (meters >= 1000) {
-    return (meters / 1000).toFixed(2) + ' كيلومتر'
+    return (meters / 1000).toFixed(2) + ' ' + t('kilometers')
   }
-  return Math.round(meters) + ' متر'
+  return Math.round(meters) + ' ' + t('meters')
 }
 
 // ==========================================
@@ -235,7 +357,7 @@ function selectWorksite(site) {
   selectedWorksite.value = site
   worksiteName.value = site.name
   radius.value = site.radius_meters
-  debugInfo.value = `تم اختيار: ${site.name} (النطاق: ${site.radius_meters}م)`
+  debugInfo.value = `${t('worksite_selected')} ${site.name} (${t('radius')}: ${site.radius_meters} ${t('meter')})`
   
   if (userLocation.value) {
     calculateDistance(userLocation.value.lat, userLocation.value.lng)
@@ -272,17 +394,17 @@ async function getAddressFromCoords(lat, lng) {
   try {
     const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=a6a3b5fec1cd4b1c99daaf6decab855f&lang=ar`
     const response = await fetch(url)
-    if (!response.ok) throw new Error('فشل جلب العنوان')
-    
+    if (!response.ok) throw new Error(t('failed_fetch_address'))
+
     const data = await response.json()
     if (data.features && data.features.length > 0) {
       const props = data.features[0].properties
-      return props.formatted || props.address_line1 || 'عنوان غير معروف'
+      return props.formatted || props.address_line1 || t('address_unknown')
     }
-    return 'لم يتم العثور على عنوان'
+    return t('address_not_found')
   } catch (e) {
-    console.error('فشل جلب العنوان:', e)
-    return 'تعذر الحصول على العنوان'
+    console.error(t('failed_fetch_address'), e)
+    return t('cannot_get_address')
   }
 }
 
@@ -291,7 +413,7 @@ async function getAddressFromCoords(lat, lng) {
 // ==========================================
 async function getLocationWithAddress() {
   if (!navigator.geolocation) {
-    error.value = 'المتصفح لا يدعم تحديد الموقع'
+    error.value = t('browser_not_support_location')
     return
   }
 
@@ -300,7 +422,7 @@ async function getLocationWithAddress() {
   error.value = ''
   success.value = ''
   locationAddress.value = ''
-  debugInfo.value = '⏳ جاري تحديد الموقع...'
+  debugInfo.value = t('getting_location')
 
   try {
     const pos = await new Promise((resolve, reject) => {
@@ -315,20 +437,34 @@ async function getLocationWithAddress() {
     const lng = pos.coords.longitude
 
     userLocation.value = { lat, lng }
-    debugInfo.value = `📍 الموقع: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+    debugInfo.value = `${t('location_coords')} ${lat.toFixed(6)}, ${lng.toFixed(6)}`
 
     const address = await getAddressFromCoords(lat, lng)
     locationAddress.value = address
-    debugInfo.value += `\n🏠 ${address}`
+    debugInfo.value += `\n${t('home_icon')} ${address}`
 
     if (selectedWorksite.value) {
       calculateDistance(lat, lng)
-      debugInfo.value += `\n📏 المسافة: ${formatDistance(distance.value)}`
+      debugInfo.value += `\n${t('distance_label')} ${formatDistance(distance.value)}`
     }
 
-    success.value = '✅ تم تحديد موقعك بنجاح'
+    // إرسال الموقع فوراً للتتبع اللحظي
+    if (isWorking.value) {
+      try {
+        await api.post('/location/update', {
+          latitude: lat,
+          longitude: lng,
+          accuracy: pos.coords.accuracy || 0
+        })
+        debugInfo.value += `\n📡 تم إرسال الموقع فوراً`
+      } catch (e) {
+        console.error('فشل إرسال الموقع الفوري:', e)
+      }
+    }
+
+    success.value = t('location_determined_success')
   } catch (e) {
-    error.value = '❌ فشل تحديد الموقع: ' + (e.message || 'خطأ غير معروف')
+    error.value = t('location_determine_failed') + ' ' + (e.message || t('error'))
     debugInfo.value = `❌ ${error.value}`
   } finally {
     gettingLocation.value = false
@@ -339,23 +475,23 @@ async function getLocationWithAddress() {
 // بدء الدوام
 // ==========================================
 async function checkIn() {
-  if (!userLocation.value) { 
-    error.value = '📍 اضغط على "تحديد موقعي" أولاً'
-    return 
-  }
-  if (!selectedWorksiteId.value) { 
-    error.value = '📌 اختر نقطة العمل أولاً'
-    return 
-  }
-  if (!withinRange.value) {
-    error.value = `❌ أنت خارج النطاق! المسافة: ${formatDistance(distance.value)} (المسموح: ${radius.value}م)`
+  if (!userLocation.value) {
+    error.value = t('click_select_location_first')
     return
   }
-  
+  if (!selectedWorksiteId.value) {
+    error.value = t('select_worksite_first')
+    return
+  }
+  if (!withinRange.value) {
+    error.value = `${t('outside_range_distance')} ${formatDistance(distance.value)} (${t('allowed_range')}: ${radius.value} ${t('meter')})`
+    return
+  }
+
   checkingIn.value = true
   error.value = ''
   success.value = ''
-  debugInfo.value = '⏳ جاري تسجيل بدء الدوام...'
+  debugInfo.value = t('registering_checkin')
 
   try {
     const payload = {
@@ -363,27 +499,27 @@ async function checkIn() {
       latitude: userLocation.value.lat,
       longitude: userLocation.value.lng
     }
-    
+
     const { data } = await api.post('/attendance/check-in', payload)
-    
+
     attendanceId.value = data.attendance?.id
-    success.value = '✅ بدء الدوام بنجاح!'
+    success.value = t('checkin_success')
     isWorking.value = true
     elapsedSeconds.value = 0
     timerInterval = setInterval(() => elapsedSeconds.value++, 1000)
     startLocationTracking()
-    debugInfo.value = `✅ بدء الدوام في ${worksiteName.value}`
-    
+    debugInfo.value = `${t('checkin_started_at')} ${worksiteName.value}`
+
     hasClickedLocation.value = false
   } catch(e) {
     console.error('❌ فشل CheckIn:', e.response?.data)
     const errData = e.response?.data
     if (errData?.geofence) {
       distance.value = errData.geofence.distance_meters || distance.value
-      error.value = `❌ خارج النطاق! المسافة: ${formatDistance(distance.value)} (المسموح: ${radius.value}م)`
-      debugInfo.value = `📏 المسافة الفعلية: ${formatDistance(distance.value)}`
+      error.value = `${t('outside_range_actual_distance')} ${formatDistance(distance.value)} (${t('allowed_range')}: ${radius.value} ${t('meter')})`
+      debugInfo.value = `${t('actual_distance')} ${formatDistance(distance.value)}`
     } else {
-      error.value = errData?.error || '❌ فشل بدء الدوام'
+      error.value = errData?.error || t('checkin_failed')
       debugInfo.value = `❌ ${error.value}`
     }
   } finally {
@@ -395,33 +531,33 @@ async function checkIn() {
 // إنهاء الدوام
 // ==========================================
 async function checkOut() {
-  if (!attendanceId.value) { 
-    error.value = '⚠️ لا توجد وردية نشطة'
-    return 
+  if (!attendanceId.value) {
+    error.value = t('no_active_shift')
+    return
   }
-  
+
   if (!hasClickedLocation.value) {
-    error.value = '📍 يجب الضغط على "تحديد موقعي" أولاً قبل إنهاء الدوام!'
-    debugInfo.value = '⚠️ اضغط على "تحديد موقعي" ثم حاول مرة أخرى'
+    error.value = t('click_select_location_before_checkout')
+    debugInfo.value = t('click_select_location_again')
     return
   }
 
   if (!userLocation.value) {
-    error.value = '📍 فشل تحديد الموقع. حاول مرة أخرى'
-    debugInfo.value = '⚠️ اضغط على "تحديد موقعي" مرة أخرى'
+    error.value = t('location_determine_failed_retry')
+    debugInfo.value = t('click_select_location_retry')
     return
   }
 
   if (!withinRange.value) {
-    error.value = `❌ أنت خارج نطاق موقع العمل! المسافة: ${formatDistance(distance.value)} (المسموح: ${radius.value}م)`
-    debugInfo.value = '⚠️ لا يمكن إنهاء الدوام خارج النطاق المسموح'
+    error.value = `${t('outside_worksite_range')} ${formatDistance(distance.value)} (${t('allowed_range')}: ${radius.value} ${t('meter')})`
+    debugInfo.value = t('cannot_checkout_outside_range')
     return
   }
 
   checkingOut.value = true
   error.value = ''
   success.value = ''
-  debugInfo.value = '⏳ جاري تسجيل إنهاء الدوام...'
+  debugInfo.value = t('registering_checkout')
 
   try {
     const { data } = await api.post('/attendance/check-out', {
@@ -429,17 +565,17 @@ async function checkOut() {
       latitude: userLocation.value.lat,
       longitude: userLocation.value.lng
     })
-    success.value = `✅ انتهى الدوام (${data.worked_hours?.toFixed(2)} ساعة)`
+    success.value = `${t('checkout_success')} (${data.worked_hours?.toFixed(2)} ${t('checkout_success_hours')})`
     isWorking.value = false
     clearInterval(timerInterval)
     clearInterval(locationInterval)
     await fetchSummary()
-    debugInfo.value = `✅ انتهى الدوام بعد ${data.worked_hours?.toFixed(2)} ساعة`
-    
+    debugInfo.value = `${t('checkout_completed_after')} ${data.worked_hours?.toFixed(2)} ${t('checkout_success_hours')}`
+
     hasClickedLocation.value = false
   } catch(e) {
     console.error('❌ فشل CheckOut:', e.response?.data)
-    error.value = e.response?.data?.error || '❌ فشل إنهاء الدوام'
+    error.value = e.response?.data?.error || t('checkout_failed')
     debugInfo.value = `❌ ${error.value}`
   } finally {
     checkingOut.value = false
@@ -460,7 +596,7 @@ function startLocationTracking() {
         })
       } catch(e) { /* silent */ }
     }
-  }, 10000)
+  }, 3000) // تحديث كل 3 ثوانٍ للتتبع اللحظي
 }
 
 // ==========================================
@@ -482,7 +618,7 @@ async function restoreState() {
         worksiteName.value = ws.name
         radius.value = ws.radius_meters
       }
-      debugInfo.value = '🔄 تم استعادة الوردية النشطة'
+      debugInfo.value = t('shift_restored')
       hasClickedLocation.value = false
     }
   } catch(e) { console.error(e) }
@@ -501,6 +637,41 @@ async function fetchSummary() {
 }
 
 // ==========================================
+// دوال سجل الحضور الشخصي
+// ==========================================
+async function fetchMyAttendanceHistory() {
+  loadingMyHistory.value = true
+  try {
+    const { data } = await api.get(
+      `/attendance/my-history?year=${selectedYear.value}&month=${selectedMonth.value}`
+    )
+    myAttendanceHistory.value = data || []
+    
+    // جلب الملخص الشهري
+    const summaryResponse = await api.get(
+      `/attendance/my-monthly-summary?year=${selectedYear.value}&month=${selectedMonth.value}`
+    )
+    myMonthlySummary.value = summaryResponse.data
+  } catch (error) {
+    console.error('فشل جلب سجل الحضور:', error)
+    myAttendanceHistory.value = []
+    myMonthlySummary.value = null
+  } finally {
+    loadingMyHistory.value = false
+  }
+}
+
+function formatDate(date) {
+  if (!date) return '—'
+  return new Date(date).toLocaleDateString('en-GB')
+}
+
+function formatTime(date) {
+  if (!date) return '—'
+  return new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+// ==========================================
 // دورة الحياة
 // ==========================================
 onMounted(async () => {
@@ -516,74 +687,254 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.page-title { font-size: 20px; margin-bottom: 16px; }
+.page-title { 
+  font-size: 24px; 
+  margin-bottom: 20px; 
+  font-weight: 700;
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-.worksites-section { padding: 16px; margin-bottom: 16px; }
-.worksites-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.worksite-card { padding: 12px; border: 2px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; text-align: right; transition: 0.2s; }
-.worksite-card.active { border-color: var(--brand); background: var(--brand-tint); }
-.ws-name { font-weight: 600; display: block; }
-.ws-address { font-size: 12px; color: var(--ink-soft); }
-.ws-radius { font-size: 11px; color: var(--brand); }
+.worksites-section { padding: 20px; margin-bottom: 20px; }
+.worksites-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.worksite-card { 
+  padding: 16px 14px; 
+  border: 2px solid var(--line); 
+  border-radius: var(--radius-md); 
+  background: var(--surface); 
+  cursor: pointer; 
+  text-align: right; 
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+.worksite-card:hover {
+  border-color: var(--brand-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.worksite-card.active { 
+  border-color: var(--brand); 
+  background: linear-gradient(135deg, var(--brand-tint) 0%, var(--brand-tint) 100%);
+  box-shadow: var(--shadow-md);
+}
+.ws-name { font-weight: 700; display: block; font-size: 15px; color: var(--ink); }
+.ws-address { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.ws-radius { font-size: 12px; color: var(--brand); margin-top: 6px; font-weight: 600; }
 
-.navigation-card { padding: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-.nav-info { display: flex; align-items: center; gap: 10px; }
-.nav-icon { font-size: 24px; }
-.nav-title { font-weight: 600; margin: 0; }
-.nav-address { font-size: 12px; color: var(--ink-soft); margin: 0; }
-.nav-buttons { display: flex; gap: 8px; }
-.btn { padding: 8px 16px; border-radius: var(--radius-sm); font-weight: 600; text-decoration: none; display: inline-block; font-size: 13px; cursor: pointer; border: none; }
-.btn--waze { background: #33ccff; color: #1a1a2e; }
-.btn--google { background: #4285f4; color: white; }
+.active-worksite-card { 
+  padding: 20px; 
+  margin-bottom: 20px; 
+  background: linear-gradient(135deg, var(--signal-in-tint) 0%, var(--signal-in-tint) 100%); 
+  border: 2px solid var(--signal-in); 
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.active-worksite-info { text-align: center; }
+.active-worksite-name { font-size: 20px; font-weight: 700; color: var(--signal-in); margin-bottom: 10px; }
+.active-worksite-address { font-size: 15px; color: var(--ink); margin-bottom: 14px; }
+.active-worksite-status { font-size: 17px; font-weight: 600; color: var(--signal-in); }
+
+.navigation-card { 
+  padding: 20px; 
+  margin-bottom: 20px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  flex-wrap: wrap; 
+  gap: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.nav-info { display: flex; align-items: center; gap: 12px; }
+.nav-icon { font-size: 28px; }
+.nav-title { font-weight: 700; margin: 0; font-size: 16px; color: var(--ink); }
+.nav-address { font-size: 13px; color: var(--ink-soft); margin: 0; }
+.nav-buttons { display: flex; gap: 10px; }
+.btn { 
+  padding: 10px 18px; 
+  border-radius: var(--radius-md); 
+  font-weight: 600; 
+  text-decoration: none; 
+  display: inline-block; 
+  font-size: 14px; 
+  cursor: pointer; 
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+.btn--waze { 
+  background: linear-gradient(135deg, #33ccff 0%, #00b8e6 100%); 
+  color: #1a1a2e; 
+}
+.btn--waze:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.btn--google { 
+  background: linear-gradient(135deg, #4285f4 0%, #3467a6 100%); 
+  color: white; 
+}
+.btn--google:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
 
 .location-info { 
   width: 100%; 
-  padding: 14px; 
+  padding: 16px; 
   background: var(--canvas); 
-  border-radius: var(--radius-sm); 
+  border-radius: var(--radius-md); 
   border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
 }
-.location-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.location-icon { font-size: 18px; }
-.location-title { font-weight: 600; font-size: 14px; }
-.location-coords { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
-.location-address { font-size: 13px; color: var(--ink); padding: 4px 8px; background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 6px; }
-.location-distance { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--radius-sm); font-size: 13px; }
+.location-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.location-icon { font-size: 20px; }
+.location-title { font-weight: 700; font-size: 15px; color: var(--ink); }
+.location-coords { font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; font-family: var(--font-mono); }
+.location-address { font-size: 14px; color: var(--ink); padding: 6px 10px; background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 8px; }
+.location-distance { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; }
 .location-distance.in { background: var(--signal-in-tint); color: var(--signal-in); }
 .location-distance.out { background: var(--signal-out-tint); color: var(--signal-out); }
-.distance-icon { font-size: 16px; }
-.distance-range { font-size: 12px; opacity: 0.7; }
+.distance-icon { font-size: 18px; }
+.distance-range { font-size: 13px; opacity: 0.8; font-weight: 400; }
 
-.timer-card { padding: 16px; margin-bottom: 16px; text-align: center; background: var(--signal-in-tint); border-radius: var(--radius-md); }
-.timer { font-size: 28px; font-weight: 700; font-family: var(--font-mono); color: var(--signal-in); display: flex; align-items: center; justify-content: center; gap: 8px; }
-.timer-label { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.timer-card { 
+  padding: 24px; 
+  margin-bottom: 20px; 
+  text-align: center; 
+  background: linear-gradient(135deg, var(--signal-in-tint) 0%, var(--signal-in-tint) 100%); 
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--signal-in);
+  box-shadow: var(--shadow-md);
+}
+.timer { 
+  font-size: 32px; 
+  font-weight: 700; 
+  font-family: var(--font-mono); 
+  color: var(--signal-in); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 10px; 
+}
+.timer-label { font-size: 14px; color: var(--ink-soft); margin-top: 6px; font-weight: 600; }
 
-.summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
-.summary-item { background: var(--surface); padding: 12px; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--line); }
-.summary-item .num { font-size: 22px; font-weight: 700; color: var(--brand); display: block; }
-.summary-item span:last-child { font-size: 11px; color: var(--ink-soft); }
+.summary { 
+  display: grid; 
+  grid-template-columns: repeat(3,1fr); 
+  gap: 12px; 
+  margin-bottom: 20px; 
+}
+.summary-item { 
+  background: var(--surface); 
+  padding: 16px; 
+  text-align: center; 
+  border-radius: var(--radius-md); 
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+.summary-item:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.summary-item .num { 
+  font-size: 26px; 
+  font-weight: 700; 
+  color: var(--brand); 
+  display: block; 
+  margin-bottom: 4px;
+}
+.summary-item span:last-child { 
+  font-size: 12px; 
+  color: var(--ink-soft); 
+  font-weight: 600;
+}
 
-.attendance-card { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-.geofence-status { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--canvas); border-radius: var(--radius-sm); }
-.status-icon { font-size: 28px; }
-.status-text { font-weight: 600; margin: 0; }
-.status-text.in { color: var(--signal-in); } .status-text.out { color: var(--signal-out); }
-.status-distance { font-size: 12px; color: var(--ink-soft); margin: 0; }
+.btn--full { width: 100%; }
+
+.attendance-card { 
+  padding: 24px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px; 
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.geofence-status { 
+  display: flex; 
+  align-items: center; 
+  gap: 14px; 
+  padding: 14px; 
+  background: var(--canvas); 
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+}
+.status-icon { font-size: 32px; }
+.status-text { font-weight: 700; margin: 0; font-size: 15px; }
+.status-text.in { color: var(--signal-in); } 
+.status-text.out { color: var(--signal-out); }
+.status-distance { font-size: 13px; color: var(--ink-soft); margin: 0; }
 .status-distance .mono { font-family: var(--font-mono); font-weight: 600; }
 
-.actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-.btn--primary { background: var(--brand); color: white; padding: 14px; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; width: 100%; font-size: 16px; }
-.btn--primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn--ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink); padding: 14px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; width: 100%; font-size: 16px; }
-.btn--ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+.actions { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.btn--primary { 
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); 
+  color: white; 
+  padding: 16px; 
+  border: none; 
+  border-radius: var(--radius-md); 
+  font-weight: 700; 
+  cursor: pointer; 
+  width: 100%; 
+  font-size: 16px;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+.btn--primary:hover:not(:disabled) {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+.btn--primary:disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+  transform: none !important;
+}
+.btn--ghost { 
+  background: var(--surface); 
+  border: 2px solid var(--line); 
+  color: var(--ink); 
+  padding: 16px; 
+  border-radius: var(--radius-md); 
+  font-weight: 700; 
+  cursor: pointer; 
+  width: 100%; 
+  font-size: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+.btn--ghost:hover:not(:disabled) {
+  border-color: var(--brand-light);
+  color: var(--brand);
+  box-shadow: var(--shadow-md);
+}
+.btn--ghost:disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+}
 
 .warning-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
   font-weight: 600;
+  font-size: 14px;
 }
 
 .warning-location {
@@ -601,13 +952,14 @@ onUnmounted(() => {
 .success-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 14px 18px;
   background: var(--signal-in-tint);
   border: 2px solid var(--signal-in);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--signal-in);
   font-weight: 600;
+  font-size: 14px;
 }
 
 .success-icon { font-size: 24px; }
@@ -615,8 +967,182 @@ onUnmounted(() => {
 .warning-icon { font-size: 24px; }
 .warning-text { font-size: 14px; }
 
-.error { color: var(--signal-out); text-align: center; }
-.success { color: var(--signal-in); text-align: center; }
-.debug-info { padding: 8px 12px; background: var(--ink); color: #fff; border-radius: var(--radius-sm); font-size: 12px; text-align: center; white-space: pre-line; }
-.loading, .empty { text-align: center; padding: 20px; color: var(--ink-soft); }
+.error { 
+  color: var(--signal-out); 
+  text-align: center; 
+  font-weight: 600;
+  font-size: 14px;
+}
+.success { 
+  color: var(--signal-in); 
+  text-align: center; 
+  font-weight: 600;
+  font-size: 14px;
+}
+.debug-info { 
+  padding: 10px 14px; 
+  background: var(--ink); 
+  color: #fff; 
+  border-radius: var(--radius-md); 
+  font-size: 12px; 
+  text-align: center; 
+  white-space: pre-line;
+  font-family: var(--font-mono);
+}
+
+/* مودال سجل الحضور */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+}
+
+.modal {
+  width: 100%; max-width: 600px; padding: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px; border-bottom: 1px solid var(--line);
+  background: var(--canvas);
+}
+
+.modal-header h3 { 
+  font-size: 18px; 
+  margin: 0; 
+  font-weight: 700;
+  color: var(--brand);
+}
+.modal-close { 
+  background: none; 
+  border: none; 
+  font-size: 28px; 
+  cursor: pointer; 
+  color: var(--ink-soft);
+  transition: color 0.2s ease;
+}
+.modal-close:hover {
+  color: var(--signal-out);
+}
+
+.modal-body { padding: 24px; }
+
+.filters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.form-select {
+  padding: 10px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  min-width: 120px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--brand-light);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+
+.monthly-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  flex: 1;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--brand-tint) 0%, var(--brand-tint) 100%);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  border: 2px solid var(--brand);
+  box-shadow: var(--shadow-md);
+}
+
+.summary-label {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.summary-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.table-wrapper { 
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+}
+
+.table { 
+  width: 100%; 
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.table th {
+  text-align: right;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-weight: 700;
+  padding: 14px 16px;
+  border-bottom: 2px solid var(--line);
+  background: var(--canvas);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td {
+  background: var(--canvas);
+}
 </style>

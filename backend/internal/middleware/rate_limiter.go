@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RateLimiter بسيط يمنع أكثر من 60 طلب في الدقيقة لكل IP (حماية أساسية للـ API المجاني)
+// RateLimiter بسيط يمنع أكثر من 500 طلب في الدقيقة لكل IP (للتطوير والاختبار)
 type visitor struct {
 	count     int
 	resetTime time.Time
@@ -34,7 +34,7 @@ func RateLimiter() gin.HandlerFunc {
 		count := v.count
 		mu.Unlock()
 
-		if count > 60 {
+		if count > 500 {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": i18n.T(lang, "err_too_many_requests")})
 			return
 		}

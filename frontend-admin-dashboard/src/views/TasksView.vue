@@ -1,13 +1,13 @@
 <template>
   <div>
     <div class="page-head">
-      <div><h2>المهام</h2><p>جميع المهام عبر الموظفين ونقاط العمل</p></div>
-      <button class="btn btn--primary">+ مهمة جديدة</button>
+      <div><h2>{{ t('tasks') }}</h2><p>{{ t('tasks_description') }}</p></div>
+      <button class="btn btn--primary">{{ t('new_task') }}</button>
     </div>
 
     <div class="card">
       <table class="table">
-        <thead><tr><th>المهمة</th><th>الموظف</th><th>نقطة العمل</th><th>الحالة</th></tr></thead>
+        <thead><tr><th>{{ t('task_title') }}</th><th>{{ t('task_employee') }}</th><th>{{ t('task_worksite') }}</th><th>{{ t('task_status') }}</th></tr></thead>
         <tbody>
           <tr v-for="t in tasks" :key="t.id">
             <td>{{ t.title }}</td>
@@ -22,9 +22,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from '../services/i18n'
 
-const labels = { pending: 'قيد الانتظار', in_progress: 'جارية', completed: 'مكتملة', late: 'متأخرة' }
+const { t } = useI18n()
+
+const labels = computed(() => ({ 
+  pending: t('status_pending'), 
+  in_progress: t('status_in_progress'), 
+  completed: t('status_completed'), 
+  late: t('status_late') 
+}))
 const badgeMap = { pending: '', in_progress: 'badge--gold', completed: 'badge--in', late: 'badge--out' }
 
 const tasks = ref([

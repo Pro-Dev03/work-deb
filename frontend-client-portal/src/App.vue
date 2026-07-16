@@ -2,15 +2,25 @@
   <div class="shell">
     <header class="topbar">
       <div class="topbar__brand">
-        <span class="brand-mark"></span>
+        <span class="brand-mark">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </span>
         <div class="brand-text">
-          <span class="brand-name">WorkTrack</span>
+          <span class="brand-name gradient-text">WorkTrack</span>
           <span class="brand-sub">بوابة العميل</span>
         </div>
       </div>
       <div class="topbar__actions">
         <LanguageSwitcher />
-        <router-link to="/new" class="btn btn--primary btn--sm">طلب خدمة</router-link>
+        <router-link to="/new" class="btn btn--primary btn--sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          طلب خدمة
+        </router-link>
       </div>
     </header>
 
@@ -46,12 +56,32 @@ import LanguageSwitcher from './components/LanguageSwitcher.vue'
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
+.topbar:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .topbar__brand {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
+  transition: transform var(--transition-base);
+}
+
+.topbar__brand:hover .brand-mark {
+  transform: scale(1.1);
 }
 
 .brand-text {
@@ -84,6 +114,7 @@ import LanguageSwitcher from './components/LanguageSwitcher.vue'
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
+  animation: fadeIn 0.4s ease;
 }
 
 .footer {
@@ -91,6 +122,7 @@ import LanguageSwitcher from './components/LanguageSwitcher.vue'
   padding: 16px 20px;
   border-top: 1px solid var(--line);
   background: var(--surface);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
 .footer p {

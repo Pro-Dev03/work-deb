@@ -256,3 +256,368 @@ func (h *AttendanceHandler) GetAllAttendanceSummary(c *gin.Context) {
 
 	c.JSON(http.StatusOK, summary)
 }
+
+// GetEmployeeAttendanceHistory جلب سجل الحضور لموظف معين
+func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
+	userID := c.Param("id")
+	
+	// الحصول على معاملات التصفية
+	year := c.DefaultQuery("year", "")
+	month := c.DefaultQuery("month", "")
+	
+	// بناء الاستعلام حسب الفلتر
+	query := `
+		SELECT 
+			a.id,
+			a.worksite_id,
+			w.name as worksite_name,
+			a.check_in_time,
+			a.check_in_lat,
+			a.check_in_lng,
+			a.check_in_distance_meters,
+			a.check_out_time,
+			a.check_out_lat,
+			a.check_out_lng,
+			a.check_out_distance_meters,
+			a.status,
+			a.created_at
+		FROM attendance a
+		LEFT JOIN worksites w ON a.worksite_id = w.id
+		WHERE a.user_id = $1
+	`
+	args := []interface{}{userID}
+	argCount := 1
+	
+	if year != "" && month != "" {
+		argCount++
+		query += fmt.Sprintf(" AND EXTRACT(YEAR FROM check_in_time) = $%d", argCount)
+		args = append(args, year)
+		
+		argCount++
+		query += fmt.Sprintf(" AND EXTRACT(MONTH FROM check_in_time) = $%d", argCount)
+		args = append(args, month)
+	}
+	
+	query += " ORDER BY check_in_time DESC"
+	
+	rows, err := h.Service.DB.Query(query, args...)
+	if err != nil {
+		log.Printf("❌ فشل جلب سجل الحضور: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب سجل الحضور"})
+		return
+	}
+	defer rows.Close()
+	
+	var history []gin.H
+	for rows.Next() {
+		var id, worksiteID, worksiteName string
+		var checkInTime, checkOutTime, createdAt time.Time
+		var checkInLat, checkInLng, checkInDistance, checkOutLat, checkOutLng, checkOutDistance *float64
+		var status string
+
+		err := rows.Scan(
+			&id, &worksiteID, &worksiteName, &checkInTime, &checkInLat, &checkInLng, &checkInDistance,
+			&checkOutTime, &checkOutLat, &checkOutLng, &checkOutDistance, &status, &createdAt,
+		)
+		if err != nil {
+			log.Printf("❌ خطأ في قراءة البيانات: %v", err)
+			continue
+		}
+
+		var workedHours *float64
+		if checkOutTime.After(checkInTime) {
+			hours := checkOutTime.Sub(checkInTime).Hours()
+			workedHours = &hours
+		}
+
+		record := gin.H{
+			"id":                        id,
+			"worksite_id":               worksiteID,
+			"worksite_name":             worksiteName,
+			"check_in_time":             checkInTime,
+			"check_in_lat":              checkInLat,
+			"check_in_lng":              checkInLng,
+			"check_in_distance_meters":  checkInDistance,
+			"check_out_time":            checkOutTime,
+			"check_out_lat":             checkOutLat,
+			"check_out_lng":             checkOutLng,
+			"check_out_distance_meters": checkOutDistance,
+			"status":                    status,
+			"worked_hours":              workedHours,
+			"created_at":                createdAt,
+		}
+		
+		history = append(history, record)
+	}
+	
+	c.JSON(http.StatusOK, history)
+}
+
+// GetEmployeeMonthlySummary جلب ملخص شهري لموظف معين
+func (h *AttendanceHandler) GetEmployeeMonthlySummary(c *gin.Context) {
+	userID := c.Param("id")
+	year := c.DefaultQuery("year", "")
+	month := c.DefaultQuery("month", "")
+	
+	if year == "" || month == "" {
+		// استخدام الشهر الحالي إذا لم يتم تحديده
+		now := time.Now()
+		year = fmt.Sprintf("%d", now.Year())
+		month = fmt.Sprintf("%d", int(now.Month()))
+	}
+	
+	// جلب إجمالي الساعات للشهر
+	var totalHours float64
+	err := h.Service.DB.QueryRow(`
+		SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600), 0)
+		FROM attendance 
+		WHERE user_id = $1 
+		AND EXTRACT(YEAR FROM check_in_time) = $2
+		AND EXTRACT(MONTH FROM check_in_time) = $3
+		AND check_out_time IS NOT NULL
+	`, userID, year, month).Scan(&totalHours)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب الملخص الشهري: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب الملخص الشهري"})
+		return
+	}
+	
+	// جلب عدد أيام العمل
+	var workDays int
+	err = h.Service.DB.QueryRow(`
+		SELECT COUNT(DISTINCT DATE(check_in_time))
+		FROM attendance 
+		WHERE user_id = $1 
+		AND EXTRACT(YEAR FROM check_in_time) = $2
+		AND EXTRACT(MONTH FROM check_in_time) = $3
+		AND check_out_time IS NOT NULL
+	`, userID, year, month).Scan(&workDays)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب عدد أيام العمل: %v", err)
+		workDays = 0
+	}
+	
+	// جلب معلومات الموظف
+	var fullName, email string
+	err = h.Service.DB.QueryRow(`
+		SELECT full_name, email FROM users WHERE id = $1
+	`, userID).Scan(&fullName, &email)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب معلومات الموظف: %v", err)
+		fullName = "غير معروف"
+		email = ""
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"employee": gin.H{
+			"id":         userID,
+			"full_name":  fullName,
+			"email":      email,
+		},
+		"period": gin.H{
+			"year":  year,
+			"month": month,
+		},
+		"summary": gin.H{
+			"total_hours": totalHours,
+			"work_days":   workDays,
+		},
+	})
+}
+
+// GetMyAttendanceHistory جلب سجل الحضور للمستخدم الحالي
+func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	
+	// الحصول على معاملات التصفية
+	year := c.DefaultQuery("year", "")
+	month := c.DefaultQuery("month", "")
+	
+	// بناء الاستعلام حسب الفلتر
+	query := `
+		SELECT 
+			a.id,
+			a.worksite_id,
+			w.name as worksite_name,
+			a.check_in_time,
+			a.check_in_lat,
+			a.check_in_lng,
+			a.check_in_distance_meters,
+			a.check_out_time,
+			a.check_out_lat,
+			a.check_out_lng,
+			a.check_out_distance_meters,
+			a.status,
+			a.created_at
+		FROM attendance a
+		LEFT JOIN worksites w ON a.worksite_id = w.id
+		WHERE a.user_id = $1
+	`
+	args := []interface{}{userID.(string)}
+	argCount := 1
+	
+	if year != "" && month != "" {
+		argCount++
+		query += fmt.Sprintf(" AND EXTRACT(YEAR FROM check_in_time) = $%d", argCount)
+		args = append(args, year)
+		
+		argCount++
+		query += fmt.Sprintf(" AND EXTRACT(MONTH FROM check_in_time) = $%d", argCount)
+		args = append(args, month)
+	}
+	
+	query += " ORDER BY check_in_time DESC"
+	
+	rows, err := h.Service.DB.Query(query, args...)
+	if err != nil {
+		log.Printf("❌ فشل جلب سجل الحضور: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب سجل الحضور"})
+		return
+	}
+	defer rows.Close()
+	
+	var history []gin.H
+	for rows.Next() {
+		var id, worksiteID, worksiteName string
+		var checkInTime, checkOutTime, createdAt time.Time
+		var checkInLat, checkInLng, checkInDistance, checkOutLat, checkOutLng, checkOutDistance *float64
+		var status string
+
+		err := rows.Scan(
+			&id, &worksiteID, &worksiteName, &checkInTime, &checkInLat, &checkInLng, &checkInDistance,
+			&checkOutTime, &checkOutLat, &checkOutLng, &checkOutDistance, &status, &createdAt,
+		)
+		if err != nil {
+			log.Printf("❌ خطأ في قراءة البيانات: %v", err)
+			continue
+		}
+
+		var workedHours *float64
+		if checkOutTime.After(checkInTime) {
+			hours := checkOutTime.Sub(checkInTime).Hours()
+			workedHours = &hours
+		}
+
+		record := gin.H{
+			"id":                        id,
+			"worksite_id":               worksiteID,
+			"worksite_name":             worksiteName,
+			"check_in_time":             checkInTime,
+			"check_in_lat":              checkInLat,
+			"check_in_lng":              checkInLng,
+			"check_in_distance_meters":  checkInDistance,
+			"check_out_time":            checkOutTime,
+			"check_out_lat":             checkOutLat,
+			"check_out_lng":             checkOutLng,
+			"check_out_distance_meters": checkOutDistance,
+			"status":                    status,
+			"worked_hours":              workedHours,
+			"created_at":                createdAt,
+		}
+		
+		history = append(history, record)
+	}
+	
+	c.JSON(http.StatusOK, history)
+}
+
+// GetMyMonthlySummary جلب الملخص الشهري للمستخدم الحالي
+func (h *AttendanceHandler) GetMyMonthlySummary(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	year := c.DefaultQuery("year", "")
+	month := c.DefaultQuery("month", "")
+	
+	if year == "" || month == "" {
+		// استخدام الشهر الحالي إذا لم يتم تحديده
+		now := time.Now()
+		year = fmt.Sprintf("%d", now.Year())
+		month = fmt.Sprintf("%d", int(now.Month()))
+	}
+	
+	// جلب إجمالي الساعات للشهر
+	var totalHours float64
+	err := h.Service.DB.QueryRow(`
+		SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600), 0)
+		FROM attendance 
+		WHERE user_id = $1 
+		AND EXTRACT(YEAR FROM check_in_time) = $2
+		AND EXTRACT(MONTH FROM check_in_time) = $3
+		AND check_out_time IS NOT NULL
+	`, userID, year, month).Scan(&totalHours)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب الملخص الشهري: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب الملخص الشهري"})
+		return
+	}
+	
+	// جلب عدد أيام العمل
+	var workDays int
+	err = h.Service.DB.QueryRow(`
+		SELECT COUNT(DISTINCT DATE(check_in_time))
+		FROM attendance 
+		WHERE user_id = $1 
+		AND EXTRACT(YEAR FROM check_in_time) = $2
+		AND EXTRACT(MONTH FROM check_in_time) = $3
+		AND check_out_time IS NOT NULL
+	`, userID, year, month).Scan(&workDays)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب عدد أيام العمل: %v", err)
+		workDays = 0
+	}
+	
+	// جلب معلومات المستخدم
+	var fullName, email string
+	err = h.Service.DB.QueryRow(`
+		SELECT full_name, email FROM users WHERE id = $1
+	`, userID).Scan(&fullName, &email)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب معلومات المستخدم: %v", err)
+		fullName = "غير معروف"
+		email = ""
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"employee": gin.H{
+			"id":         userID,
+			"full_name":  fullName,
+			"email":      email,
+		},
+		"period": gin.H{
+			"year":  year,
+			"month": month,
+		},
+		"summary": gin.H{
+			"total_hours": totalHours,
+			"work_days":   workDays,
+		},
+	})
+}
+
+// CleanupOldRecords حذف السجلات القديمة (أكثر من 3 أشهر)
+func (h *AttendanceHandler) CleanupOldRecords(c *gin.Context) {
+	// حذف السجلات الأقدم من 3 أشهر
+	result, err := h.Service.DB.Exec(`
+		DELETE FROM attendance 
+		WHERE check_in_time < NOW() - INTERVAL '3 months'
+		AND status = 'completed'
+	`)
+	if err != nil {
+		log.Printf("❌ فشل حذف السجلات القديمة: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل حذف السجلات القديمة"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	log.Printf("✅ تم حذف %d سجل قديم", rowsAffected)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("تم حذف %d سجل قديم بنجاح", rowsAffected),
+		"deleted_count": rowsAffected,
+	})
+}
