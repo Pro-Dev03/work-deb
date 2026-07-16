@@ -81,7 +81,7 @@
   "login_check_account_active": "الحساب نشط (is_active = TRUE)",
   "login_error_code_prefix": "الرمز:",
   "login_error_message_prefix": "الرسالة:",
-  "email_placeholder": "admin@worktrack.com",
+  "email_placeholder": "البريد الإلكتروني",
   "password_placeholder": "••••••••",
   "footer_copyright": "© 2026 DevPro - شريكك في التحول الرقمي",
   "devpro_watermark": "DevPro - شريكك في التحول الرقمي",
