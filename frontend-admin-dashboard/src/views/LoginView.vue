@@ -33,12 +33,12 @@
       <form class="login-form" @submit.prevent="handleSubmit">
         <div class="field">
           <label>{{ $t('email') }}</label>
-          <input v-model="email" type="email" :placeholder="$t('email_placeholder')" required />
+          <input v-model="email" type="email" :placeholder="$t('email_placeholder')" required autocomplete="off" />
         </div>
          
         <div class="field">
           <label>{{ $t('password') }}</label>
-          <input v-model="password" type="password" :placeholder="$t('password_placeholder')" required />
+          <input v-model="password" type="password" :placeholder="$t('password_placeholder')" required autocomplete="new-password" />
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
@@ -296,6 +296,9 @@ async function handleSubmit() {
   font-family: inherit;
   background: #F8FAFC;
   width: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1A2A3A;
 }
 
 .field input:focus {
@@ -389,6 +392,12 @@ async function handleSubmit() {
   
   .powered-text strong {
     font-size: 12px;
+  }
+  
+  .field input {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 </style> 
