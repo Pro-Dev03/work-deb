@@ -618,6 +618,10 @@ onMounted(fetchEmployees)
 
 .table-wrapper { overflow-x: auto; }
 
+/* إخفاء افتراضي للعناصر المحمولة والسطحية */
+.desktop-only { display: none; }
+.mobile-only { display: none; }
+
 .table { width: 100%; border-collapse: collapse; }
 
 .table th {
@@ -785,13 +789,21 @@ onMounted(fetchEmployees)
     max-width: 100%;
   }
   
-  .desktop-only { display: none; }
-  .mobile-only { display: block; }
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+  
+  .card {
+    border-radius: var(--radius-md);
+  }
+  
+  .mobile-cards {
+    padding: 0 4px;
+  }
 }
 
 @media (min-width: 769px) {
-  .desktop-only { display: block; }
-  .mobile-only { display: none; }
+  .desktop-only { display: block !important; }
+  .mobile-only { display: none !important; }
 }
 
 /* تصميم بطاقات سجل الحضور للهاتف */
@@ -799,6 +811,8 @@ onMounted(fetchEmployees)
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .attendance-card {
@@ -807,6 +821,8 @@ onMounted(fetchEmployees)
   border-radius: var(--radius-md);
   padding: 16px;
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .attendance-card:hover {
@@ -872,6 +888,8 @@ onMounted(fetchEmployees)
   border-radius: var(--radius-md);
   padding: 16px;
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .employee-card:hover {
@@ -887,6 +905,7 @@ onMounted(fetchEmployees)
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .employee-card__person {
@@ -1040,6 +1059,22 @@ onMounted(fetchEmployees)
     font-size: 10px;
     padding: 3px 6px;
   }
+  
+  .employee-card {
+    padding: 12px;
+  }
+  
+  .employee-card__header {
+    gap: 6px;
+  }
+  
+  .employee-card__body {
+    gap: 6px;
+  }
+  
+  .mobile-cards {
+    padding: 0 2px;
+  }
 }
 
 @media (max-width: 340px) {
@@ -1056,6 +1091,45 @@ onMounted(fetchEmployees)
   
   .btn--compact .btn-icon {
     font-size: 14px;
+  }
+  
+  .employee-card {
+    padding: 10px;
+  }
+  
+  .employee-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .employee-card__badges {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .employee-card__person {
+    width: 100%;
+  }
+  
+  .employee-card__name {
+    max-width: 100%;
+  }
+  
+  .employee-card__email {
+    max-width: 100%;
+  }
+  
+  .employee-card__value {
+    max-width: 100%;
+  }
+  
+  .mobile-cards {
+    padding: 0;
+  }
+  
+  .card {
+    border-radius: var(--radius-sm);
   }
 }
 
@@ -1087,6 +1161,19 @@ onMounted(fetchEmployees)
   
   .modal-body::-webkit-scrollbar {
     width: 4px;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .employee-card {
+    margin: 0 4px 8px 4px;
+  }
+  
+  .attendance-card {
+    margin: 0 4px 8px 4px;
   }
 }
 </style>
