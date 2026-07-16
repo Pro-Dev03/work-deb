@@ -30,10 +30,10 @@
         </button>
       </div>
 
-      <form class="login-form" @submit.prevent="handleSubmit">
+      <form class="login-form" @submit.prevent="handleSubmit" autocomplete="off">
         <div class="field">
           <label>{{ $t('email') }}</label>
-          <input v-model="email" type="email" :placeholder="$t('email_placeholder')" required autocomplete="off" />
+          <input v-model="email" type="email" :placeholder="$t('email_placeholder')" required autocomplete="nope" readonly @focus="removeReadonly" @blur="addReadonly" ref="emailInput" />
         </div>
          
         <div class="field">
@@ -72,6 +72,19 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 const debugInfo = ref('')
+const emailInput = ref(null)
+
+function removeReadonly() {
+  if (emailInput.value) {
+    emailInput.value.removeAttribute('readonly')
+  }
+}
+
+function addReadonly() {
+  if (emailInput.value) {
+    emailInput.value.setAttribute('readonly', 'true')
+  }
+}
 
 const languages = [
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
