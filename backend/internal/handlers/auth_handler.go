@@ -139,10 +139,14 @@ func (h *AuthHandler) ListEmployees(c *gin.Context) {
 
 	rows, err := h.DB.Query(`
 		SELECT 
-			id, full_name, email, phone, role, is_active, created_at,
-			COALESCE(device_model, '') as device_model
-		FROM users 
-		ORDER BY created_at DESC
+			u.id, u.full_name, u.email, u.phone, u.role, u.is_active, u.created_at,
+			COALESCE(u.device_model, '') as device_model,
+			ws.name as current_worksite,
+			ws.id as current_worksite_id
+		FROM users u
+		LEFT JOIN attendance a ON u.id = a.user_id AND a.status = 'in_progress'
+		LEFT JOIN worksites ws ON a.worksite_id = ws.id
+		ORDER BY u.created_at DESC
 	`)
 
 	if err != nil {
@@ -156,23 +160,28 @@ func (h *AuthHandler) ListEmployees(c *gin.Context) {
 	for rows.Next() {
 		var id, fullName, email, phone, role, createdAt, deviceModel string
 		var isActive bool
+		var currentWorksite, currentWorksiteID sql.NullString
 
-		if err := rows.Scan(&id, &fullName, &email, &phone, &role, &isActive, &createdAt, &deviceModel); err != nil {
+		if err := rows.Scan(&id, &fullName, &email, &phone, &role, &isActive, &createdAt, &deviceModel, &currentWorksite, &currentWorksiteID); err != nil {
 			log.Printf("⚠️ خطأ في القراءة: %v", err)
 			continue
 		}
 
-		employees = append(employees, gin.H{
-			"id":            id,
-			"full_name":     fullName,
-			"email":         email,
-			"phone":         phone,
-			"role":          role,
-			"is_active":     isActive,
-			"created_at":    createdAt,
-			"device_model":  deviceModel,
-			"is_registered": deviceModel != "",
-		})
+		employee := gin.H{
+			"id":                id,
+			"full_name":         fullName,
+			"email":             email,
+			"phone":             phone,
+			"role":              role,
+			"is_active":         isActive,
+			"created_at":        createdAt,
+			"device_model":      deviceModel,
+			"is_registered":     deviceModel != "",
+			"current_worksite":  currentWorksite.String,
+			"current_worksite_id": currentWorksiteID.String,
+		}
+
+		employees = append(employees, employee)
 	}
 
 	log.Printf("✅ تم جلب %d موظف", len(employees))

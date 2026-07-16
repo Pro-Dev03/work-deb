@@ -24,5 +24,6 @@
   "location": "מיקום",
   "cleanup_old_records": "מחיקת רשומות ישנות",
   "name": "שם",
-  "worksite": "אתר עבודה"
+  "worksite": "אתר עבודה",
+  "current_worksite": "אתר עבודה נוכחי"
 }

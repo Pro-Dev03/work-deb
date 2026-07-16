@@ -24,5 +24,6 @@
   "location": "الموقع",
   "cleanup_old_records": "حذف السجلات القديمة",
   "name": "الاسم",
-  "worksite": "نقطة العمل"
+  "worksite": "نقطة العمل",
+  "current_worksite": "نقطة العمل الحالية"
 }

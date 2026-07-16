@@ -24,5 +24,6 @@
   "location": "Location",
   "cleanup_old_records": "Cleanup Old Records",
   "name": "Name",
-  "worksite": "Worksite"
+  "worksite": "Worksite",
+  "current_worksite": "Current Worksite"
 }

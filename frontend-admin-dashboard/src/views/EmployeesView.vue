@@ -33,6 +33,7 @@
               <th>{{ t('phone') }}</th>
               <th>{{ t('role') }}</th>
               <th>{{ t('status') }}</th>
+              <th>{{ t('current_worksite') }}</th>
               <th>{{ t('created_at') }}</th>
               <th>{{ t('actions') }}</th>
             </tr>
@@ -56,6 +57,12 @@
                 <span class="badge" :class="emp.is_active ? 'badge--in' : 'badge--out'">
                   {{ emp.is_active ? t('active_status') : t('suspended_status') }}
                 </span>
+              </td>
+              <td>
+                <span v-if="emp.current_worksite" class="badge badge--success">
+                  📍 {{ emp.current_worksite }}
+                </span>
+                <span v-else class="text-muted">—</span>
               </td>
               <td class="mono">{{ formatDate(emp.created_at) }}</td>
               <td>
@@ -104,6 +111,13 @@
             <div class="employee-card__row">
               <span class="employee-card__label">{{ t('phone') }}</span>
               <span class="employee-card__value mono">{{ emp.phone || '—' }}</span>
+            </div>
+            <div class="employee-card__row">
+              <span class="employee-card__label">{{ t('current_worksite') }}</span>
+              <span v-if="emp.current_worksite" class="employee-card__value">
+                <span class="badge badge--success badge--compact">📍 {{ emp.current_worksite }}</span>
+              </span>
+              <span v-else class="employee-card__value text-muted">—</span>
             </div>
             <div class="employee-card__row">
               <span class="employee-card__label">{{ t('created_at') }}</span>
@@ -920,6 +934,15 @@ onMounted(fetchEmployees)
   font-size: 11px;
   padding: 4px 8px;
   white-space: nowrap;
+}
+
+.badge--success {
+  background-color: #10b981;
+  color: white;
+}
+
+.text-muted {
+  color: var(--ink-soft);
 }
 
 .employee-card__body {
