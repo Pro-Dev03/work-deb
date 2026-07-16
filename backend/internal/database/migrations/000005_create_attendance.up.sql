@@ -16,8 +16,13 @@ CREATE TABLE IF NOT EXISTS attendance (
     check_out_lng DOUBLE PRECISION,
     check_out_distance_meters DOUBLE PRECISION,
 
+    photo_url TEXT,
+    photo_uploaded_at TIMESTAMPTZ,
+    photo_notes TEXT,
+
     status VARCHAR(20) NOT NULL DEFAULT 'in_progress'
         CHECK (status IN ('in_progress', 'completed')),
 
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

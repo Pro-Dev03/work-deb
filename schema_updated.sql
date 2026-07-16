@@ -217,9 +217,14 @@ CREATE TABLE IF NOT EXISTS worksites (
     radius_meters INTEGER NOT NULL DEFAULT 100
         CHECK (radius_meters > 0),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- إضافة عمود assigned_employee_id إذا لم يكن موجوداً (للتوافق مع قواعد البيانات الموجودة)
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
 
 -- جدول المهام
 CREATE TABLE IF NOT EXISTS tasks (
@@ -242,7 +247,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     task_id UUID REFERENCES tasks(id) ON DELETE SET NULL,
-    worksite_id UUID NOT NULL REFERENCES worksites(id) ON DELETE RESTRICT,
+    worksite_id UUID REFERENCES worksites(id) ON DELETE RESTRICT,
 
     check_in_time TIMESTAMPTZ,
     check_in_lat DOUBLE PRECISION,
@@ -260,8 +265,13 @@ CREATE TABLE IF NOT EXISTS attendance (
 
     status VARCHAR(20) NOT NULL DEFAULT 'in_progress'
         CHECK (status IN ('in_progress', 'completed')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- إضافة عمود updated_at إذا لم يكن موجوداً (للتوافق مع قواعد البيانات الموجودة)
+ALTER TABLE attendance
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 -- إضافة حقول الصور إلى جدول الحضور إذا لم تكن موجودة
 ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
@@ -340,6 +350,9 @@ CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 CREATE INDEX IF NOT EXISTS idx_worksites_location
     ON worksites(latitude, longitude);
 
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee
+    ON worksites(assigned_employee_id);
+
 CREATE INDEX IF NOT EXISTS idx_tasks_worksite_id
     ON tasks(worksite_id);
 
@@ -351,6 +364,9 @@ CREATE INDEX IF NOT EXISTS idx_attendance_user_id
 
 CREATE INDEX IF NOT EXISTS idx_attendance_task_id
     ON attendance(task_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id
+    ON attendance(worksite_id);
 
 CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time
     ON attendance(check_in_time);
@@ -388,7 +404,12 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id
 -- 3. بيانات تسجيل الدخول الافتراضية:
 --    - morad@worktrack.com / adminmorad (اشتراك مدى الحياة)
 --    - admin@worktrack.com / adminadmin (اشتراك سنة واحدة)
---    - morad-admin@worktrack.com / admin123 (اشتراك مدى الحياة) - جديد
+--    - morad-admin@worktrack.com / admin123 (اشتراك مدى الحياة)
 --
--- 4. السكريبت آمن للتشغيل المتعدد - يستخدم IF NOT EXISTS و ON CONFLICT
+-- 4. التحديثات في هذا الإصدار:
+--    - إضافة عمود assigned_employee_id إلى جدول worksites
+--    - إضافة عمود updated_at إلى جدول attendance
+--    - إضافة فهارس محسّنة للأداء
+--
+-- 5. السكريبت آمن للتشغيل المتعدد - يستخدم IF NOT EXISTS و ON CONFLICT
 -- =====================================================
