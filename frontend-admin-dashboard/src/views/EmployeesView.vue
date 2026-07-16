@@ -622,6 +622,18 @@ onMounted(fetchEmployees)
 .desktop-only { display: none; }
 .mobile-only { display: none; }
 
+/* إظهار الجدول للشاشات الكبيرة فقط */
+@media (min-width: 769px) {
+  .desktop-only { display: block !important; }
+  .mobile-only { display: none !important; }
+}
+
+/* إظهار البطاقات للشاشات الصغيرة فقط */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+}
+
 .table { width: 100%; border-collapse: collapse; }
 
 .table th {
@@ -789,9 +801,6 @@ onMounted(fetchEmployees)
     max-width: 100%;
   }
   
-  .desktop-only { display: none !important; }
-  .mobile-only { display: block !important; }
-  
   .card {
     border-radius: var(--radius-md);
   }
@@ -799,11 +808,6 @@ onMounted(fetchEmployees)
   .mobile-cards {
     padding: 0 4px;
   }
-}
-
-@media (min-width: 769px) {
-  .desktop-only { display: block !important; }
-  .mobile-only { display: none !important; }
 }
 
 /* تصميم بطاقات سجل الحضور للهاتف */

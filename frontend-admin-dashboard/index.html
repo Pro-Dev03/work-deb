@@ -13,22 +13,46 @@
     />
     <title>WorkTrack — Admin</title>
     <style>
-      /* منع ظهور المحتوى غير المنسق */
+      /* منع ظهور المحتوى غير المنسق - Critical CSS */
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* إخفاء العناصر غير الضرورية قبل التحميل */
+      body > :not(#app):not(script) {
+        display: none !important;
+      }
+      
+      /* إخفاء Vue app قبل التحميل */
       [v-cloak] {
         display: none !important;
       }
+      
+      /* شاشة التحميل */
       #app[v-cloak] {
+        display: flex !important;
         min-height: 100vh;
-        display: flex;
         align-items: center;
         justify-content: center;
         background: #f8fafc;
+        position: relative;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       }
+      
       #app[v-cloak]::before {
         content: "جاري التحميل...";
-        font-family: 'Cairo', sans-serif;
         font-size: 18px;
         color: #64748b;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
       }
     </style>
   </head>
