@@ -21,7 +21,7 @@ func NewWorksiteHandler(db *sql.DB) *WorksiteHandler {
 
 // List - جلب جميع نقاط العمل مع الموظفين العاملين حالياً
 func (h *WorksiteHandler) List(c *gin.Context) {
-	// التحقق من وجود عمود assigned_employee_id
+	// التحقق من وجود عمود assigned_employee_id للتوافق مع الإصدارات القديمة
 	var columnExists bool
 	h.DB.QueryRow(`
 		SELECT EXISTS (
@@ -34,7 +34,7 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 	var err error
 
 	if columnExists {
-		// استخدام الاستعلام مع assigned_employee_id
+		// استخدام الاستعلام مع assigned_employee_id (الإصدار الحديث)
 		rows, err = h.DB.Query(`
 			SELECT w.id, w.name, w.address, w.latitude, w.longitude, w.radius_meters, w.is_active, w.created_at,
 				u.id as assigned_employee_id, u.full_name as assigned_employee_name
@@ -42,7 +42,7 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 			LEFT JOIN users u ON w.assigned_employee_id = u.id
 			ORDER BY w.created_at DESC`)
 	} else {
-		// استخدام الاستعلام بدون assigned_employee_id
+		// استخدام الاستعلام بدون assigned_employee_id (للتوافق مع الإصدارات القديمة)
 		rows, err = h.DB.Query(`
 			SELECT w.id, w.name, w.address, w.latitude, w.longitude, w.radius_meters, w.is_active, w.created_at
 			FROM worksites w
@@ -64,11 +64,13 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 		if columnExists {
 			if err := rows.Scan(&w.ID, &w.Name, &w.Address, &w.Latitude, &w.Longitude,
 				&w.RadiusMeters, &w.IsActive, &w.CreatedAt, &assignedEmployeeID, &assignedEmployeeName); err != nil {
+				log.Printf("⚠️ خطأ في قراءة صف نقاط العمل: %v", err)
 				continue
 			}
 		} else {
 			if err := rows.Scan(&w.ID, &w.Name, &w.Address, &w.Latitude, &w.Longitude,
 				&w.RadiusMeters, &w.IsActive, &w.CreatedAt); err != nil {
+				log.Printf("⚠️ خطأ في قراءة صف نقاط العمل: %v", err)
 				continue
 			}
 		}
