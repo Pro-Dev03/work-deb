@@ -21,12 +21,34 @@ func NewWorksiteHandler(db *sql.DB) *WorksiteHandler {
 
 // List - جلب جميع نقاط العمل مع الموظفين العاملين حالياً
 func (h *WorksiteHandler) List(c *gin.Context) {
-	rows, err := h.DB.Query(`
-		SELECT w.id, w.name, w.address, w.latitude, w.longitude, w.radius_meters, w.is_active, w.created_at,
-			u.id as assigned_employee_id, u.full_name as assigned_employee_name
-		FROM worksites w
-		LEFT JOIN users u ON w.assigned_employee_id = u.id
-		ORDER BY w.created_at DESC`)
+	// التحقق من وجود عمود assigned_employee_id
+	var columnExists bool
+	h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM information_schema.columns 
+			WHERE table_name = 'worksites' AND column_name = 'assigned_employee_id'
+		)
+	`).Scan(&columnExists)
+
+	var rows *sql.Rows
+	var err error
+
+	if columnExists {
+		// استخدام الاستعلام مع assigned_employee_id
+		rows, err = h.DB.Query(`
+			SELECT w.id, w.name, w.address, w.latitude, w.longitude, w.radius_meters, w.is_active, w.created_at,
+				u.id as assigned_employee_id, u.full_name as assigned_employee_name
+			FROM worksites w
+			LEFT JOIN users u ON w.assigned_employee_id = u.id
+			ORDER BY w.created_at DESC`)
+	} else {
+		// استخدام الاستعلام بدون assigned_employee_id
+		rows, err = h.DB.Query(`
+			SELECT w.id, w.name, w.address, w.latitude, w.longitude, w.radius_meters, w.is_active, w.created_at
+			FROM worksites w
+			ORDER BY w.created_at DESC`)
+	}
+
 	if err != nil {
 		log.Printf("❌ فشل جلب نقاط العمل: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب نقاط العمل"})
@@ -38,9 +60,17 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 	for rows.Next() {
 		var w models.Worksite
 		var assignedEmployeeID, assignedEmployeeName sql.NullString
-		if err := rows.Scan(&w.ID, &w.Name, &w.Address, &w.Latitude, &w.Longitude,
-			&w.RadiusMeters, &w.IsActive, &w.CreatedAt, &assignedEmployeeID, &assignedEmployeeName); err != nil {
-			continue
+
+		if columnExists {
+			if err := rows.Scan(&w.ID, &w.Name, &w.Address, &w.Latitude, &w.Longitude,
+				&w.RadiusMeters, &w.IsActive, &w.CreatedAt, &assignedEmployeeID, &assignedEmployeeName); err != nil {
+				continue
+			}
+		} else {
+			if err := rows.Scan(&w.ID, &w.Name, &w.Address, &w.Latitude, &w.Longitude,
+				&w.RadiusMeters, &w.IsActive, &w.CreatedAt); err != nil {
+				continue
+			}
 		}
 
 		worksite := gin.H{
@@ -54,7 +84,7 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 			"created_at":    w.CreatedAt,
 		}
 
-		if assignedEmployeeID.Valid && assignedEmployeeName.Valid {
+		if columnExists && assignedEmployeeID.Valid && assignedEmployeeName.Valid {
 			worksite["assigned_to"] = gin.H{
 				"id":   assignedEmployeeID.String,
 				"name": assignedEmployeeName.String,
