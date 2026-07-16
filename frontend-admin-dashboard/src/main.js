@@ -14,7 +14,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
 })
 
-const app = createApp(App)
-app.use(i18n)
-app.use(router)
-app.mount('#app')
+// التأكد من تحميل الصفحة بشكل كامل قبل تعريف التطبيق
+document.addEventListener('DOMContentLoaded', () => {
+  const app = createApp(App)
+  app.use(i18n)
+  app.use(router)
+  app.mount('#app')
+})

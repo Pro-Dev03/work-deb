@@ -4,7 +4,10 @@ import router from './router'
 import './styles/tokens.css'
 import i18n from './services/i18n'
 
-const app = createApp(App)
-app.use(i18n)
-app.use(router)
-app.mount('#app')
+// التأكد من تحميل الصفحة بشكل كامل قبل تعريف التطبيق
+document.addEventListener('DOMContentLoaded', () => {
+  const app = createApp(App)
+  app.use(i18n)
+  app.use(router)
+  app.mount('#app')
+})

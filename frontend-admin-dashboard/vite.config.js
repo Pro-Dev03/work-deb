@@ -10,5 +10,16 @@ export default defineConfig({
   optimizeDeps: {
     include: ['vue', 'vue-router', 'leaflet']
   },
-  assetsInclude: ['**/*.json']
+  assetsInclude: ['**/*.json'],
+  build: {
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router'],
+          'leaflet-vendor': ['leaflet']
+        }
+      }
+    }
+  }
 })

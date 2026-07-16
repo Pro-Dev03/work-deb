@@ -9,5 +9,15 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['vue', 'vue-router']
+  },
+  build: {
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router']
+        }
+      }
+    }
   }
 })
