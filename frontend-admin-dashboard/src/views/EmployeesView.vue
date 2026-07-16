@@ -115,14 +115,16 @@
               class="btn btn--primary btn--sm btn--compact" 
               @click="showAttendanceHistory(emp)"
             >
-              📊 <span class="btn-text">{{ t('attendance_history') }}</span>
+              <span class="btn-icon">📊</span>
+              <span class="btn-text">{{ t('attendance_history') }}</span>
             </button>
             <button 
               class="btn btn--danger btn--sm btn--compact" 
               @click="confirmDelete(emp)"
               :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
             >
-              🗑️ <span class="btn-text">{{ t('delete') }}</span>
+              <span class="btn-icon">🗑️</span>
+              <span class="btn-text">{{ t('delete') }}</span>
             </button>
           </div>
         </div>
@@ -840,12 +842,12 @@ onMounted(fetchEmployees)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 150px;
+  max-width: 180px;
 }
 
 @media (max-width: 380px) {
   .attendance-card__value {
-    max-width: 120px;
+    max-width: 140px;
   }
 }
 
@@ -894,7 +896,7 @@ onMounted(fetchEmployees)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 180px;
+  max-width: 200px;
 }
 
 .employee-card__email {
@@ -903,7 +905,7 @@ onMounted(fetchEmployees)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 180px;
+  max-width: 200px;
 }
 
 .employee-card__badges {
@@ -948,7 +950,7 @@ onMounted(fetchEmployees)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 150px;
+  max-width: 180px;
 }
 
 .employee-card__actions {
@@ -959,9 +961,13 @@ onMounted(fetchEmployees)
 
 .employee-card__actions .btn {
   flex: 1;
-  min-width: 100px;
+  min-width: 110px;
   font-size: 13px;
   padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn--compact {
@@ -969,32 +975,64 @@ onMounted(fetchEmployees)
   padding: 6px 10px;
 }
 
+.btn--compact .btn-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
 .btn--compact .btn-text {
   display: inline;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 @media (max-width: 380px) {
   .employee-card__name {
-    max-width: 140px;
+    max-width: 150px;
   }
   
   .employee-card__email {
-    max-width: 140px;
+    max-width: 150px;
   }
   
   .employee-card__value {
-    max-width: 120px;
+    max-width: 130px;
   }
   
   .employee-card__actions .btn {
-    min-width: 90px;
-    font-size: 12px;
+    min-width: 95px;
+    font-size: 11px;
     padding: 6px 8px;
+    gap: 4px;
+  }
+  
+  .btn--compact .btn-icon {
+    font-size: 12px;
   }
   
   .badge--compact {
     font-size: 10px;
     padding: 3px 6px;
+  }
+}
+
+@media (max-width: 340px) {
+  .employee-card__actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .employee-card__actions .btn {
+    min-width: 100%;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  .btn--compact .btn-icon {
+    font-size: 14px;
   }
 }
 
