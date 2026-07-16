@@ -64,5 +64,6 @@
   "status": "الحالة",
   "actions": "إجراءات",
   "created_at": "تاريخ الإنشاء",
-  "shift_restored": "🔄 تم استعادة الوردية النشطة"
+  "shift_restored": "🔄 تم استعادة الوردية النشطة",
+  "current_worksite": "نقطة العمل الحالية"
 }

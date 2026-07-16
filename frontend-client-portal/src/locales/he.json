@@ -64,5 +64,6 @@
   "status": "סטטוס",
   "actions": "פעולות",
   "created_at": "תאריך יצירה",
-  "shift_restored": "🔄 המשמרת הפעילה שוחזרה"
+  "shift_restored": "🔄 המשמרת הפעילה שוחזרה",
+  "current_worksite": "אתר עבודה נוכחי"
 }

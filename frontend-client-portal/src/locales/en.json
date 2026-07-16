@@ -64,5 +64,6 @@
   "status": "Status",
   "actions": "Actions",
   "created_at": "Created At",
-  "shift_restored": "🔄 Active shift restored"
+  "shift_restored": "🔄 Active shift restored",
+  "current_worksite": "Current Worksite"
 }
