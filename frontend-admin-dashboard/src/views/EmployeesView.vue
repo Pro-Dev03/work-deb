@@ -92,10 +92,10 @@
               </div>
             </div>
             <div class="employee-card__badges">
-              <span class="badge" :class="emp.role === 'admin' ? 'badge--gold' : ''">
+              <span class="badge badge--compact" :class="emp.role === 'admin' ? 'badge--gold' : ''">
                 {{ emp.role === 'admin' ? t('admin_role') : t('field_employee') }}
               </span>
-              <span class="badge" :class="emp.is_active ? 'badge--in' : 'badge--out'">
+              <span class="badge badge--compact" :class="emp.is_active ? 'badge--in' : 'badge--out'">
                 {{ emp.is_active ? t('active_status') : t('suspended_status') }}
               </span>
             </div>
@@ -112,17 +112,17 @@
           </div>
           <div class="employee-card__actions">
             <button 
-              class="btn btn--primary btn--sm" 
+              class="btn btn--primary btn--sm btn--compact" 
               @click="showAttendanceHistory(emp)"
             >
-              📊 {{ t('attendance_history') }}
+              📊 <span class="btn-text">{{ t('attendance_history') }}</span>
             </button>
             <button 
-              class="btn btn--danger btn--sm" 
+              class="btn btn--danger btn--sm btn--compact" 
               @click="confirmDelete(emp)"
               :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
             >
-              🗑️ {{ t('delete') }}
+              🗑️ <span class="btn-text">{{ t('delete') }}</span>
             </button>
           </div>
         </div>
@@ -823,18 +823,30 @@ onMounted(fetchEmployees)
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 .attendance-card__label {
   font-size: 13px;
   color: var(--ink-soft);
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .attendance-card__value {
   font-size: 14px;
   color: var(--ink);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+@media (max-width: 380px) {
+  .attendance-card__value {
+    max-width: 120px;
+  }
 }
 
 /* تصميم بطاقات الموظفين للهاتف */
@@ -858,13 +870,15 @@ onMounted(fetchEmployees)
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
+  gap: 8px;
 }
 
 .employee-card__person {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
+  min-width: 0; /* مهم للنصوص الطويلة */
 }
 
 .employee-card__info {
@@ -877,11 +891,19 @@ onMounted(fetchEmployees)
   font-weight: 600;
   color: var(--ink);
   font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 
 .employee-card__email {
   font-size: 12px;
   color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 
 .employee-card__badges {
@@ -889,6 +911,13 @@ onMounted(fetchEmployees)
   flex-direction: column;
   gap: 6px;
   align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.badge--compact {
+  font-size: 11px;
+  padding: 4px 8px;
+  white-space: nowrap;
 }
 
 .employee-card__body {
@@ -902,18 +931,24 @@ onMounted(fetchEmployees)
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 .employee-card__label {
   font-size: 13px;
   color: var(--ink-soft);
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .employee-card__value {
   font-size: 14px;
   color: var(--ink);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
 }
 
 .employee-card__actions {
@@ -924,7 +959,43 @@ onMounted(fetchEmployees)
 
 .employee-card__actions .btn {
   flex: 1;
-  min-width: 120px;
+  min-width: 100px;
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+.btn--compact {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.btn--compact .btn-text {
+  display: inline;
+}
+
+@media (max-width: 380px) {
+  .employee-card__name {
+    max-width: 140px;
+  }
+  
+  .employee-card__email {
+    max-width: 140px;
+  }
+  
+  .employee-card__value {
+    max-width: 120px;
+  }
+  
+  .employee-card__actions .btn {
+    min-width: 90px;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+  
+  .badge--compact {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
 }
 
 /* تحسين شريط التمرير */
