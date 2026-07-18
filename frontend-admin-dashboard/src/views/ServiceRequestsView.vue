@@ -86,7 +86,6 @@
             <span class="employee-item__avatar">{{ emp.full_name.slice(0, 1) }}</span>
             <div>
               <strong>{{ emp.full_name }}</strong>
-              <span class="mono">{{ emp.email }}</span>
             </div>
           </button>
         </div>

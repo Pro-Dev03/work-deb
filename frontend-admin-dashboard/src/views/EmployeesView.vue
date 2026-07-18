@@ -29,7 +29,6 @@
           <thead>
             <tr>
               <th>{{ t('name') }}</th>
-              <th>{{ t('email') }}</th>
               <th>{{ t('phone') }}</th>
               <th>{{ t('role') }}</th>
               <th>{{ t('status') }}</th>
@@ -46,7 +45,6 @@
                   {{ emp.full_name }}
                 </div>
               </td>
-              <td class="mono">{{ emp.email }}</td>
               <td class="mono">{{ emp.phone || '—' }}</td>
               <td>
                 <span class="badge" :class="emp.role === 'admin' ? 'badge--gold' : ''">
@@ -95,7 +93,6 @@
               <span class="table__avatar">{{ emp.full_name?.slice(0, 1) || '?' }}</span>
               <div class="employee-card__info">
                 <span class="employee-card__name">{{ emp.full_name }}</span>
-                <span class="employee-card__email mono">{{ emp.email }}</span>
               </div>
             </div>
             <div class="employee-card__badges">
@@ -936,15 +933,6 @@ onMounted(fetchEmployees)
   max-width: 200px;
 }
 
-.employee-card__email {
-  font-size: 12px;
-  color: var(--ink-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
-}
-
 .employee-card__badges {
   display: flex;
   flex-direction: column;
@@ -1040,10 +1028,6 @@ onMounted(fetchEmployees)
     max-width: 150px;
   }
   
-  .employee-card__email {
-    max-width: 150px;
-  }
-  
   .employee-card__value {
     max-width: 130px;
   }
@@ -1117,10 +1101,6 @@ onMounted(fetchEmployees)
   }
   
   .employee-card__name {
-    max-width: 100%;
-  }
-  
-  .employee-card__email {
     max-width: 100%;
   }
   

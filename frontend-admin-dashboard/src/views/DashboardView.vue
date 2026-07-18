@@ -313,7 +313,7 @@
               <span class="employee-detail__avatar">{{ selectedEmployee.full_name.slice(0, 1) }}</span>
               <div>
                 <h4>{{ selectedEmployee.full_name }}</h4>
-                <p>{{ selectedEmployee.email }} | {{ selectedEmployee.phone }}</p>
+                <p>{{ selectedEmployee.phone }}</p>
               </div>
             </div>
             
