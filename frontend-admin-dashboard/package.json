@@ -68,7 +68,12 @@
       "package.json",
       "public/**/*"
     ],
-    "asar": false,
+    "asar": true,
+    "asarUnpack": [
+      "**/*.dll",
+      "**/*.dat",
+      "**/*.pak"
+    ],
     "extraResources": [
       {
         "from": "public",
@@ -79,7 +84,14 @@
       }
     ],
     "win": {
-      "target": "dir",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "public/icon.ico",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
