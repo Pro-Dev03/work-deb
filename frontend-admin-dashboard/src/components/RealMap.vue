@@ -2,18 +2,16 @@
   <div class="map-container">
     <l-map
       ref="mapRef"
-      :key="isDarkMode ? 'dark' : 'light'"
       :zoom="zoom"
       @update:zoom="updateZoom"
       :center="center"
-      :options="{ attributionControl: true, zoomControl: true, zoomSnap: 0.5 }"
+      :options="{ attributionControl: true, zoomControl: true }"
       :style="{ height: height + 'px', width: '100%' }"
-      class="wolt-map"
     >
       <l-tile-layer
         :url="mapTileUrl"
         layer-type="base"
-        :name="mapLayerName"
+        :name="isDarkMode ? 'CartoDB Dark' : 'OpenStreetMap'"
         :attribution="mapAttribution"
       />
       
@@ -31,10 +29,10 @@
         </l-icon>
         <l-popup>
           <div class="popup-content">
-            <h4>{{ site.name }}</h4>
-            <p v-if="site.address">📍 {{ site.address }}</p>
+            <h4>🏢 {{ site.name }}</h4>
+            <p>{{ site.address || 'لا يوجد عنوان' }}</p>
             <p>⭕ النطاق: {{ site.radius_meters }} متر</p>
-            <p>👥 الموظفين: {{ getEmployeeCount(site.id) }}</p>
+            <p>👥 عدد الموظفين: {{ getEmployeeCount(site.id) }}</p>
           </div>
         </l-popup>
       </l-marker>
@@ -55,7 +53,7 @@
         </l-icon>
         <l-popup>
           <div class="popup-content employee-popup">
-            <h4>{{ emp.full_name }}</h4>
+            <h4>👤 {{ emp.full_name }}</h4>
             <p>📍 {{ emp.worksite.name }}</p>
             <p>📏 المسافة: {{ formatDistance(emp.worksite.distance) }}</p>
             <p>⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة</p>
@@ -68,7 +66,7 @@
               class="btn btn--sm btn--primary"
               @click="handleShowDetails(emp)"
             >
-              عرض التفاصيل
+              📋 عرض التفاصيل
             </button>
           </div>
         </l-popup>
@@ -103,48 +101,30 @@ const emit = defineEmits(['update:zoom', 'showDetails'])
 
 const mapRef = ref(null)
 let watchId = null
-let observer = null
 
-// ✅ اكتشاف الوضع الداكن مع مراقبة التغييرات
-const isDarkMode = ref(document.documentElement.getAttribute('data-theme') === 'dark')
+// ✅ اكتشاف الوضع الداكن
+const isDarkMode = computed(() => {
+  return document.documentElement.getAttribute('data-theme') === 'dark'
+})
 
-// ✅ مراقبة تغييرات data-theme
-const observeThemeChanges = () => {
-  observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
-        isDarkMode.value = document.documentElement.getAttribute('data-theme') === 'dark'
-      }
-    })
-  })
-
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['data-theme']
-  })
-}
-
-// ✅ تحديد URL الخريطة حسب الوضع - Wolt-style design
+// ✅ تحديد URL الخريطة حسب الوضع
 const mapTileUrl = computed(() => {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-  if (isDark) {
-    // خريطة داكنة أنيقة من CartoDB - تشبه Wolt
+  if (isDarkMode.value) {
+    // خريطة داكنة من CartoDB
     return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
   } else {
-    // خريطة فاتحة أنيقة من CartoDB - تشبه Wolt
-    return 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    // خريطة عادية من OpenStreetMap
+    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
   }
 })
 
-// ✅ تحديد Attribution حسب الوضع - Wolt-style minimal attribution
+// ✅ تحديد Attribution حسب الوضع
 const mapAttribution = computed(() => {
-  return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-})
-
-// ✅ اسم طبقة الخريطة
-const mapLayerName = computed(() => {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-  return isDark ? 'CartoDB Dark' : 'CartoDB Light'
+  if (isDarkMode.value) {
+    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  } else {
+    return '&copy; OpenStreetMap contributors'
+  }
 })
 
 function updateZoom(newZoom) {
@@ -183,83 +163,66 @@ function getUserLocation() {
 
 onMounted(() => {
   getUserLocation()
-  observeThemeChanges()
 })
 
 onUnmounted(() => {
   if (watchId) {
     navigator.geolocation.clearWatch(watchId)
   }
-  if (observer) {
-    observer.disconnect()
-  }
 })
 </script>
 
 <style scoped>
 .map-container {
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--line);
   position: relative;
   min-height: 400px;
-  background: #f8f9fa;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.02);
-  transition: all 0.3s ease;
+  background: #E8EDF2;
 }
 
 [data-theme="dark"] .map-container {
-  background: #1a1a1a;
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background: #0f172a;
+  border-color: #334155;
 }
 
 .worksite-marker {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .worksite-dot {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: #333333;
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: #2563EB;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
   z-index: 2;
-  transition: all 0.3s ease;
-}
-
-[data-theme="dark"] .worksite-dot {
-  background: #ffffff;
-  border-color: #333333;
 }
 
 .worksite-ring {
   position: absolute;
-  inset: -10px;
+  inset: -8px;
   border-radius: 50%;
-  border: 2px solid rgba(51, 51, 51, 0.4);
-  animation: ringPulse 2.5s ease-out infinite;
-}
-
-[data-theme="dark"] .worksite-ring {
-  border-color: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(37, 99, 235, 0.3);
+  animation: ringPulse 2s ease-out infinite;
 }
 
 @keyframes ringPulse {
   0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
 }
 
 .employee-marker {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -267,59 +230,58 @@ onUnmounted(() => {
 }
 
 .employee-dot {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
   color: white;
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   z-index: 2;
   transition: all 0.3s ease;
 }
 
 .employee-dot.inside {
   background: #22C55E;
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
 }
 
 .employee-dot.outside {
   background: #EF4444;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
 .employee-pulse {
   position: absolute;
-  inset: -6px;
+  inset: -4px;
   border-radius: 50%;
   z-index: 1;
-  animation: employeePulse 2s ease-out infinite;
+  animation: employeePulse 1.5s ease-out infinite;
 }
 
 .employee-pulse.inside {
-  border: 3px solid rgba(34, 197, 94, 0.6);
+  border: 2px solid #22C55E;
 }
 
 .employee-pulse.outside {
-  border: 3px solid rgba(239, 68, 68, 0.6);
+  border: 2px solid #EF4444;
 }
 
 @keyframes employeePulse {
   0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(1.7); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
 .employee-marker:hover .employee-dot {
-  transform: scale(1.15);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
 }
 
 .employee-marker:hover .employee-pulse {
-  animation-duration: 1s;
+  animation-duration: 0.8s;
 }
 
 .map-overlay {
@@ -328,71 +290,56 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
   z-index: 1000;
-  padding: 40px;
-  border-radius: 16px;
+  padding: 30px;
+  border-radius: var(--radius-lg);
 }
 
 [data-theme="dark"] .map-overlay {
-  background: rgba(26, 26, 26, 0.92);
+  background: rgba(15, 23, 42, 0.85);
 }
 
 .overlay-content {
   text-align: center;
   max-width: 400px;
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeInUp 0.5s ease;
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .overlay-icon {
-  font-size: 72px;
+  font-size: 64px;
   display: block;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+  margin-bottom: 16px;
 }
 
 .overlay-content h3 {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
   color: var(--ink);
-  margin-bottom: 12px;
-  letter-spacing: -0.4px;
-}
-
-[data-theme="dark"] .overlay-content h3 {
-  color: #f1f5f9;
+  margin-bottom: 8px;
 }
 
 .overlay-content p {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--ink-soft);
-  margin-bottom: 20px;
-  line-height: 1.6;
-}
-
-[data-theme="dark"] .overlay-content p {
-  color: #cbd5e1;
+  margin-bottom: 16px;
 }
 
 .popup-content h4 {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 700;
+  margin: 0 0 4px;
+  font-size: 14px;
   color: var(--ink);
-  letter-spacing: -0.3px;
 }
 
 .popup-content p {
-  margin: 4px 0;
-  font-size: 13px;
+  margin: 2px 0;
+  font-size: 12px;
   color: var(--ink-soft);
-  line-height: 1.5;
 }
 
 [data-theme="dark"] .popup-content h4 {
@@ -404,108 +351,30 @@ onUnmounted(() => {
 }
 
 .popup-content .btn {
-  margin-top: 12px;
-  font-size: 13px;
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-weight: 600;
+  margin-top: 8px;
+  font-size: 12px;
+  padding: 4px 12px;
 }
 
 .employee-popup {
-  min-width: 220px;
-  padding: 4px;
+  min-width: 200px;
 }
 
 .badge--in {
-  background: rgba(34, 197, 94, 0.15);
+  background: #22C55E20;
   color: #22C55E;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 600;
-  display: inline-block;
 }
 
 .badge--out {
-  background: rgba(239, 68, 68, 0.15);
+  background: #EF444420;
   color: #EF4444;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-block;
-}
-
-/* Wolt-style map controls and attribution */
-.wolt-map :deep(.leaflet-control-attribution) {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
-  padding: 4px 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
   font-size: 11px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] .wolt-map :deep(.leaflet-control-attribution) {
-  background: rgba(0, 0, 0, 0.8) !important;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.wolt-map :deep(.leaflet-control-attribution a) {
-  color: #333 !important;
-}
-
-[data-theme="dark"] .wolt-map :deep(.leaflet-control-attribution a) {
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-
-.wolt-map :deep(.leaflet-control-zoom) {
-  border: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.wolt-map :deep(.leaflet-control-zoom a) {
-  background: white !important;
-  color: #333 !important;
-  border: none !important;
-  width: 36px !important;
-  height: 36px !important;
-  line-height: 36px !important;
-  font-size: 18px;
   font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.wolt-map :deep(.leaflet-control-zoom a:hover) {
-  background: #f0f0f0 !important;
-  transform: scale(1.05);
-}
-
-[data-theme="dark"] .wolt-map :deep(.leaflet-control-zoom a) {
-  background: #2a2a2a !important;
-  color: white !important;
-}
-
-[data-theme="dark"] .wolt-map :deep(.leaflet-control-zoom a:hover) {
-  background: #3a3a3a !important;
-}
-
-.wolt-map :deep(.leaflet-popup-content-wrapper) {
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  padding: 0;
-  overflow: hidden;
-}
-
-.wolt-map :deep(.leaflet-popup-content) {
-  margin: 0;
-  padding: 16px;
-  line-height: 1.5;
-}
-
-.wolt-map :deep(.leaflet-popup-tip) {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 </style>
