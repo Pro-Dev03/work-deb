@@ -1,9 +1,10 @@
-const CACHE_NAME = 'worktrack-v1'
+const CACHE_NAME = 'worktrack-v2'
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
+  '/icon.ico',
   '/icon-128x128.png',
   '/icon-256x256.png',
   '/icon-512x512.png'
