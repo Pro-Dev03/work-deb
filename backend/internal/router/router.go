@@ -76,7 +76,6 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 			// الموقع
 			employee.GET("/location/active", locationHandler.GetActiveEmployees)
 			employee.GET("/location/track/:id", locationHandler.GetEmployeeTrack)
-			employee.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)
 			employee.GET("/location/logs", locationHandler.GetLocationLogs)
 			employee.POST("/location/update", locationHandler.UpdateLocation)
 
@@ -118,6 +117,9 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 				admin.GET("/attendance/employee/:id/history", attendanceHandler.GetEmployeeAttendanceHistory)
 				admin.GET("/attendance/employee/:id/monthly-summary", attendanceHandler.GetEmployeeMonthlySummary)
 				admin.POST("/attendance/cleanup-old-records", attendanceHandler.CleanupOldRecords)
+
+				// الموقع والملاحظات الأمنية
+				admin.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)
 			}
 		}
 	}
