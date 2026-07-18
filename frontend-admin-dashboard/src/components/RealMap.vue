@@ -2,7 +2,7 @@
   <div class="map-container">
     <l-map
       ref="mapRef"
-      :key="isDarkMode ? 'dark' : 'light'"
+      :key="isDarkMode.value ? 'dark' : 'light'"
       :zoom="zoom"
       @update:zoom="updateZoom"
       :center="center"
@@ -12,7 +12,7 @@
       <l-tile-layer
         :url="mapTileUrl"
         layer-type="base"
-        :name="isDarkMode ? 'CartoDB Dark' : 'OpenStreetMap'"
+        :name="isDarkMode.value ? 'CartoDB Dark' : 'OpenStreetMap'"
         :attribution="mapAttribution"
       />
       
@@ -102,17 +102,32 @@ const emit = defineEmits(['update:zoom', 'showDetails'])
 
 const mapRef = ref(null)
 let watchId = null
+let observer = null
 
-// ✅ اكتشاف الوضع الداكن
-const isDarkMode = computed(() => {
-  return document.documentElement.getAttribute('data-theme') === 'dark'
-})
+// ✅ اكتشاف الوضع الداكن مع مراقبة التغييرات
+const isDarkMode = ref(document.documentElement.getAttribute('data-theme') === 'dark')
+
+// ✅ مراقبة تغييرات data-theme
+const observeThemeChanges = () => {
+  observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+        isDarkMode.value = document.documentElement.getAttribute('data-theme') === 'dark'
+      }
+    })
+  })
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+  })
+}
 
 // ✅ تحديد URL الخريطة حسب الوضع
 const mapTileUrl = computed(() => {
   if (isDarkMode.value) {
     // خريطة داكنة زرقاء فاتحة ومريحة للعين من CartoDB
-    return 'https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png'
+    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
   } else {
     // خريطة عادية من OpenStreetMap
     return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -164,11 +179,15 @@ function getUserLocation() {
 
 onMounted(() => {
   getUserLocation()
+  observeThemeChanges()
 })
 
 onUnmounted(() => {
   if (watchId) {
     navigator.geolocation.clearWatch(watchId)
+  }
+  if (observer) {
+    observer.disconnect()
   }
 })
 </script>
