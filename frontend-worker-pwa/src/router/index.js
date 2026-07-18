@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import AttendanceView from '../views/AttendanceView.vue'
 import ProfileView from '../views/ProfileView.vue'
@@ -10,7 +10,13 @@ const routes = [
   { path: '/profile', component: ProfileView },
 ]
 
-const router = createRouter({ history: createWebHistory(), routes })
+// استخدام MemoryHistory لـ Electron و WebHistory للويب
+const isElectron = typeof window !== 'undefined' && (window.isElectron || (window.process && window.process.type === 'renderer'))
+const router = createRouter({ 
+  history: isElectron ? createMemoryHistory() : createWebHistory(), 
+  routes 
+})
+
 router.beforeEach((to) => {
   if (!to.meta.public && !localStorage.getItem('worktrack_token')) return '/login'
   return true

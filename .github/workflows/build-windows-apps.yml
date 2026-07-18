@@ -1,0 +1,103 @@
+name: Build Windows Desktop Apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'App to build (admin, worker, client, all)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - admin
+          - worker
+          - client
+          - all
+
+jobs:
+  build-admin:
+    if: github.event.inputs.app == 'admin' || github.event.inputs.app == 'all'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (Admin)
+        run: |
+          cd frontend-admin-dashboard
+          npm install
+
+      - name: Build Admin Dashboard
+        run: |
+          cd frontend-admin-dashboard
+          npm run build:electron:win
+
+      - name: Upload Admin Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-windows
+          path: frontend-admin-dashboard/dist-electron/*.exe
+          retention-days: 30
+
+  build-worker:
+    if: github.event.inputs.app == 'worker' || github.event.inputs.app == 'all'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (Worker)
+        run: |
+          cd frontend-worker-pwa
+          npm install
+
+      - name: Build Worker PWA
+        run: |
+          cd frontend-worker-pwa
+          npm run build:electron:win
+
+      - name: Upload Worker Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-windows
+          path: frontend-worker-pwa/dist-electron/*.exe
+          retention-days: 30
+
+  build-client:
+    if: github.event.inputs.app == 'client' || github.event.inputs.app == 'all'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (Client)
+        run: |
+          cd frontend-client-portal
+          npm install
+
+      - name: Build Client Portal
+        run: |
+          cd frontend-client-portal
+          npm run build:electron:win
+
+      - name: Upload Client Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-windows
+          path: frontend-client-portal/dist-electron/*.exe
+          retention-days: 30

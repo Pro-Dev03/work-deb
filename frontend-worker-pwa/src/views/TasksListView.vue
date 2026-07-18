@@ -19,14 +19,45 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../services/i18n'
 import { tasksStore } from '../store/tasks'
 import TaskCard from '../components/TaskCard.vue'
+import wsService from '../services/websocket'
 
 const { t } = useI18n()
 
-onMounted(() => tasksStore.fetchMine())
+onMounted(() => {
+  tasksStore.fetchMine()
+  connectWebSocket()
+})
+
+onUnmounted(() => {
+  disconnectWebSocket()
+})
+
+function connectWebSocket() {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+  const apiHost = apiBaseUrl.replace('/api/v1', '')
+  const wsUrl = apiHost.replace('http://', 'ws://').replace('https://', 'wss://') + '/ws'
+  console.log('🔌 Attempting to connect to WebSocket:', wsUrl)
+  wsService.connect(wsUrl)
+  
+  wsService.onMessage((data) => {
+    if (data.type === 'connected') {
+      console.log('✅ تم الاتصال بـ WebSocket')
+    } else if (data.type === 'disconnected') {
+      console.log('❌ انقطع الاتصال بـ WebSocket')
+    } else if (data.type === 'task_update') {
+      console.log('📋 تحديث مهمة:', data.data)
+      tasksStore.fetchMine()
+    }
+  })
+}
+
+function disconnectWebSocket() {
+  wsService.disconnect()
+}
 </script>
 
 <style scoped>

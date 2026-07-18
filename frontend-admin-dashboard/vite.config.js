@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue()],
+  base: './', // استخدام مسارات نسبية لـ Electron
   server: { 
     port: 3001,
     cors: true

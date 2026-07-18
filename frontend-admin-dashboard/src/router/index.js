@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import EmployeesView from '../views/EmployeesView.vue'
@@ -21,8 +21,10 @@ const routes = [
   { path: '/settings', component: SettingsView, meta: { requiresAuth: true } },
 ]
 
+// استخدام MemoryHistory لـ Electron و WebHistory للويب
+const isElectron = typeof window !== 'undefined' && (window.isElectron || (window.process && window.process.type === 'renderer'))
 const router = createRouter({ 
-  history: createWebHistory(), 
+  history: isElectron ? createMemoryHistory() : createWebHistory(), 
   routes 
 })
 

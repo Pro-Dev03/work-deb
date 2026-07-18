@@ -18,7 +18,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: "https://worktrack-api-n3ns.onrender.com,https://worktrack-admin-dashboard.onrender.com,https://worktrack-worker-pwa.onrender.com"
       - key: DEFAULT_LANG
         value: ar
       - key: GEOAPIFY_KEY

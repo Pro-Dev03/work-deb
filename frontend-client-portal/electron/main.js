@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu, session } = require('electron')
 const path = require('path')
 const isDev = require('electron-is-dev')
 
@@ -14,7 +14,9 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      preload: path.join(__dirname, 'preload.js')
+      webSecurity: false, // إيقاف webSecurity للسماح بالاتصال بالـ API الخارجي
+      preload: path.join(__dirname, 'preload.js'),
+      additionalArguments: ['--disable-web-security', '--allow-running-insecure-content']
     },
     icon: path.join(__dirname, '../public/favicon.ico'),
     title: 'WorkTrack - بوابة العملاء'
@@ -26,6 +28,8 @@ function createWindow() {
     mainWindow.webContents.openDevTools()
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    // تمرير متغير البيئة للكشف عن Electron
+    mainWindow.webContents.executeJavaScript('window.isElectron = true')
   }
 
   mainWindow.on('closed', () => {
@@ -107,6 +111,41 @@ function createMenu() {
 }
 
 app.whenReady().then(() => {
+  // إعداد CORS وحل مشاكل الشبكة
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Access-Control-Allow-Origin': ['*'],
+        'Access-Control-Allow-Methods': ['GET, POST, PUT, DELETE, OPTIONS'],
+        'Access-Control-Allow-Headers': ['Content-Type, Authorization']
+      }
+    })
+  })
+  
+  // إعداد SSL/CORS للسماح بالاتصال بـ API خارجي
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    callback({
+      requestHeaders: {
+        ...details.requestHeaders,
+        'User-Agent': 'WorkTrack-Electron-App/1.0'
+      }
+    })
+  })
+  
+  // إعداد WebSocket للسماح بالاتصالات عبر بروتوكول ws:// و wss://
+  session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
+    const url = details.url
+    // السماح بجميع الاتصالات بما فيها WebSocket
+    callback({ cancel: false })
+  })
+  
+  // إعداد إضافي لضمان عمل WebSocket مع HTTPS
+  session.defaultSession.setCertificateVerifyProc((request, callback) => {
+    // تجاهل أخطاء الشهادات للسماح بالاتصال بالخوادم الخارجية
+    callback(0)
+  })
+  
   createWindow()
   createMenu()
 

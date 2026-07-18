@@ -42,3 +42,27 @@ test_morad_user.sql
 schema_final.sql
 schema_updated.sql
 check_user_queries.sql
+
+# Temporary images (keep project icons)
+*.png
+*.jpg
+!public/icon*.png
+!public/company-logo.jpg
+!src/assets/devpro-logo.jpg
+
+# Temporary documentation files
+BUILD_AND_RUN_COMMANDS.txt
+BUILD_GUIDE_AR.md
+ELECTRON_FIX_SUMMARY.md
+RENDER_FIX_GUIDE.md
+CLEANUP_GUIDE.md
+extend_subscription_guide.txt
+subscription_commands.txt
+blk
+
+# Temporary test files
+test-dark-mode.html
+test_results_report.md
+
+# Temporary build files
+backend/worktrack-api

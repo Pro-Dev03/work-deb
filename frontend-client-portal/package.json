@@ -1,6 +1,12 @@
 {
   "name": "worktrack-client-portal",
   "version": "1.0.0",
+  "description": "WorkTrack Client Portal - Customer interface for tracking and management",
+  "author": {
+    "name": "WorkTrack Team",
+    "email": "contact@worktrack.com"
+  },
+  "homepage": "https://github.com/worktrack/worktrack-client",
   "private": true,
   "type": "module",
   "main": "electron/main.js",
@@ -12,10 +18,22 @@
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3002 && electron .\"",
     "build:electron": "npm run build && electron-builder",
     "build:electron:win": "npm run build && electron-builder --win",
+    "build:electron:win:portable": "npm run build && electron-builder --win --publish never --config.win.target=portable",
     "build:electron:mac": "npm run build && electron-builder --mac",
-    "build:electron:linux": "npm run build && electron-builder --linux"
+    "build:electron:linux": "npm run build && electron-builder --linux",
+    "cap:sync": "npx cap sync",
+    "cap:sync:android": "npx cap sync android",
+    "cap:sync:ios": "npx cap sync ios",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:build:android": "npm run build && npx cap sync android && npx cap open android",
+    "cap:build:ios": "npm run build && npx cap sync ios && npx cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
     "axios": "^1.18.1",
     "vue": "^3.5.39",
     "vue-router": "^4.6.4"
@@ -26,6 +44,7 @@
     "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
     "electron-is-dev": "^3.0.1",
+    "sharp": "^0.35.3",
     "vite": "^5.3.1",
     "wait-on": "^9.0.10"
   },
@@ -45,34 +64,45 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "public/favicon.ico"
+      "icon": "public/icon.png"
     },
     "mac": {
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
-      "icon": "public/favicon.ico",
+      "icon": "public/icon.png",
       "category": "public.app-category.business"
     },
     "linux": {
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "public/favicon.ico",
-      "category": "Office"
+      "icon": "public/icon.png",
+      "category": "Office",
+      "maintainer": "WorkTrack Team <contact@worktrack.com>",
+      "executableName": "worktrack-client"
     },
     "nsis": {
       "oneClick": false,

@@ -1,0 +1,26 @@
+{
+  "appId": "com.worktrack.worker",
+  "appName": "WorkTrackWorker",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true,
+    "allowNavigation": ["*"]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#3880ff",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK"
+    },
+    "App": {
+      "buildString": "1.0.0"
+    }
+  }
+}
