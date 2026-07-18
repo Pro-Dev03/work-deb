@@ -8,6 +8,15 @@ node_modules/
 dist/
 .vite/
 
+# Electron build output
+dist-electron/
+build/
+*.dmg
+*.AppImage
+*.deb
+*.exe
+*.snap
+
 # Runtime data and local logs
 *.log
 uploads/
