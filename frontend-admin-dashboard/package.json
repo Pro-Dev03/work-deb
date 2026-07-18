@@ -40,7 +40,8 @@
     "leaflet": "^1.9.4",
     "vue": "^3.5.39",
     "vue-chartjs": "^5.3.4",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.21",
@@ -63,7 +64,15 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "public/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "target": [

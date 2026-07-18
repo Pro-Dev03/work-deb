@@ -1,6 +1,7 @@
-import { app, BrowserWindow, Menu, session } from 'electron'
+import { app, BrowserWindow, Menu, session, ipcMain } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import WebSocket from 'ws'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
@@ -21,6 +22,7 @@ if (process.platform === 'linux') {
 }
 
 let mainWindow
+let wsClient = null
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -48,7 +50,7 @@ function createWindow() {
 
   // تحميل التطبيق
   if (isDev) {
-    mainWindow.loadURL('http://localhost:3002')
+    mainWindow.loadURL('http://localhost:3001')
     mainWindow.webContents.openDevTools()
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
@@ -138,6 +140,70 @@ function createMenu() {
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 }
+
+// WebSocket handlers
+ipcMain.handle('websocket-connect', (event, url) => {
+  try {
+    if (wsClient) {
+      wsClient.close()
+    }
+
+    wsClient = new WebSocket(url)
+
+    wsClient.on('open', () => {
+      console.log('✅ WebSocket connected in main process')
+      if (mainWindow) {
+        mainWindow.webContents.send('websocket-open')
+      }
+    })
+
+    wsClient.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString())
+        if (mainWindow) {
+          mainWindow.webContents.send('websocket-message', message)
+        }
+      } catch (e) {
+        console.error('Error parsing WebSocket message:', e)
+      }
+    })
+
+    wsClient.on('error', (error) => {
+      console.error('WebSocket error:', error)
+      if (mainWindow) {
+        mainWindow.webContents.send('websocket-error', error.message)
+      }
+    })
+
+    wsClient.on('close', (code, reason) => {
+      console.log('WebSocket closed:', code, reason.toString())
+      if (mainWindow) {
+        mainWindow.webContents.send('websocket-close', code, reason.toString())
+      }
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to connect WebSocket:', error)
+    return { success: false, error: error.message }
+  }
+})
+
+ipcMain.handle('websocket-send', (event, data) => {
+  if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+    wsClient.send(JSON.stringify(data))
+    return { success: true }
+  }
+  return { success: false, error: 'WebSocket not connected' }
+})
+
+ipcMain.handle('websocket-disconnect', () => {
+  if (wsClient) {
+    wsClient.close()
+    wsClient = null
+  }
+  return { success: true }
+})
 
 app.whenReady().then(() => {
   // إعداد CORS وحل مشاكل الشبكة
