@@ -2,6 +2,7 @@
   <div class="map-container">
     <l-map
       ref="mapRef"
+      :key="isDarkMode ? 'dark' : 'light'"
       :zoom="zoom"
       @update:zoom="updateZoom"
       :center="center"
@@ -110,8 +111,8 @@ const isDarkMode = computed(() => {
 // ✅ تحديد URL الخريطة حسب الوضع
 const mapTileUrl = computed(() => {
   if (isDarkMode.value) {
-    // خريطة داكنة من CartoDB
-    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    // خريطة داكنة زرقاء فاتحة ومريحة للعين من CartoDB
+    return 'https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png'
   } else {
     // خريطة عادية من OpenStreetMap
     return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
