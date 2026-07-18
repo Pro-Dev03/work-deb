@@ -26,3 +26,10 @@ uploads/
 # Destructive local database utilities; never publish their sample credentials
 database_setup.sql
 reset_password.sql
+
+# Local SQL files with hardcoded passwords and test data
+create_morad_user.sql
+test_morad_user.sql
+schema_final.sql
+schema_updated.sql
+check_user_queries.sql
