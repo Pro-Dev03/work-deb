@@ -18,7 +18,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: "https://worktrack-admin.onrender.com,https://worktrack-client-portal.onrender.com,https://worktrack-worker-pwa.onrender.com"
+        value: "https://worktrack-admin.onrender.com,https://worktrack-client-portal.onrender.com,https://worktrack-worker-pwa.onrender.com,https://worktrack-worker.onrender.com,https://worktrack-client.onrender.com"
       - key: DEFAULT_LANG
         value: ar
       - key: GEOAPIFY_KEY

@@ -11,7 +11,7 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: https://worktrack-worker.onrender.com,https://worktrack-admin.onrender.com,https://worktrack-client.onrender.com
       # اللغة الافتراضية للردود عندما لا يرسل العميل أي تفضيل لغة (ar / he / en)
       - key: DEFAULT_LANG
         value: ar
@@ -22,4 +22,6 @@ services:
       - key: R2_SECRET_KEY
         sync: false
       - key: R2_BUCKET_NAME
+        sync: false
+      - key: GEOAPIFY_KEY
         sync: false

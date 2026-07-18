@@ -45,6 +45,7 @@
     "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
     "electron-is-dev": "^3.0.1",
+    "png-to-ico": "^3.0.2",
     "sharp": "^0.35.3",
     "vite": "^5.3.1",
     "wait-on": "^9.0.10"
@@ -59,7 +60,17 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "public/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "win": {
       "target": [
@@ -70,7 +81,7 @@
           ]
         }
       ],
-      "icon": "public/icon.png"
+      "icon": "public/icon.ico"
     },
     "mac": {
       "target": [
@@ -109,7 +120,10 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico",
+      "installerHeaderIcon": "public/icon.ico"
     }
   }
 }

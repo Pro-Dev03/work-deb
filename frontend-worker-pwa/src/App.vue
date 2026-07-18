@@ -8,7 +8,10 @@
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
         </div>
-        <span class="brand-name gradient-text">{{ t('app_name') }}</span>
+        <div class="brand-info">
+          <span class="brand-name gradient-text">{{ t('app_name') }}</span>
+          <span class="devpro-badge">Powered by DevPro</span>
+        </div>
       </div>
       <router-link to="/profile" class="avatar">{{ initials }}</router-link>
     </header>
@@ -67,11 +70,17 @@ const initials = computed(() => (authStore.user?.full_name || 'م ع').slice(0, 
   box-shadow: var(--shadow-md);
 }
 
-.brand { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
-  font-weight: 700; 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .brand-mark { 
@@ -91,6 +100,14 @@ const initials = computed(() => (authStore.user?.full_name || 'م ع').slice(0, 
 .brand-name {
   font-size: 16px;
   font-weight: 700;
+}
+
+.devpro-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .avatar { 

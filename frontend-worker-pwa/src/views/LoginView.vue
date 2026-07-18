@@ -44,7 +44,12 @@
         </button>
       </form>
 
-      <p class="footer">{{ t('created_by_admin') }}</p>
+      <div class="footer">
+        <p>{{ t('created_by_admin') }}</p>
+        <div class="devpro-logo">
+          <img src="/src/assets/devpro-logo.jpg" alt="DevPro Logo" class="devpro-img" />
+        </div>
+      </div>
       <p class="footer-small">{{ t('device_verify') }}</p>
     </div>
   </div>
@@ -367,6 +372,24 @@ async function handleSubmit() {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #E2E8F0;
+}
+
+.devpro-logo {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.devpro-img {
+  max-width: 120px;
+  height: auto;
+  border-radius: 8px;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.devpro-img:hover {
+  opacity: 1;
 }
 
 .footer-small {

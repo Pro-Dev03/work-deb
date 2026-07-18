@@ -3,7 +3,10 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.ico'
+  '/favicon.ico',
+  '/icon-128x128.png',
+  '/icon-256x256.png',
+  '/icon-512x512.png'
 ]
 
 // تثبيت Service Worker وتخزين الملفات الأساسية

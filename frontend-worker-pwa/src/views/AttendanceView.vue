@@ -162,6 +162,12 @@
       <p v-if="debugInfo" class="debug-info mono">{{ debugInfo }}</p>
     </div>
 
+    <!-- DevPro Branding -->
+    <div class="devpro-branding">
+      <img src="/src/assets/devpro-logo.jpg" alt="DevPro Logo" class="devpro-logo-img" />
+      <p class="devpro-text">Powered by DevPro</p>
+    </div>
+
     <!-- مودال سجل الحضور -->
     <div v-if="showAttendanceHistoryModal" class="modal-backdrop" @click.self="showAttendanceHistoryModal = false">
       <div class="modal card">
@@ -1144,5 +1150,41 @@ onUnmounted(() => {
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover td {
   background: var(--canvas);
+}
+
+.devpro-branding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  margin-top: 20px;
+  background: linear-gradient(135deg, var(--brand-tint) 0%, rgba(31, 111, 92, 0.05) 100%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  animation: fadeIn 0.5s ease;
+}
+
+.devpro-logo-img {
+  width: 80px;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.devpro-logo-img:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.devpro-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0;
 }
 </style>

@@ -47,6 +47,7 @@
     "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
     "electron-is-dev": "^3.0.1",
+    "png-to-ico": "^3.0.2",
     "sharp": "^0.35.3",
     "vite": "^5.3.1",
     "wait-on": "^9.0.10"
@@ -68,7 +69,9 @@
       {
         "from": "public",
         "to": "public",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
@@ -86,7 +89,7 @@
           ]
         }
       ],
-      "icon": "public/icon.png",
+      "icon": "public/icon.ico",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "mac": {
@@ -129,9 +132,9 @@
       "createStartMenuShortcut": true,
       "perMachine": true,
       "allowElevation": true,
-      "installerIcon": "public/icon.png",
-      "uninstallerIcon": "public/icon.png",
-      "installerHeaderIcon": "public/icon.png",
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico",
+      "installerHeaderIcon": "public/icon.ico",
       "deleteAppDataOnUninstall": false
     }
   }
