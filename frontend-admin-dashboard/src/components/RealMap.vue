@@ -1,18 +1,18 @@
 <template>
   <div class="map-container">
-    <l-map 
+    <l-map
       ref="mapRef"
-      :zoom="zoom" 
+      :zoom="zoom"
       @update:zoom="updateZoom"
       :center="center"
       :options="{ attributionControl: true, zoomControl: true }"
       :style="{ height: height + 'px', width: '100%' }"
     >
       <l-tile-layer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        :url="mapTileUrl"
         layer-type="base"
-        name="OpenStreetMap"
-        attribution='&copy; OpenStreetMap contributors'
+        :name="isDarkMode ? 'CartoDB Dark' : 'OpenStreetMap'"
+        :attribution="mapAttribution"
       />
       
       <!-- نقاط العمل -->
@@ -54,7 +54,6 @@
         <l-popup>
           <div class="popup-content employee-popup">
             <h4>👤 {{ emp.full_name }}</h4>
-            <p>📧 {{ emp.email }}</p>
             <p>📍 {{ emp.worksite.name }}</p>
             <p>📏 المسافة: {{ formatDistance(emp.worksite.distance) }}</p>
             <p>⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة</p>
@@ -63,8 +62,8 @@
                 {{ emp.status_text }}
               </span>
             </p>
-            <button 
-              class="btn btn--sm btn--primary" 
+            <button
+              class="btn btn--sm btn--primary"
               @click="handleShowDetails(emp)"
             >
               📋 عرض التفاصيل
@@ -85,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { LMap, LTileLayer, LMarker, LPopup, LIcon } from '@vue-leaflet/vue-leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -102,6 +101,31 @@ const emit = defineEmits(['update:zoom', 'showDetails'])
 
 const mapRef = ref(null)
 let watchId = null
+
+// ✅ اكتشاف الوضع الداكن
+const isDarkMode = computed(() => {
+  return document.documentElement.getAttribute('data-theme') === 'dark'
+})
+
+// ✅ تحديد URL الخريطة حسب الوضع
+const mapTileUrl = computed(() => {
+  if (isDarkMode.value) {
+    // خريطة داكنة من CartoDB
+    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+  } else {
+    // خريطة عادية من OpenStreetMap
+    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+  }
+})
+
+// ✅ تحديد Attribution حسب الوضع
+const mapAttribution = computed(() => {
+  if (isDarkMode.value) {
+    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  } else {
+    return '&copy; OpenStreetMap contributors'
+  }
+})
 
 function updateZoom(newZoom) {
   emit('update:zoom', newZoom)
@@ -156,6 +180,11 @@ onUnmounted(() => {
   position: relative;
   min-height: 400px;
   background: #E8EDF2;
+}
+
+[data-theme="dark"] .map-container {
+  background: #0f172a;
+  border-color: #334155;
 }
 
 .worksite-marker {
@@ -268,6 +297,10 @@ onUnmounted(() => {
   border-radius: var(--radius-lg);
 }
 
+[data-theme="dark"] .map-overlay {
+  background: rgba(15, 23, 42, 0.85);
+}
+
 .overlay-content {
   text-align: center;
   max-width: 400px;
@@ -307,6 +340,14 @@ onUnmounted(() => {
   margin: 2px 0;
   font-size: 12px;
   color: var(--ink-soft);
+}
+
+[data-theme="dark"] .popup-content h4 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .popup-content p {
+  color: #cbd5e1;
 }
 
 .popup-content .btn {
