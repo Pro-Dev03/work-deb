@@ -315,7 +315,18 @@ const ar = {
   "release_to_refresh": "أطلق للتحديث",
   "pwa": {
     "installTitle": "تثبيت التطبيق",
-    "installText": "تثبيت التطبيق"
+    "installText": "تثبيت التطبيق",
+    "installOnIos": "تثبيت على iPhone",
+    "iosModalTitle": "تثبيت التطبيق على iPhone",
+    "iosModalSubtitle": "احصل على تجربة تطبيق أفضل!",
+    "step1Text": "اضغط على زر Share ⎋ في أسفل الشاشة",
+    "step2Text": "مرر لأسفل واضغط على Add to Home Screen",
+    "step3Text": "اضغط على Add في الزاوية العلوية",
+    "benefit1": "⚡ تشغيل أسرع",
+    "benefit2": "📱 أيقونة على الشاشة الرئيسية",
+    "benefit3": "🎨 تصميم شبيه بالتطبيقات",
+    "gotIt": "فهمت ✓",
+    "remindLater": "ذكرني لاحقاً"
   }
 }
 
@@ -633,7 +644,18 @@ const he = {
   "release_to_refresh": "שחרר לרענון",
   "pwa": {
     "installTitle": "התקנת אפליקציה",
-    "installText": "התקן אפליקציה"
+    "installText": "התקן אפליקציה",
+    "installOnIos": "התקנה באייפון",
+    "iosModalTitle": "התקנת האפליקציה באייפון",
+    "iosModalSubtitle": "קבל חוויית אפליקציה טובה יותר!",
+    "step1Text": "לחץ על כפתור Share ⎋ בתחתית המסך",
+    "step2Text": "גרור למטה ולחץ על Add to Home Screen",
+    "step3Text": "לחץ על Add בפינה העליונה",
+    "benefit1": "⚡ טעינה מהירה יותר",
+    "benefit2": "📱 אייקון במסך הבית",
+    "benefit3": "🎨 עיצוב דמוי אפליקציה",
+    "gotIt": "הבנתי ✓",
+    "remindLater": "תזכיר לי מאוחר יותר"
   }
 }
 
@@ -951,7 +973,18 @@ const en = {
   "release_to_refresh": "Release to refresh",
   "pwa": {
     "installTitle": "Install App",
-    "installText": "Install App"
+    "installText": "Install App",
+    "installOnIos": "Install on iPhone",
+    "iosModalTitle": "Install App on iPhone",
+    "iosModalSubtitle": "Get a better app experience!",
+    "step1Text": "Tap the Share ⎋ button at the bottom",
+    "step2Text": "Scroll down and tap Add to Home Screen",
+    "step3Text": "Tap Add in the top corner",
+    "benefit1": "⚡ Faster loading",
+    "benefit2": "📱 Icon on home screen",
+    "benefit3": "🎨 App-like design",
+    "gotIt": "Got it ✓",
+    "remindLater": "Remind me later"
   }
 }
 

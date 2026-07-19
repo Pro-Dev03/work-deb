@@ -86,7 +86,18 @@
   "release_to_refresh": "Release to refresh",
   "pwa": {
     "installTitle": "Install App",
-    "installText": "Install the app on your device"
+    "installText": "Install App",
+    "installOnIos": "Install on iPhone",
+    "iosModalTitle": "Install App on iPhone",
+    "iosModalSubtitle": "Get a better app experience!",
+    "step1Text": "Tap the Share ⎋ button at the bottom",
+    "step2Text": "Scroll down and tap Add to Home Screen",
+    "step3Text": "Tap Add in the top corner",
+    "benefit1": "⚡ Faster loading",
+    "benefit2": "📱 Icon on home screen",
+    "benefit3": "🎨 App-like design",
+    "gotIt": "Got it ✓",
+    "remindLater": "Remind me later"
   },
   "pwa_install_title": "Install App",
   "pwa_install_text": "Install the app on your device"

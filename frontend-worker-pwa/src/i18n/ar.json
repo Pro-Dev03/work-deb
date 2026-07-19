@@ -86,7 +86,18 @@
   "release_to_refresh": "أطلق للتحديث",
   "pwa": {
     "installTitle": "تثبيت التطبيق",
-    "installText": "ثبت التطبيق على جهازك"
+    "installText": "ثبت التطبيق على جهازك",
+    "installOnIos": "تثبيت على iPhone",
+    "iosModalTitle": "تثبيت التطبيق على iPhone",
+    "iosModalSubtitle": "احصل على تجربة تطبيق أفضل!",
+    "step1Text": "اضغط على زر Share ⎋ في أسفل الشاشة",
+    "step2Text": "مرر لأسفل واضغط على Add to Home Screen",
+    "step3Text": "اضغط على Add في الزاوية العلوية",
+    "benefit1": "⚡ تشغيل أسرع",
+    "benefit2": "📱 أيقونة على الشاشة الرئيسية",
+    "benefit3": "🎨 تصميم شبيه بالتطبيقات",
+    "gotIt": "فهمت ✓",
+    "remindLater": "ذكرني لاحقاً"
   },
   "pwa_install_title": "تثبيت التطبيق",
   "pwa_install_text": "ثبت التطبيق على جهازك"

@@ -91,106 +91,46 @@ export default {
       return 'ar' // default
     },
     pwaInstallTitle() {
-      if (this.$t) {
-        return this.$t('pwa.installTitle') || this.t('pwa_install_title')
-      } else if (window.i18nStore && window.i18nStore.t) {
-        return window.i18nStore.t('pwa.installTitle') || this.t('pwa_install_title')
-      }
-      return this.t('pwa_install_title')
+      return this.$t('pwa.installTitle')
     },
     pwaInstallText() {
       if (this.isIOS) {
-        return this.t('install_on_ios')
+        return this.$t('pwa.installOnIos')
       }
-      if (this.$t) {
-        return this.$t('pwa.installText') || this.t('pwa_install_text')
-      } else if (window.i18nStore && window.i18nStore.t) {
-        return window.i18nStore.t('pwa.installText') || this.t('pwa_install_text')
-      }
-      return this.t('pwa_install_text')
+      return this.$t('pwa.installText')
     },
     iosModalTitle() {
-      return this.t('ios_modal_title')
+      return this.$t('pwa.iosModalTitle')
     },
     iosModalSubtitle() {
-      return this.t('ios_modal_subtitle')
+      return this.$t('pwa.iosModalSubtitle')
     },
     step1Text() {
-      return this.t('step1_text')
+      return this.$t('pwa.step1Text')
     },
     step2Text() {
-      return this.t('step2_text')
+      return this.$t('pwa.step2Text')
     },
     step3Text() {
-      return this.t('step3_text')
+      return this.$t('pwa.step3Text')
     },
     benefit1() {
-      return this.t('benefit1')
+      return this.$t('pwa.benefit1')
     },
     benefit2() {
-      return this.t('benefit2')
+      return this.$t('pwa.benefit2')
     },
     benefit3() {
-      return this.t('benefit3')
+      return this.$t('pwa.benefit3')
     },
     gotItText() {
-      return this.t('got_it')
+      return this.$t('pwa.gotIt')
     },
     remindLaterText() {
-      return this.t('remind_later')
+      return this.$t('pwa.remindLater')
     }
   },
   methods: {
-    t(key) {
-      const translations = {
-        ar: {
-          pwa_install_title: 'تثبيت التطبيق',
-          pwa_install_text: 'تثبيت التطبيق',
-          install_on_ios: 'تثبيت على iPhone',
-          ios_modal_title: 'تثبيت التطبيق على iPhone',
-          ios_modal_subtitle: 'احصل على تجربة تطبيق أفضل!',
-          step1_text: 'اضغط على زر Share ⎋ في أسفل الشاشة',
-          step2_text: 'مرر لأسفل واضغط على Add to Home Screen',
-          step3_text: 'اضغط على Add في الزاوية العلوية',
-          benefit1: '⚡ تشغيل أسرع',
-          benefit2: '📱 أيقونة على الشاشة الرئيسية',
-          benefit3: '🎨 تصميم شبيه بالتطبيقات',
-          got_it: 'فهمت ✓',
-          remind_later: 'ذكرني لاحقاً'
-        },
-        he: {
-          pwa_install_title: 'התקנת אפליקציה',
-          pwa_install_text: 'התקן אפליקציה',
-          install_on_ios: 'התקנה באייפון',
-          ios_modal_title: 'התקנת האפליקציה באייפון',
-          ios_modal_subtitle: 'קבל חוויית אפליקציה טובה יותר!',
-          step1_text: 'לחץ על כפתור Share ⎋ בתחתית המסך',
-          step2_text: 'גרור למטה ולחץ על Add to Home Screen',
-          step3_text: 'לחץ על Add בפינה העליונה',
-          benefit1: '⚡ טעינה מהירה יותר',
-          benefit2: '📱 אייקון במסך הבית',
-          benefit3: '🎨 עיצוב דמוי אפליקציה',
-          got_it: 'הבנתי ✓',
-          remind_later: 'תזכיר לי מאוחר יותר'
-        },
-        en: {
-          pwa_install_title: 'Install App',
-          pwa_install_text: 'Install App',
-          install_on_ios: 'Install on iPhone',
-          ios_modal_title: 'Install App on iPhone',
-          ios_modal_subtitle: 'Get a better app experience!',
-          step1_text: 'Tap the Share ⎋ button at the bottom',
-          step2_text: 'Scroll down and tap Add to Home Screen',
-          step3_text: 'Tap Add in the top corner',
-          benefit1: '⚡ Faster loading',
-          benefit2: '📱 Icon on home screen',
-          benefit3: '🎨 App-like design',
-          got_it: 'Got it ✓',
-          remind_later: 'Remind me later'
-        }
-      }
-      return translations[this.currentLang]?.[key] || translations['ar'][key]
-    },
     detectIOS() {
       const userAgent = window.navigator.userAgent.toLowerCase()
       return /iphone|ipad|ipod/.test(userAgent) && !/edge|crios|fxios/.test(userAgent)

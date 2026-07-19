@@ -82,77 +82,25 @@ const showIOSInstructions = ref(false)
 const isIOS = ref(false)
 const isStandalone = ref(false)
 
-// Translation function
-function translate(key) {
-  const translations = {
-    ar: {
-      pwa_install_title: 'تثبيت التطبيق',
-      pwa_install_text: 'تثبيت التطبيق',
-      install_on_ios: 'تثبيت على iPhone',
-      ios_modal_title: 'تثبيت التطبيق على iPhone',
-      ios_modal_subtitle: 'احصل على تجربة تطبيق أفضل!',
-      step1_text: 'اضغط على زر Share ⎋ في أسفل الشاشة',
-      step2_text: 'مرر لأسفل واضغط على Add to Home Screen',
-      step3_text: 'اضغط على Add في الزاوية العلوية',
-      benefit1: '⚡ تشغيل أسرع',
-      benefit2: '📱 أيقونة على الشاشة الرئيسية',
-      benefit3: '🎨 تصميم شبيه بالتطبيقات',
-      got_it: 'فهمت ✓',
-      remind_later: 'ذكرني لاحقاً'
-    },
-    he: {
-      pwa_install_title: 'התקנת אפליקציה',
-      pwa_install_text: 'התקן אפליקציה',
-      install_on_ios: 'התקנה באייפון',
-      ios_modal_title: 'התקנת האפליקציה באייפון',
-      ios_modal_subtitle: 'קבל חוויית אפליקציה טובה יותר!',
-      step1_text: 'לחץ על כפתור Share ⎋ בתחתית המסך',
-      step2_text: 'גרור למטה ולחץ על Add to Home Screen',
-      step3_text: 'לחץ על Add בפינה העליונה',
-      benefit1: '⚡ טעינה מהירה יותר',
-      benefit2: '📱 אייקון במסך הבית',
-      benefit3: '🎨 עיצוב דמוי אפליקציה',
-      got_it: 'הבנתי ✓',
-      remind_later: 'תזכיר לי מאוחר יותר'
-    },
-    en: {
-      pwa_install_title: 'Install App',
-      pwa_install_text: 'Install App',
-      install_on_ios: 'Install on iPhone',
-      ios_modal_title: 'Install App on iPhone',
-      ios_modal_subtitle: 'Get a better app experience!',
-      step1_text: 'Tap the Share ⎋ button at the bottom',
-      step2_text: 'Scroll down and tap Add to Home Screen',
-      step3_text: 'Tap Add in the top corner',
-      benefit1: '⚡ Faster loading',
-      benefit2: '📱 Icon on home screen',
-      benefit3: '🎨 App-like design',
-      got_it: 'Got it ✓',
-      remind_later: 'Remind me later'
-    }
-  }
-  return translations[currentLang.value]?.[key] || translations['ar'][key]
-}
-
-const pwaInstallTitle = computed(() => t('pwa.installTitle') || translate('pwa_install_title'))
+const pwaInstallTitle = computed(() => t('pwa.installTitle'))
 
 const pwaInstallText = computed(() => {
   if (isIOS.value) {
-    return translate('install_on_ios')
+    return t('pwa.installOnIos')
   }
-  return t('pwa.installText') || translate('pwa_install_text')
+  return t('pwa.installText')
 })
 
-const iosModalTitle = computed(() => translate('ios_modal_title'))
-const iosModalSubtitle = computed(() => translate('ios_modal_subtitle'))
-const step1Text = computed(() => translate('step1_text'))
-const step2Text = computed(() => translate('step2_text'))
-const step3Text = computed(() => translate('step3_text'))
-const benefit1 = computed(() => translate('benefit1'))
-const benefit2 = computed(() => translate('benefit2'))
-const benefit3 = computed(() => translate('benefit3'))
-const gotItText = computed(() => translate('got_it'))
-const remindLaterText = computed(() => translate('remind_later'))
+const iosModalTitle = computed(() => t('pwa.iosModalTitle'))
+const iosModalSubtitle = computed(() => t('pwa.iosModalSubtitle'))
+const step1Text = computed(() => t('pwa.step1Text'))
+const step2Text = computed(() => t('pwa.step2Text'))
+const step3Text = computed(() => t('pwa.step3Text'))
+const benefit1 = computed(() => t('pwa.benefit1'))
+const benefit2 = computed(() => t('pwa.benefit2'))
+const benefit3 = computed(() => t('pwa.benefit3'))
+const gotItText = computed(() => t('pwa.gotIt'))
+const remindLaterText = computed(() => t('pwa.remindLater'))
 
 function detectIOS() {
   const userAgent = window.navigator.userAgent.toLowerCase()

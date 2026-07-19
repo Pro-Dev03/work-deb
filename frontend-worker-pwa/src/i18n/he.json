@@ -86,7 +86,18 @@
   "release_to_refresh": "שחרר לרענון",
   "pwa": {
     "installTitle": "התקנת אפליקציה",
-    "installText": "התקן את האפליקציה במכשיר שלך"
+    "installText": "התקן אפליקציה",
+    "installOnIos": "התקנה באייפון",
+    "iosModalTitle": "התקנת האפליקציה באייפון",
+    "iosModalSubtitle": "קבל חוויית אפליקציה טובה יותר!",
+    "step1Text": "לחץ על כפתור Share ⎋ בתחתית המסך",
+    "step2Text": "גרור למטה ולחץ על Add to Home Screen",
+    "step3Text": "לחץ על Add בפינה העליונה",
+    "benefit1": "⚡ טעינה מהירה יותר",
+    "benefit2": "📱 אייקון במסך הבית",
+    "benefit3": "🎨 עיצוב דמוי אפליקציה",
+    "gotIt": "הבנתי ✓",
+    "remindLater": "תזכיר לי מאוחר יותר"
   },
   "pwa_install_title": "התקנת אפליקציה",
   "pwa_install_text": "התקן את האפליקציה במכשיר שלך"
