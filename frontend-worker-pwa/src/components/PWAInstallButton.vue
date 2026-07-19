@@ -172,14 +172,7 @@ onMounted(() => {
     return
   }
 
-  // Check if already dismissed
-  const dismissed = localStorage.getItem('pwa-install-dismissed')
-  const duration = parseInt(localStorage.getItem('pwa-install-dismiss-duration') || '24')
-  if (dismissed && Date.now() - parseInt(dismissed) < duration * 60 * 60 * 1000) {
-    return
-  }
-
-  // For iOS, always show button
+  // Always show button on login page
   if (isIOS.value) {
     showInstallButton.value = true
   } else {
@@ -214,7 +207,6 @@ function installPWA() {
   } else if (window.pwaInstall) {
     // Use native install prompt for Android/Windows
     window.pwaInstall()
-    showInstallButton.value = false
   } else {
     // Fallback - show general instructions
     showIOSInstructions.value = true
@@ -222,12 +214,8 @@ function installPWA() {
 }
 
 function remindLater() {
-  // Hide for 24 hours (change this number to adjust duration)
-  const hoursToHide = 24
-  localStorage.setItem('pwa-install-dismissed', Date.now().toString())
-  localStorage.setItem('pwa-install-dismiss-duration', hoursToHide.toString())
+  // Just close the modal, keep icon visible
   showIOSInstructions.value = false
-  showInstallButton.value = false
 }
 </script>
 

@@ -208,19 +208,14 @@ export default {
       } else if (window.pwaInstall) {
         // Use native install prompt for Android/Windows
         window.pwaInstall()
-        this.showInstallButton = false
       } else {
         // Fallback - show general instructions
         this.showIOSInstructions = true
       }
     },
     remindLater() {
-      // Hide for 24 hours (change this number to adjust duration)
-      const hoursToHide = 24
-      localStorage.setItem('pwa-install-dismissed', Date.now().toString())
-      localStorage.setItem('pwa-install-dismiss-duration', hoursToHide.toString())
+      // Just close the modal, keep icon visible
       this.showIOSInstructions = false
-      this.showInstallButton = false
     }
   },
   mounted() {
@@ -236,14 +231,7 @@ export default {
       return
     }
 
-    // Check if already dismissed
-    const dismissed = localStorage.getItem('pwa-install-dismissed')
-    const duration = parseInt(localStorage.getItem('pwa-install-dismiss-duration') || '24')
-    if (dismissed && Date.now() - parseInt(dismissed) < duration * 60 * 60 * 1000) {
-      return
-    }
-
-    // For iOS, always show button
+    // Always show button on login page
     if (this.isIOS) {
       this.showInstallButton = true
     } else {
