@@ -31,16 +31,52 @@ document.addEventListener('DOMContentLoaded', () => {
   app.use(router)
   app.mount('#app')
 
-  // تسجيل Service Worker
+  // تسجيل Service Worker مع التحقق من التحديثات
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
         .then((registration) => {
           console.log('Service Worker registered with scope:', registration.scope)
+          
+          // التحقق من التحديثات بشكل دوري
+          setInterval(() => {
+            registration.update()
+              .then(() => {
+                console.log('[SW] Update check completed')
+              })
+              .catch((error) => {
+                console.error('[SW] Update check failed:', error)
+              })
+          }, 60000) // التحقق كل دقيقة
+          
+          // الاستماع للتحديثات الجديدة
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing
+            console.log('[SW] New service worker found')
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[SW] New service worker installed, activating')
+                // تفعيل الـ service worker الجديد فوراً
+                newWorker.postMessage({ type: 'SKIP_WAITING' })
+                
+                // إعادة تحميل الصفحة لتفعيل التحديث
+                setTimeout(() => {
+                  window.location.reload()
+                }, 1000)
+              }
+            })
+          })
         })
         .catch((error) => {
           console.error('Service Worker registration failed:', error)
         })
+    })
+    
+    // الاستماع لتغييرات الـ service worker
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('[SW] Controller changed, reloading page')
+      window.location.reload()
     })
   }
 })

@@ -41,11 +41,17 @@ export default defineConfig({
   },
   build: {
     cssCodeSplit: true,
+    // إضافة timestamp لتفادي الكاش
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router']
-        }
+        },
+        // إضافة الـ version إلى أسماء الملفات
+        entryFileNames: 'assets/[name]-[hash]-' + appVersion + '.js',
+        chunkFileNames: 'assets/[name]-[hash]-' + appVersion + '.js',
+        assetFileNames: 'assets/[name]-[hash]-' + appVersion + '[extname]'
       }
     }
   }

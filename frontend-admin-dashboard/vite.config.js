@@ -45,12 +45,18 @@ export default defineConfig({
   assetsInclude: ['**/*.json'],
   build: {
     cssCodeSplit: true,
+    // إضافة timestamp لتفادي الكاش
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router'],
           'leaflet-vendor': ['leaflet']
-        }
+        },
+        // إضافة الـ version إلى أسماء الملفات
+        entryFileNames: 'assets/[name]-[hash]-' + appVersion + '.js',
+        chunkFileNames: 'assets/[name]-[hash]-' + appVersion + '.js',
+        assetFileNames: 'assets/[name]-[hash]-' + appVersion + '[extname]'
       }
     }
   }

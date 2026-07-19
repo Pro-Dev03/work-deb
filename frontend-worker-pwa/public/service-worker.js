@@ -19,33 +19,37 @@ const CACHE_PAGES = [
 
 // تثبيت Service Worker وتخزين الملفات الأساسية
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing new service worker')
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache')
+        console.log('[SW] Opened cache:', CACHE_NAME)
         return cache.addAll(urlsToCache)
       })
       .catch((error) => {
-        console.error('Cache installation failed:', error)
+        console.error('[SW] Cache installation failed:', error)
       })
   )
+  // تفعيل الـ service worker الجديد فوراً
   self.skipWaiting()
 })
 
 // تفعيل Service Worker وتنظيف الكاش القديم
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating new service worker')
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName)
+            console.log('[SW] Deleting old cache:', cacheName)
             return caches.delete(cacheName)
           }
         })
       )
     })
   )
+  // التحكم في جميع الصفحات فوراً
   self.clients.claim()
 })
 
@@ -86,10 +90,12 @@ self.addEventListener('fetch', (event) => {
 // معالجة طلبات التحديث عبر pull-to-refresh
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Skip waiting requested')
     self.skipWaiting()
   }
   
   if (event.data && event.data.type === 'CACHE_BUST') {
+    console.log('[SW] Cache bust requested')
     // تنظيف الكاش القديم
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -100,6 +106,12 @@ self.addEventListener('message', (event) => {
         })
       )
     })
+  }
+  
+  if (event.data && event.data.type === 'CHECK_UPDATE') {
+    console.log('[SW] Update check requested')
+    // إرسال إشعار بأن هناك تحديث متاح
+    event.ports[0].postMessage({ type: 'UPDATE_AVAILABLE' })
   }
 })
 
