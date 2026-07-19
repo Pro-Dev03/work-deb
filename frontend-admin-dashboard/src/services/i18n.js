@@ -311,7 +311,11 @@ const ar = {
   "pwa_install_text": "ثبت التطبيق على جهازك",
   "pull_to_refresh": "اسحب للتحديث",
   "refreshing": "جاري التحديث...",
-  "release_to_refresh": "أطلق للتحديث"
+  "release_to_refresh": "أطلق للتحديث",
+  "pwa": {
+    "installTitle": "تثبيت التطبيق",
+    "installText": "تثبيت التطبيق"
+  }
 }
 
 const he = {
@@ -624,7 +628,11 @@ const he = {
   "pwa_install_text": "התקן את האפליקציה במכשיר שלך",
   "pull_to_refresh": "משוך לרענון",
   "refreshing": "מרענן...",
-  "release_to_refresh": "שחרר לרענון"
+  "release_to_refresh": "שחרר לרענון",
+  "pwa": {
+    "installTitle": "התקנת אפליקציה",
+    "installText": "התקן אפליקציה"
+  }
 }
 
 const en = {
@@ -937,7 +945,11 @@ const en = {
   "pwa_install_text": "Install the app on your device",
   "pull_to_refresh": "Pull to refresh",
   "refreshing": "Refreshing...",
-  "release_to_refresh": "Release to refresh"
+  "release_to_refresh": "Release to refresh",
+  "pwa": {
+    "installTitle": "Install App",
+    "installText": "Install App"
+  }
 }
 
 // =============================================

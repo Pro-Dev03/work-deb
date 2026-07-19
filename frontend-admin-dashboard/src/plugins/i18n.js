@@ -12,7 +12,11 @@ const arExtended = {
   refreshing: "جاري التحديث...",
   release_to_refresh: "أطلق للتحديث",
   pwa_install_title: "تثبيت التطبيق",
-  pwa_install_text: "ثبت التطبيق على جهازك"
+  pwa_install_text: "ثبت التطبيق على جهازك",
+  pwa: {
+    installTitle: "تثبيت التطبيق",
+    installText: "تثبيت التطبيق"
+  }
 }
 
 const heExtended = {
@@ -21,7 +25,11 @@ const heExtended = {
   refreshing: "מרענן...",
   release_to_refresh: "שחרר לרענון",
   pwa_install_title: "התקנת אפליקציה",
-  pwa_install_text: "התקן את האפליקציה במכשיר שלך"
+  pwa_install_text: "התקן את האפליקציה במכשיר שלך",
+  pwa: {
+    installTitle: "התקנת אפליקציה",
+    installText: "התקן אפליקציה"
+  }
 }
 
 const enExtended = {
@@ -30,7 +38,11 @@ const enExtended = {
   refreshing: "Refreshing...",
   release_to_refresh: "Release to refresh",
   pwa_install_title: "Install App",
-  pwa_install_text: "Install the app on your device"
+  pwa_install_text: "Install the app on your device",
+  pwa: {
+    installTitle: "Install App",
+    installText: "Install App"
+  }
 }
 
 const messages = {
@@ -58,6 +70,9 @@ export const i18nStore = reactive({
       localStorage.setItem('worktrack_lang', lang)
       document.documentElement.dir = lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr'
       document.documentElement.lang = lang
+
+      // إرسال event للإشارة بتغيير اللغة
+      window.dispatchEvent(new CustomEvent('language-changed', { detail: { lang } }))
     }
   },
   
