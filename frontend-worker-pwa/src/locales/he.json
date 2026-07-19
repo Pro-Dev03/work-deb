@@ -160,5 +160,7 @@
   "pwa": {
     "installTitle": "התקן אפליקציה",
     "installText": "התקן אפליקציה"
-  }
+  },
+  "pwa_install_title": "התקנת אפליקציה",
+  "pwa_install_text": "התקן את האפליקציה במכשיר שלך"
 }

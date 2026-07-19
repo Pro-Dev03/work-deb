@@ -3,14 +3,14 @@
     <button 
       @click="installPWA" 
       class="pwa-install-button"
-      :title="$t('pwa_install_title') || 'تثبيت التطبيق'"
+      :title="pwaInstallTitle"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
         <polyline points="7 10 12 15 17 10"></polyline>
         <line x1="12" y1="15" x2="12" y2="3"></line>
       </svg>
-      <span>{{ $t('pwa_install_text') || 'تثبيت التطبيق' }}</span>
+      <span>{{ pwaInstallText }}</span>
     </button>
   </div>
 </template>
@@ -21,7 +21,9 @@ export default {
   data() {
     return {
       showInstallButton: false,
-      deferredPrompt: null
+      deferredPrompt: null,
+      pwaInstallTitle: 'تثبيت التطبيق',
+      pwaInstallText: 'تثبيت التطبيق'
     }
   },
   mounted() {
@@ -33,12 +35,25 @@ export default {
     if (window.deferredPrompt) {
       this.showInstallButton = true
     }
+    
+    // جلب الترجمات
+    this.loadTranslations()
   },
   beforeUnmount() {
     window.removeEventListener('pwa-install-available', this.handleInstallAvailable)
     window.removeEventListener('pwa-install-success', this.handleInstallSuccess)
   },
   methods: {
+    loadTranslations() {
+      // محاولة جلب الترجمات من مصادر مختلفة
+      if (this.$t) {
+        this.pwaInstallTitle = this.$t('pwa_install_title') || 'تثبيت التطبيق'
+        this.pwaInstallText = this.$t('pwa_install_text') || 'تثبيت التطبيق'
+      } else if (window.i18nStore && window.i18nStore.t) {
+        this.pwaInstallTitle = window.i18nStore.t('pwa_install_title') || 'تثبيت التطبيق'
+        this.pwaInstallText = window.i18nStore.t('pwa_install_text') || 'تثبيت التطبيق'
+      }
+    },
     handleInstallAvailable() {
       this.showInstallButton = true
     },

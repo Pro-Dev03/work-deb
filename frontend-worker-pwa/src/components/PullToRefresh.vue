@@ -34,6 +34,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from '../services/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   threshold: {
@@ -42,15 +45,15 @@ const props = defineProps({
   },
   refreshText: {
     type: String,
-    default: 'اسحب للتحديث'
+    default: ''
   },
   refreshingText: {
     type: String,
-    default: 'جاري التحديث...'
+    default: ''
   },
   releaseText: {
     type: String,
-    default: 'أفعل للتحديث'
+    default: ''
   }
 })
 
@@ -63,9 +66,9 @@ const startY = ref(0)
 const currentY = ref(0)
 
 const displayText = computed(() => {
-  if (isRefreshing.value) return props.refreshingText
-  if (pullDistance.value >= props.threshold) return props.releaseText
-  return props.refreshText
+  if (isRefreshing.value) return props.refreshingText || t('refreshing')
+  if (pullDistance.value >= props.threshold) return props.releaseText || t('release_to_refresh')
+  return props.refreshText || t('pull_to_refresh')
 })
 
 const refreshText = computed(() => displayText.value)

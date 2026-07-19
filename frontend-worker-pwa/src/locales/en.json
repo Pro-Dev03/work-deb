@@ -170,5 +170,7 @@
   "pwa": {
     "installTitle": "Install App",
     "installText": "Install App"
-  }
+  },
+  "pwa_install_title": "Install App",
+  "pwa_install_text": "Install the app on your device"
 }

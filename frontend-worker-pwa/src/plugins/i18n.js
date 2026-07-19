@@ -99,6 +99,55 @@ const messages = {
     release_to_refresh: "שחרר לרענון",
     pwa_install_title: "התקנת אפליקציה",
     pwa_install_text: "התקן את האפליקציה במכשיר שלך"
+  },
+  en: {
+    app_name: "WorkTrack", 
+    admin_panel: "Admin Panel",
+    login: "Login",
+    email: "Email",
+    password: "Password",
+    dashboard: "Dashboard",
+    employees: "Employees",
+    tasks: "Tasks",
+    worksites: "Worksites",
+    clients: "Clients",
+    reports: "Reports",
+    settings: "Settings",
+    service_requests: "Service Requests",
+    logout: "Logout",
+    add_employee: "Add Employee",
+    assign: "Assign",
+    status: "Status",
+    pending: "Pending",
+    assigned: "Assigned",
+    in_progress: "In Progress",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    open_in_maps: "Open in Maps",
+    location: "Location",
+    phone: "Phone",
+    full_name: "Full Name",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    search: "Search",
+    filter: "Filter",
+    dark_mode: "Dark Mode",
+    light_mode: "Light Mode",
+    language: "Language",
+    arabic: "Arabic",
+    hebrew: "Hebrew",
+    loading: "Loading...",
+    no_data: "No Data",
+    error: "Error",
+    success: "Success",
+    welcome: "Welcome",
+    pull_to_refresh: "Pull to refresh",
+    refreshing: "Refreshing...",
+    release_to_refresh: "Release to refresh",
+    pwa_install_title: "Install App",
+    pwa_install_text: "Install the app on your device"
   }
 }
 
@@ -106,7 +155,7 @@ const FALLBACK = 'ar'
 
 const getStoredLang = () => {
   const stored = localStorage.getItem('worktrack_lang')
-  if (stored && (stored === 'ar' || stored === 'he')) return stored
+  if (stored && (stored === 'ar' || stored === 'he' || stored === 'en')) return stored
   return FALLBACK
 }
 
@@ -114,7 +163,7 @@ export const i18nStore = reactive({
   lang: getStoredLang(),
   
   setLang(lang) {
-    if (lang === 'ar' || lang === 'he') {
+    if (lang === 'ar' || lang === 'he' || lang === 'en') {
       this.lang = lang
       localStorage.setItem('worktrack_lang', lang)
       window.location.reload()
