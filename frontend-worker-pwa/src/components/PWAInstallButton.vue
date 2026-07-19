@@ -2,7 +2,7 @@
   <div v-if="showInstallButton" class="pwa-install-container">
     <button 
       @click="installPWA" 
-      class="pwa-install-button"
+      class="pwa-install-icon"
       :title="pwaInstallTitle"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -10,7 +10,6 @@
         <polyline points="7 10 12 15 17 10"></polyline>
         <line x1="12" y1="15" x2="12" y2="3"></line>
       </svg>
-      <span>{{ pwaInstallText }}</span>
     </button>
     
     <!-- iOS Instructions Modal -->
@@ -175,7 +174,8 @@ onMounted(() => {
 
   // Check if already dismissed
   const dismissed = localStorage.getItem('pwa-install-dismissed')
-  if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
+  const duration = parseInt(localStorage.getItem('pwa-install-dismiss-duration') || '24')
+  if (dismissed && Date.now() - parseInt(dismissed) < duration * 60 * 60 * 1000) {
     return
   }
 
@@ -222,8 +222,10 @@ function installPWA() {
 }
 
 function remindLater() {
-  // Hide for 24 hours
+  // Hide for 24 hours (change this number to adjust duration)
+  const hoursToHide = 24
   localStorage.setItem('pwa-install-dismissed', Date.now().toString())
+  localStorage.setItem('pwa-install-dismiss-duration', hoursToHide.toString())
   showIOSInstructions.value = false
   showInstallButton.value = false
 }
@@ -232,34 +234,34 @@ function remindLater() {
 <style scoped>
 .pwa-install-container {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: 16px;
+  right: 16px;
   z-index: 1000;
 }
 
-.pwa-install-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+.pwa-install-icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
   background: linear-gradient(135deg, #1F6F5C 0%, #2d8a6f 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(31, 111, 92, 0.3);
+  box-shadow: 0 4px 12px rgba(31, 111, 92, 0.3);
   transition: all 0.3s ease;
 }
 
-.pwa-install-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(31, 111, 92, 0.4);
+.pwa-install-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(31, 111, 92, 0.4);
 }
 
-.pwa-install-button:active {
-  transform: translateY(0);
+.pwa-install-icon:active {
+  transform: scale(0.95);
 }
 
 /* iOS Instructions Modal */
@@ -488,12 +490,8 @@ function remindLater() {
 
 /* RTL support */
 [dir="rtl"] .pwa-install-container {
-  left: auto;
-  right: 20px;
-}
-
-[dir="rtl"] .pwa-install-button {
-  flex-direction: row-reverse;
+  right: auto;
+  left: 16px;
 }
 
 [dir="rtl"] .close-btn {
@@ -503,19 +501,18 @@ function remindLater() {
 
 @media (max-width: 768px) {
   .pwa-install-container {
-    bottom: 16px;
-    left: 16px;
-    right: 16px;
+    bottom: 12px;
+    right: 12px;
   }
   
   [dir="rtl"] .pwa-install-container {
-    left: 16px;
-    right: 16px;
+    right: auto;
+    left: 12px;
   }
   
-  .pwa-install-button {
-    width: 100%;
-    justify-content: center;
+  .pwa-install-icon {
+    width: 40px;
+    height: 40px;
   }
 
   .ios-instructions-content {

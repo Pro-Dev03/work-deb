@@ -6,6 +6,7 @@
     :release-text="t('release_to_refresh')"
   >
     <div class="login-page">
+      <PWAInstallButton />
       <div class="login-card">
       <div class="login-header">
         <div class="logo">
@@ -68,6 +69,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '../services/i18n'
 import api from '../services/api'
 import PullToRefresh from '../components/PullToRefresh.vue'
+import PWAInstallButton from '../components/PWAInstallButton.vue'
 
 const { t, currentLang, setLang } = useI18n()
 const router = useRouter()

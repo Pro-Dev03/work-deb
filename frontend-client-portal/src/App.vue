@@ -32,14 +32,10 @@
       <p>© 2026 WorkTrack - جميع الحقوق محفوظة</p>
     </footer>
   </div>
-  
-  <!-- PWA Install Button -->
-  <PWAInstallButton />
 </template>
 
 <script setup>
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
-import PWAInstallButton from './components/PWAInstallButton.vue'
 </script>
 
 <style scoped>

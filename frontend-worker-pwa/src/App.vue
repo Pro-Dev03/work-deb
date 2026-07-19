@@ -37,16 +37,12 @@
       </router-link>
     </nav>
   </div>
-  
-  <!-- PWA Install Button -->
-  <PWAInstallButton />
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from './services/i18n'
 import { authStore } from './store/auth'
-import PWAInstallButton from './components/PWAInstallButton.vue'
 
 const { t } = useI18n()
 const initials = computed(() => (authStore.user?.full_name || 'م ع').slice(0, 1))

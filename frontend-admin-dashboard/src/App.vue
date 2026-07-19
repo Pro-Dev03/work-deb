@@ -135,9 +135,6 @@
       <main class="content"><router-view /></main>
     </div>
   </div>
-  
-  <!-- PWA Install Button -->
-  <PWAInstallButton />
 </template>
 
 <script setup>
@@ -145,7 +142,6 @@ import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { authStore } from './store/auth'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
-import PWAInstallButton from './components/PWAInstallButton.vue'
 import { useI18n } from './services/i18n'
 
 const { t, currentLang } = useI18n()
