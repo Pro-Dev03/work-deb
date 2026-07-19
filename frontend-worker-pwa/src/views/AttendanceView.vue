@@ -1184,6 +1184,7 @@ onUnmounted(() => {
   margin-bottom: 12px;
   box-shadow: var(--shadow-sm);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: block;
 }
 
 .devpro-logo-img:hover {
@@ -1198,5 +1199,11 @@ onUnmounted(() => {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin: 0;
+}
+
+@media (max-width: 480px) {
+  .devpro-logo-img {
+    width: 60px;
+  }
 }
 </style>

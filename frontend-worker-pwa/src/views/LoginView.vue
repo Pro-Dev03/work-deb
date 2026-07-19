@@ -381,11 +381,12 @@ async function handleSubmit() {
 }
 
 .devpro-img {
-  max-width: 120px;
+  max-width: 100px;
   height: auto;
   border-radius: 8px;
   opacity: 0.8;
   transition: opacity 0.3s ease;
+  display: block;
 }
 
 .devpro-img:hover {
@@ -403,14 +404,18 @@ async function handleSubmit() {
   .login-card {
     padding: 28px 20px;
   }
-  
+
   .title {
     font-size: 24px;
   }
-  
+
   .lang-btn {
     padding: 6px 12px;
     font-size: 13px;
+  }
+
+  .devpro-img {
+    max-width: 80px;
   }
 }
 </style>
