@@ -29,6 +29,9 @@ export default {
     window.addEventListener('pwa-install-available', this.handleInstallAvailable)
     window.addEventListener('pwa-install-success', this.handleInstallSuccess)
     
+    // الاستماع لتغيير اللغة
+    window.addEventListener('language-changed', this.$forceUpdate)
+    
     // التحقق من وجود deferredPrompt في window
     if (window.deferredPrompt) {
       this.showInstallButton = true
@@ -37,6 +40,7 @@ export default {
   beforeUnmount() {
     window.removeEventListener('pwa-install-available', this.handleInstallAvailable)
     window.removeEventListener('pwa-install-success', this.handleInstallSuccess)
+    window.removeEventListener('language-changed', this.$forceUpdate)
   },
   methods: {
     handleInstallAvailable() {

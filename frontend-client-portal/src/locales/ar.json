@@ -65,5 +65,9 @@
   "actions": "إجراءات",
   "created_at": "تاريخ الإنشاء",
   "shift_restored": "🔄 تم استعادة الوردية النشطة",
-  "current_worksite": "نقطة العمل الحالية"
+  "current_worksite": "نقطة العمل الحالية",
+  "pwa": {
+    "installTitle": "تثبيت التطبيق",
+    "installText": "تثبيت التطبيق"
+  }
 }

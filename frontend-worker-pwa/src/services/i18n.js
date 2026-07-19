@@ -43,6 +43,9 @@ const i18nState = reactive({
       document.documentElement.dir = lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr'
       document.documentElement.lang = lang
       
+      // إرسال event للإشارة بتغيير اللغة
+      window.dispatchEvent(new CustomEvent('language-changed', { detail: { lang } }))
+      
       console.log(`🌍 تم تغيير اللغة إلى: ${lang}`)
     }
   },

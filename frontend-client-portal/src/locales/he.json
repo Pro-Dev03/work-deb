@@ -65,5 +65,9 @@
   "actions": "פעולות",
   "created_at": "תאריך יצירה",
   "shift_restored": "🔄 המשמרת הפעילה שוחזרה",
-  "current_worksite": "אתר עבודה נוכחי"
+  "current_worksite": "אתר עבודה נוכחי",
+  "pwa": {
+    "installTitle": "התקן אפליקציה",
+    "installText": "התקן אפליקציה"
+  }
 }

@@ -30,6 +30,9 @@ onMounted(() => {
   window.addEventListener('pwa-install-available', handleInstallAvailable)
   window.addEventListener('pwa-install-success', handleInstallSuccess)
   
+  // الاستماع لتغيير اللغة
+  window.addEventListener('language-changed', loadTranslations)
+  
   // التحقق من وجود deferredPrompt في window
   if (window.deferredPrompt) {
     showInstallButton.value = true
@@ -39,7 +42,13 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('pwa-install-available', handleInstallAvailable)
   window.removeEventListener('pwa-install-success', handleInstallSuccess)
+  window.removeEventListener('language-changed', loadTranslations)
 })
+
+function loadTranslations() {
+  pwaInstallTitle.value = t('pwa.installTitle')
+  pwaInstallText.value = t('pwa.installText')
+}
 
 function handleInstallAvailable() {
   showInstallButton.value = true

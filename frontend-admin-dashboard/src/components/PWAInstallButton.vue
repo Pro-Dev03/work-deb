@@ -31,6 +31,9 @@ export default {
     window.addEventListener('pwa-install-available', this.handleInstallAvailable)
     window.addEventListener('pwa-install-success', this.handleInstallSuccess)
     
+    // الاستماع لتغيير اللغة
+    window.addEventListener('language-changed', this.loadTranslations)
+    
     // التحقق من وجود deferredPrompt في window
     if (window.deferredPrompt) {
       this.showInstallButton = true
@@ -42,16 +45,17 @@ export default {
   beforeUnmount() {
     window.removeEventListener('pwa-install-available', this.handleInstallAvailable)
     window.removeEventListener('pwa-install-success', this.handleInstallSuccess)
+    window.removeEventListener('language-changed', this.loadTranslations)
   },
   methods: {
     loadTranslations() {
-      // محاولة جلب الترجمات من مصادر مختلفة
+      // محاولة جلب الترجمات من مصادر مختلفة باستخدام المفاتيح المتداخلة
       if (this.$t) {
-        this.pwaInstallTitle = this.$t('pwa_install_title') || 'تثبيت التطبيق'
-        this.pwaInstallText = this.$t('pwa_install_text') || 'تثبيت التطبيق'
+        this.pwaInstallTitle = this.$t('pwa.installTitle') || 'تثبيت التطبيق'
+        this.pwaInstallText = this.$t('pwa.installText') || 'تثبيت التطبيق'
       } else if (window.i18nStore && window.i18nStore.t) {
-        this.pwaInstallTitle = window.i18nStore.t('pwa_install_title') || 'تثبيت التطبيق'
-        this.pwaInstallText = window.i18nStore.t('pwa_install_text') || 'تثبيت التطبيق'
+        this.pwaInstallTitle = window.i18nStore.t('pwa.installTitle') || 'تثبيت التطبيق'
+        this.pwaInstallText = window.i18nStore.t('pwa.installText') || 'تثبيت التطبيق'
       }
     },
     handleInstallAvailable() {
