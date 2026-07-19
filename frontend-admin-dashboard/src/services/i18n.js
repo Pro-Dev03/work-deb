@@ -1024,6 +1024,10 @@ export default {
     app.config.globalProperties.$t = (key) => i18nState.t(key)
     app.config.globalProperties.$lang = computed(() => i18nState.currentLang)
     app.provide('i18n', i18nState)
+    // Make i18nStore available globally for components that need it
+    if (typeof window !== 'undefined') {
+      window.i18nStore = i18nState
+    }
   }
 }
 
