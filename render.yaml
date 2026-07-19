@@ -18,7 +18,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: "https://worktrack-admin.onrender.com,https://worktrack-client-portal.onrender.com,https://worktrack-worker-pwa.onrender.com,https://worktrack-worker.onrender.com,https://worktrack-client.onrender.com"
+        value: "https://worktrack-admin.onrender.com,https://worktrack-client-portal.onrender.com,https://worktrack-worker.onrender.com,https://worktrack-worker-pwa.onrender.com,https://worktrack-client.onrender.com"
       - key: DEFAULT_LANG
         value: ar
       - key: GEOAPIFY_KEY
@@ -31,3 +31,45 @@ services:
         sync: false
       - key: R2_BUCKET_NAME
         sync: false
+
+  - type: web
+    name: worktrack-admin
+    runtime: static
+    plan: free
+    rootDir: frontend-admin-dashboard
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "18"
+      - key: ELECTRON
+        value: "false"
+
+  - type: web
+    name: worktrack-worker
+    runtime: static
+    plan: free
+    rootDir: frontend-worker-pwa
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "18"
+      - key: ELECTRON
+        value: "false"
+
+  - type: web
+    name: worktrack-client-portal
+    runtime: static
+    plan: free
+    rootDir: frontend-client-portal
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "18"
+      - key: ELECTRON
+        value: "false"
