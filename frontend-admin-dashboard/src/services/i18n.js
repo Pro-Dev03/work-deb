@@ -296,8 +296,17 @@ const ar = {
   "cleanup_success": "تم تنظيف السجلات بنجاح",
   "cleanup_failed": "فشل تنظيف السجلات",
   "failed_to_fetch_attendance_history": "فشل جلب سجل الحضور",
+  "shift_restored": "🔄 تم استعادة الوردية النشطة",
   "current_worksite": "نقطة العمل الحالية",
-  "currently_working": "يعمل حالياً"
+  "currently_working": "يعمل حالياً",
+  "end_shift": "إنهاء الدوام",
+  "force_checkout_title": "إنهاء الدوام إجبارياً",
+  "force_checkout_message": "هل أنت متأكد من إنهاء دوام الموظف",
+  "force_checkout_warning": "⚠️ سيتم إنهاء الدوام فوراً بدون الحاجة لتختيم الموظف. استخدم هذه الميزة فقط في حالات الطوارئ.",
+  "force_checkout_success": "تم إنهاء الدوام بنجاح",
+  "force_checkout_failed": "فشل إنهاء الدوام",
+  "processing": "جارٍ المعالجة...",
+  "confirm_end_shift": "تأكيد إنهاء الدوام"
 }
 
 const he = {
@@ -595,8 +604,17 @@ const he = {
   "cleanup_success": "ניקוי רשומות הצליח",
   "cleanup_failed": "ניקוי רשומות נכשל",
   "failed_to_fetch_attendance_history": "אחזור היסטוריית נוכחות נכשל",
+  "shift_restored": "🔄 המשמרת הפעילה שוחזרה",
   "current_worksite": "אתר עבודה נוכחי",
-  "currently_working": "עובד כעת"
+  "currently_working": "עובד כעת",
+  "end_shift": "סיום משמרת",
+  "force_checkout_title": "סיום משמרת בכפייה",
+  "force_checkout_message": "האם אתה בטוח שברצונך לסיים את המשמרת עבור העובד",
+  "force_checkout_warning": "⚠️ המשמרת תסתיים מיד ללא צורך בתחברות העובד. השתמש בתכונה זו רק במצבי חירום.",
+  "force_checkout_success": "המשמרת הסתיימה בהצלחה",
+  "force_checkout_failed": "סיום המשמרת נכשל",
+  "processing": "מעבד...",
+  "confirm_end_shift": "אשר סיום משמרת"
 }
 
 const en = {
@@ -894,8 +912,17 @@ const en = {
   "cleanup_success": "Records cleanup successful",
   "cleanup_failed": "Records cleanup failed",
   "failed_to_fetch_attendance_history": "Failed to fetch attendance history",
+  "shift_restored": "🔄 Active shift restored",
   "current_worksite": "Current Worksite",
-  "currently_working": "Currently Working"
+  "currently_working": "Currently Working",
+  "end_shift": "End Shift",
+  "force_checkout_title": "Force End Shift",
+  "force_checkout_message": "Are you sure you want to end the shift for employee",
+  "force_checkout_warning": "⚠️ The shift will be ended immediately without requiring employee punch-in. Use this feature only in emergency situations.",
+  "force_checkout_success": "Shift ended successfully",
+  "force_checkout_failed": "Failed to end shift",
+  "processing": "Processing...",
+  "confirm_end_shift": "Confirm End Shift"
 }
 
 // =============================================
