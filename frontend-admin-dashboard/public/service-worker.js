@@ -11,6 +11,13 @@ const urlsToCache = [
   '/favicon.ico'
 ]
 
+// الملفات التي يجب عدم تخزينها في الكاش (JavaScript/CSS dynamic)
+const DYNAMIC_CACHE_PATTERNS = [
+  /\.js$/,
+  /\.css$/,
+  /\/assets\//i
+]
+
 // دعم offline للصفحات الرئيسية
 const CACHE_PAGES = [
   '/',
@@ -55,6 +62,40 @@ self.addEventListener('activate', (event) => {
 
 // استقبال الطلبات وتخزينها
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url)
+
+  // التحقق مما إذا كان الطلب لملف ديناميكي (JS/CSS/assets)
+  const isDynamic = DYNAMIC_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))
+
+  // للملفات الديناميكية، جلب دائماً من الشبكة (لا كاش)
+  if (isDynamic) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // التحقق من صحة الاستجابة
+          if (!response || response.status !== 200) {
+            return response
+          }
+
+          // استنساخ الاستجابة لأنها يمكن استخدامها مرة واحدة فقط
+          const responseToCache = response.clone()
+
+          // تخزين الاستجابة في الكاش للاستخدام offline
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache)
+          })
+
+          return response
+        })
+        .catch(() => {
+          // في حالة فشل الشبكة، محاولة العودة إلى الكاش
+          return caches.match(event.request)
+        })
+    )
+    return
+  }
+
+  // للملفات الثابتة، استخدام الكاش أولاً
   event.respondWith(
     caches.match(event.request)
       .then((response) => {

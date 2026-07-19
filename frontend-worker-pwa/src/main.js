@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
       navigator.serviceWorker.register('/service-worker.js')
         .then((registration) => {
           console.log('Service Worker registered with scope:', registration.scope)
-          
+
           // التحقق من التحديثات بشكل دوري
           setInterval(() => {
             registration.update()
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
               .catch((error) => {
                 console.error('[SW] Update check failed:', error)
               })
-          }, 60000) // التحقق كل دقيقة
+          }, 10000) // التحقق كل 10 ثواني
           
           // الاستماع للتحديثات الجديدة
           registration.addEventListener('updatefound', () => {
@@ -92,6 +92,18 @@ window.pwaInstall = () => {
         console.log('User dismissed the install prompt')
       }
       deferredPrompt = null
+    })
+  }
+}
+
+// دالة لتحديث Service Worker يدوياً
+window.forceUpdate = () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (registration) {
+        registration.update()
+        console.log('[SW] Manual update triggered')
+      }
     })
   }
 }
