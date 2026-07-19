@@ -654,11 +654,14 @@ onMounted(fetchEmployees)
   max-width: none;
   white-space: normal;
   word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .table td:first-child {
-  min-width: 200px;
+  min-width: 250px;
   max-width: none;
+  width: auto;
 }
 
 .table tr:last-child td { border-bottom: none; }
@@ -669,6 +672,7 @@ onMounted(fetchEmployees)
   gap: 10px;
   min-width: 0;
   flex: 1;
+  max-width: 100%;
 }
 
 .table__avatar {
@@ -691,9 +695,13 @@ onMounted(fetchEmployees)
   text-overflow: clip;
   white-space: normal;
   word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
   line-height: 1.4;
   flex: 1;
   min-width: 0;
+  max-width: 100%;
+  text-align: right;
 }
 
 .table-actions {
@@ -835,6 +843,20 @@ onMounted(fetchEmployees)
   
   .mobile-cards {
     padding: 0 4px;
+  }
+  
+  /* تحسين عرض الجدول على الهاتف */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table {
+    min-width: 600px;
+  }
+  
+  .table td:first-child {
+    min-width: 200px;
   }
 }
 
@@ -982,6 +1004,8 @@ onMounted(fetchEmployees)
   text-overflow: clip;
   white-space: normal;
   word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
   line-height: 1.4;
   max-width: 100%;
 }
@@ -994,12 +1018,15 @@ onMounted(fetchEmployees)
   flex-shrink: 0;
   flex-wrap: wrap;
   justify-content: flex-end;
+  max-width: 100%;
 }
 
 .badge--compact {
   font-size: 11px;
   padding: 4px 8px;
   white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .badge--success {
@@ -1042,6 +1069,8 @@ onMounted(fetchEmployees)
   text-overflow: clip;
   white-space: normal;
   word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
   line-height: 1.4;
   flex: 1;
   text-align: right;
@@ -1098,11 +1127,15 @@ onMounted(fetchEmployees)
   
   .employee-card__person {
     gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
   
   .employee-card__name {
     font-size: 15px;
     max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   
   .employee-card__body {
@@ -1123,6 +1156,8 @@ onMounted(fetchEmployees)
   .employee-card__value {
     font-size: 14px;
     max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   
   .employee-card__actions {
@@ -1143,6 +1178,8 @@ onMounted(fetchEmployees)
   .badge--compact {
     font-size: 10px;
     padding: 3px 6px;
+    white-space: normal;
+    word-break: break-word;
   }
   
   .mobile-cards {
@@ -1164,16 +1201,21 @@ onMounted(fetchEmployees)
   
   .employee-card__person {
     width: 100%;
+    flex: 1;
+    min-width: 0;
   }
   
   .employee-card__badges {
     width: 100%;
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
   
   .employee-card__name {
     font-size: 15px;
     max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   
   .employee-card__body {
@@ -1188,6 +1230,8 @@ onMounted(fetchEmployees)
   .employee-card__value {
     font-size: 13px;
     max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   
   .employee-card__actions {
@@ -1203,6 +1247,13 @@ onMounted(fetchEmployees)
   
   .btn--compact .btn-icon {
     font-size: 15px;
+  }
+  
+  .badge--compact {
+    font-size: 10px;
+    padding: 3px 6px;
+    white-space: normal;
+    word-break: break-word;
   }
   
   .mobile-cards {
@@ -1226,6 +1277,18 @@ onMounted(fetchEmployees)
 
 [dir="rtl"] .employee-card__badges {
   justify-content: flex-start;
+}
+
+[dir="rtl"] .table th {
+  text-align: right;
+}
+
+[dir="rtl"] .table td {
+  text-align: right;
+}
+
+[dir="rtl"] .table__person span:not(.table__avatar) {
+  text-align: right;
 }
 
 @media (max-width: 380px) {
