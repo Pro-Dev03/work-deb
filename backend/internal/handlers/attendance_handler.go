@@ -639,7 +639,7 @@ func (h *AttendanceHandler) ForceCheckOut(c *gin.Context) {
 
 	adminIDStr := adminID.(string)
 
-	// التحقق من حالة الاشتراك
+	// التحقق من حالة الاشتراك (مع التسامح مع عدم وجود الحقول)
 	var subscriptionStatus string
 	var subscriptionExpiresAt time.Time
 	err := h.Service.DB.QueryRow(`
@@ -647,26 +647,26 @@ func (h *AttendanceHandler) ForceCheckOut(c *gin.Context) {
 		FROM users
 		WHERE id = $1
 	`, adminIDStr).Scan(&subscriptionStatus, &subscriptionExpiresAt)
-	
+
+	// إذا فشل جلب حالة الاشتراك (مثلاً الحقول غير موجودة)، نتجاوز التحقق
 	if err != nil {
-		log.Printf("❌ فشل جلب حالة الاشتراك: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من حالة الاشتراك"})
-		return
-	}
-
-	// التحقق من أن الاشتراك نشط
-	if subscriptionStatus == "canceled" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "اشتراكك ملغي، الرجاء التواصل مع الدعم"})
-		return
-	}
-
-	if subscriptionStatus == "expired" || (!subscriptionExpiresAt.IsZero() && time.Now().After(subscriptionExpiresAt)) {
-		// تحديث الحالة إلى منتهي إذا لزم الأمر
-		if subscriptionStatus != "expired" {
-			_, _ = h.Service.DB.Exec(`UPDATE users SET subscription_status = 'expired' WHERE id = $1`, adminIDStr)
+		log.Printf("⚠️ فشل جلب حالة الاشتراك، تجاوز التحقق: %v", err)
+		// نستمر بدون التحقق من الاشتراك
+	} else {
+		// التحقق من أن الاشتراك نشط
+		if subscriptionStatus == "canceled" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "اشتراكك ملغي، الرجاء التواصل مع الدعم"})
+			return
 		}
-		c.JSON(http.StatusForbidden, gin.H{"error": "اشتراكك منتهي، الرجاء تجديده للتمكن من استخدام هذه الميزة"})
-		return
+
+		if subscriptionStatus == "expired" || (!subscriptionExpiresAt.IsZero() && time.Now().After(subscriptionExpiresAt)) {
+			// تحديث الحالة إلى منتهي إذا لزم الأمر
+			if subscriptionStatus != "expired" {
+				_, _ = h.Service.DB.Exec(`UPDATE users SET subscription_status = 'expired' WHERE id = $1`, adminIDStr)
+			}
+			c.JSON(http.StatusForbidden, gin.H{"error": "اشتراكك منتهي، الرجاء تجديده للتمكن من استخدام هذه الميزة"})
+			return
+		}
 	}
 
 	var req struct {

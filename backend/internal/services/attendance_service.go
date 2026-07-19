@@ -219,16 +219,26 @@ func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (
 	}
 
 	now := utils.NowInJerusalem()
-	
-	// تحديث سجل الحضور بدون التحقق من الموقع
+
+	// محاولة التحديث مع check_out_notes أولاً
 	_, err = s.DB.Exec(`
 		UPDATE attendance
 		SET check_out_time = $1, status = 'completed', check_out_notes = 'تم إنهاء الدوام من قبل المدير'
 		WHERE id = $2
 	`, now, attendanceID)
+
+	// إذا فشل بسبب عدم وجود عمود check_out_notes، حاول بدونه
 	if err != nil {
-		log.Printf("❌ فشل تحديث سجل الحضور: %v", err)
-		return 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
+		log.Printf("⚠️ فشل التحديث مع check_out_notes، محاولة بدونه: %v", err)
+		_, err = s.DB.Exec(`
+			UPDATE attendance
+			SET check_out_time = $1, status = 'completed'
+			WHERE id = $2
+		`, now, attendanceID)
+		if err != nil {
+			log.Printf("❌ فشل تحديث سجل الحضور: %v", err)
+			return 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
+		}
 	}
 
 	workedHours := now.Sub(checkInTime).Hours()
