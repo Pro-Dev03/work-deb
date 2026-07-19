@@ -1,69 +1,9 @@
 {
-  "name": "app.worktrack.com",
+  "name": "WorkTrack — تطبيق الموظف",
   "short_name": "WorkTrack",
-  "description": "نظام إدارة الحضور والموقع",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#F3F6F4",
   "theme_color": "#1F6F5C",
-  "orientation": "any",
-  "scope": "/",
-  "id": "worktrack-worker-pwa",
-  "prefer_related_applications": false,
-  "icons": [
-    {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-256x256.png",
-      "sizes": "256x256",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ],
-  "categories": ["business", "productivity"],
-  "screenshots": [],
-  "shortcuts": [
-    {
-      "name": "تسجيل حضور",
-      "short_name": "حضور",
-      "description": "تسجيل الحضور والانصراف",
-      "url": "/check-in",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" }]
-    },
-    {
-      "name": "موقعي",
-      "short_name": "موقع",
-      "description": "عرض موقعي الحالي",
-      "url": "/location",
-      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" }]
-    }
-  ]
+  "icons": []
 }
