@@ -431,14 +431,14 @@ func (h *AttendanceHandler) GetEmployeeMonthlySummary(c *gin.Context) {
 // GetMyAttendanceHistory جلب سجل الحضور للمستخدم الحالي
 func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	
+
 	// الحصول على معاملات التصفية
 	year := c.DefaultQuery("year", "")
 	month := c.DefaultQuery("month", "")
-	
+
 	// بناء الاستعلام حسب الفلتر
 	query := `
-		SELECT 
+		SELECT
 			a.id,
 			a.worksite_id,
 			w.name as worksite_name,
@@ -458,19 +458,22 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 	`
 	args := []interface{}{userID.(string)}
 	argCount := 1
-	
+
+	// إضافة الفلتر فقط إذا تم تحديد السنة والشهر معاً
 	if year != "" && month != "" {
 		argCount++
 		query += fmt.Sprintf(" AND EXTRACT(YEAR FROM check_in_time) = $%d", argCount)
 		args = append(args, year)
-		
+
 		argCount++
 		query += fmt.Sprintf(" AND EXTRACT(MONTH FROM check_in_time) = $%d", argCount)
 		args = append(args, month)
 	}
-	
+
 	query += " ORDER BY check_in_time DESC"
-	
+
+	log.Printf("📝 جلب سجل الحضور للمستخدم: user_id=%s, year=%s, month=%s", userID.(string), year, month)
+
 	rows, err := h.Service.DB.Query(query, args...)
 	if err != nil {
 		log.Printf("❌ فشل جلب سجل الحضور: %v", err)
@@ -478,7 +481,7 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 		return
 	}
 	defer rows.Close()
-	
+
 	var history []gin.H
 	for rows.Next() {
 		var id, worksiteID, worksiteName string
@@ -517,10 +520,11 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 			"worked_hours":              workedHours,
 			"created_at":                createdAt,
 		}
-		
+
 		history = append(history, record)
 	}
-	
+
+	log.Printf("✅ تم جلب %d سجل حضور", len(history))
 	c.JSON(http.StatusOK, history)
 }
 
