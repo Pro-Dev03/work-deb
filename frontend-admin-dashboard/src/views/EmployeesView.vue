@@ -85,7 +85,7 @@
         </table>
       </div>
       
-      <!-- بطاقات للشاشات الصغيرة - قائمة عمودية -->
+      <!-- بطاقات للشاشات الصغيرة -->
       <div class="mobile-cards mobile-only">
         <div v-for="emp in employees" :key="emp.id" class="employee-card">
           <div class="employee-card__header">
@@ -241,7 +241,7 @@
               </table>
             </div>
             
-            <!-- بطاقات للشاشات الصغيرة - قائمة عمودية -->
+            <!-- بطاقات للشاشات الصغيرة -->
             <div class="mobile-cards mobile-only">
               <div v-for="record in attendanceHistory" :key="record.id" class="attendance-card">
                 <div class="attendance-card__header">
@@ -466,7 +466,7 @@ async function exportToPDF() {
         title: 'היסטוריית נוכחות',
         employeeLabel: 'עובד',
         periodLabel: 'תקופה',
-        totalHoursLabel: 'סה\"כ שעות',
+        totalHoursLabel: 'סה"כ שעות',
         workDaysLabel: 'ימי עבודה',
         dateLabel: 'תאריך',
         worksiteLabel: 'אתר עבודה',
@@ -642,38 +642,15 @@ onMounted(fetchEmployees)
   border-bottom: 2px solid var(--line);
 }
 
-.table th:first-child {
-  width: auto;
-  min-width: 200px;
-}
-
 .table td {
   padding: 12px 14px;
   font-size: 14px;
   border-bottom: 1px solid var(--line);
-  max-width: none;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
-
-.table td:first-child {
-  min-width: 250px;
-  max-width: none;
-  width: auto;
 }
 
 .table tr:last-child td { border-bottom: none; }
 
-.table__person { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
-  max-width: 100%;
-}
+.table__person { display: flex; align-items: center; gap: 10px; }
 
 .table__avatar {
   width: 32px; height: 32px;
@@ -686,22 +663,6 @@ onMounted(fetchEmployees)
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 2px;
-  line-height: 1;
-}
-
-.table__person span:not(.table__avatar) {
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.4;
-  flex: 1;
-  min-width: 0;
-  max-width: 100%;
-  text-align: right;
 }
 
 .table-actions {
@@ -844,30 +805,15 @@ onMounted(fetchEmployees)
   .mobile-cards {
     padding: 0 4px;
   }
-  
-  /* تحسين عرض الجدول على الهاتف */
-  .table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .table {
-    min-width: 600px;
-  }
-  
-  .table td:first-child {
-    min-width: 200px;
-  }
 }
 
 /* تصميم بطاقات سجل الحضور للهاتف */
 .mobile-cards {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
   box-sizing: border-box;
-  padding: 8px;
 }
 
 .attendance-card {
@@ -909,8 +855,8 @@ onMounted(fetchEmployees)
 .attendance-card__row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
 .attendance-card__label {
@@ -918,37 +864,22 @@ onMounted(fetchEmployees)
   color: var(--ink-soft);
   font-weight: 500;
   flex-shrink: 0;
-  min-width: 80px;
 }
 
 .attendance-card__value {
   font-size: 14px;
   color: var(--ink);
   font-weight: 500;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  word-wrap: break-word;
-  line-height: 1.4;
-  flex: 1;
-  text-align: right;
-  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 
 @media (max-width: 380px) {
-  .attendance-card__label {
-    min-width: 70px;
-    font-size: 12px;
-  }
-  
   .attendance-card__value {
-    font-size: 13px;
+    max-width: 140px;
   }
-}
-
-/* دعم RTL لبطاقات الحضور */
-[dir="rtl"] .attendance-card__value {
-  text-align: left;
 }
 
 /* تصميم بطاقات الموظفين للهاتف */
@@ -956,83 +887,64 @@ onMounted(fetchEmployees)
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: 16px;
   transition: all 0.2s ease;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .employee-card:hover {
   border-color: var(--brand);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .employee-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
-  min-width: 0;
 }
 
 .employee-card__person {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
   flex: 1;
   min-width: 0; /* مهم للنصوص الطويلة */
-  max-width: 100%;
 }
 
 .employee-card__info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
+  gap: 4px;
 }
 
 .employee-card__name {
   font-weight: 600;
   color: var(--ink);
-  font-size: 16px;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.4;
-  max-width: 100%;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 .employee-card__badges {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 6px;
-  align-items: center;
+  align-items: flex-end;
   flex-shrink: 0;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: 100%;
-  min-width: 0;
 }
 
 .badge--compact {
-  font-size: 10px;
-  padding: 3px 6px;
+  font-size: 11px;
+  padding: 4px 8px;
   white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
-  max-width: 100%;
 }
 
 .badge--success {
@@ -1047,67 +959,58 @@ onMounted(fetchEmployees)
 .employee-card__body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .employee-card__row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 8px 0;
+  align-items: center;
+  gap: 8px;
 }
 
 .employee-card__label {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--ink-soft);
   font-weight: 500;
   flex-shrink: 0;
-  min-width: 90px;
 }
 
 .employee-card__value {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--ink);
   font-weight: 500;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.4;
-  flex: 1;
-  text-align: right;
-  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 
 .employee-card__actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .employee-card__actions .btn {
   flex: 1;
-  min-width: 120px;
-  font-size: 14px;
-  padding: 10px 16px;
+  min-width: 110px;
+  font-size: 13px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border-radius: var(--radius-sm);
+  gap: 6px;
 }
 
 .btn--compact {
-  font-size: 13px;
-  padding: 8px 12px;
+  font-size: 12px;
+  padding: 6px 10px;
 }
 
 .btn--compact .btn-icon {
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -1121,225 +1024,96 @@ onMounted(fetchEmployees)
 }
 
 @media (max-width: 380px) {
-  .employee-card {
-    padding: 16px;
-  }
-  
-  .employee-card__header {
-    gap: 8px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .employee-card__person {
-    gap: 8px;
-    flex: 1;
-    min-width: 0;
-    width: 100%;
-  }
-  
-  .employee-card__badges {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  
   .employee-card__name {
-    font-size: 15px;
-    max-width: 100%;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    line-height: 1.3;
-  }
-  
-  .employee-card__body {
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  
-  .employee-card__row {
-    gap: 12px;
-    padding: 6px 0;
-  }
-  
-  .employee-card__label {
-    min-width: 75px;
-    font-size: 13px;
+    max-width: 150px;
   }
   
   .employee-card__value {
-    font-size: 14px;
-    max-width: 100%;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-  
-  .employee-card__actions {
-    gap: 8px;
+    max-width: 130px;
   }
   
   .employee-card__actions .btn {
-    min-width: 100px;
-    font-size: 13px;
-    padding: 8px 12px;
-    gap: 6px;
+    min-width: 95px;
+    font-size: 11px;
+    padding: 6px 8px;
+    gap: 4px;
   }
   
   .btn--compact .btn-icon {
-    font-size: 14px;
+    font-size: 12px;
   }
   
   .badge--compact {
     font-size: 10px;
     padding: 3px 6px;
-    white-space: normal;
-    word-break: break-word;
+  }
+  
+  .employee-card {
+    padding: 12px;
+  }
+  
+  .employee-card__header {
+    gap: 6px;
+  }
+  
+  .employee-card__body {
+    gap: 6px;
   }
   
   .mobile-cards {
-    padding: 6px;
-    gap: 12px;
+    padding: 0 2px;
   }
 }
 
 @media (max-width: 340px) {
+  .employee-card__actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .employee-card__actions .btn {
+    min-width: 100%;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  .btn--compact .btn-icon {
+    font-size: 14px;
+  }
+  
   .employee-card {
-    padding: 14px;
+    padding: 10px;
   }
   
   .employee-card__header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+  }
+  
+  .employee-card__badges {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
   
   .employee-card__person {
     width: 100%;
-    flex: 1;
-    min-width: 0;
-    max-width: 100%;
-  }
-  
-  .employee-card__info {
-    max-width: 100%;
-    overflow: hidden;
-  }
-  
-  .employee-card__badges {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
   }
   
   .employee-card__name {
-    font-size: 14px;
     max-width: 100%;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    line-height: 1.3;
-  }
-  
-  .employee-card__body {
-    gap: 10px;
-  }
-  
-  .employee-card__label {
-    min-width: 70px;
-    font-size: 12px;
   }
   
   .employee-card__value {
-    font-size: 13px;
     max-width: 100%;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-  
-  .employee-card__actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .employee-card__actions .btn {
-    min-width: 100%;
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-  
-  .btn--compact .btn-icon {
-    font-size: 15px;
-  }
-  
-  .badge--compact {
-    font-size: 9px;
-    padding: 2px 5px;
-    white-space: normal;
-    word-break: break-word;
   }
   
   .mobile-cards {
-    padding: 4px;
-    gap: 10px;
-  }
-}
-
-/* دعم RTL للغة العربية */
-[dir="rtl"] .employee-card__header {
-  flex-direction: row;
-}
-
-[dir="rtl"] .employee-card__person {
-  flex-direction: row;
-}
-
-[dir="rtl"] .employee-card__value {
-  text-align: left;
-}
-
-[dir="rtl"] .employee-card__badges {
-  justify-content: flex-start;
-}
-
-[dir="rtl"] .table th {
-  text-align: right;
-}
-
-[dir="rtl"] .table td {
-  text-align: right;
-}
-
-[dir="rtl"] .table__person span:not(.table__avatar) {
-  text-align: right;
-}
-
-@media (max-width: 380px) {
-  [dir="rtl"] .employee-card__header {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 0;
   }
   
-  [dir="rtl"] .employee-card__person {
-    flex-direction: row;
-  }
-  
-  [dir="rtl"] .employee-card__badges {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 340px) {
-  [dir="rtl"] .employee-card__header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  [dir="rtl"] .employee-card__person {
-    flex-direction: row;
-  }
-  
-  [dir="rtl"] .employee-card__badges {
-    justify-content: flex-start;
+  .card {
+    border-radius: var(--radius-sm);
   }
 }
 
@@ -1378,17 +1152,12 @@ onMounted(fetchEmployees)
     -webkit-overflow-scrolling: touch;
   }
   
-  .mobile-cards {
-    padding: 8px;
-    gap: 16px;
-  }
-  
   .employee-card {
-    margin: 0;
+    margin: 0 4px 8px 4px;
   }
   
   .attendance-card {
-    margin: 0;
+    margin: 0 4px 8px 4px;
   }
 }
 </style>
