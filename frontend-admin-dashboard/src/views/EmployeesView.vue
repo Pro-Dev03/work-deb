@@ -663,6 +663,7 @@ onMounted(fetchEmployees)
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .table-actions {
@@ -856,7 +857,7 @@ onMounted(fetchEmployees)
 .attendance-card__row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -872,9 +873,11 @@ onMounted(fetchEmployees)
   font-size: 14px;
   color: var(--ink);
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.4;
   flex: 1;
   text-align: right;
   max-width: none;
@@ -917,7 +920,7 @@ onMounted(fetchEmployees)
 .employee-card__header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
@@ -927,7 +930,7 @@ onMounted(fetchEmployees)
 
 .employee-card__person {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   flex: 1;
   min-width: 0; /* مهم للنصوص الطويلة */
@@ -945,9 +948,11 @@ onMounted(fetchEmployees)
   font-weight: 600;
   color: var(--ink);
   font-size: 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.4;
   max-width: 100%;
 }
 
@@ -986,7 +991,7 @@ onMounted(fetchEmployees)
 .employee-card__row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   padding: 8px 0;
 }
@@ -1003,9 +1008,11 @@ onMounted(fetchEmployees)
   font-size: 15px;
   color: var(--ink);
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.4;
   flex: 1;
   text-align: right;
   max-width: none;
@@ -1065,6 +1072,7 @@ onMounted(fetchEmployees)
   
   .employee-card__name {
     font-size: 15px;
+    max-width: 100%;
   }
   
   .employee-card__body {
@@ -1084,6 +1092,7 @@ onMounted(fetchEmployees)
   
   .employee-card__value {
     font-size: 14px;
+    max-width: 100%;
   }
   
   .employee-card__actions {
@@ -1148,6 +1157,7 @@ onMounted(fetchEmployees)
   
   .employee-card__value {
     font-size: 13px;
+    max-width: 100%;
   }
   
   .employee-card__actions {
