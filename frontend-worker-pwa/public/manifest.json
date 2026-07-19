@@ -1,7 +1,7 @@
 {
-  "name": "WorkTrack — تطبيق الموظف",
+  "name": "WorkTrack",
   "short_name": "WorkTrack",
-  "description": "تطبيق إدارة الحضور والموقع للموظفين",
+  "description": "نظام إدارة الحضور والموقع",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#F3F6F4",

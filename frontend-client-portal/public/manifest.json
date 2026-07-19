@@ -1,7 +1,7 @@
 {
-  "name": "WorkTrack — بوابة العملاء",
-  "short_name": "WorkTrack Client",
-  "description": "بوابة العملاء لتتبع وإدارة المشاريع",
+  "name": "WorkTrack",
+  "short_name": "WorkTrack",
+  "description": "نظام إدارة المشاريع",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#F3F6F4",
