@@ -3,7 +3,7 @@
     <div class="login-card">
       <div class="login-header">
         <div class="powered-by">
-          <img src="/src/assets/company-logo.jpg" alt="DevPro" class="powered-logo" />
+          <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="powered-logo" />
           <span class="powered-text">
             {{ $t('app_name') }}<br />
             <strong>DevPro</strong>
