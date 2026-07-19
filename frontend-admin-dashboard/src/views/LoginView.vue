@@ -3,7 +3,7 @@
     <div class="login-card">
       <div class="login-header">
         <div class="powered-by">
-          <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="powered-logo" />
+          <img src="/src/assets/company-logo.jpg" alt="DevPro" class="powered-logo" />
           <span class="powered-text">
             {{ $t('app_name') }}<br />
             <strong>DevPro</strong>
@@ -12,7 +12,7 @@
         </div>
 
         <div class="app-brand">
-          <img src="/src/assets/devpro-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
+          <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
           <h1 class="title">{{ $t('app_name') }}</h1>
         </div>
         <p class="subtitle">{{ $t('login') }}</p>

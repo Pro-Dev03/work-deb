@@ -7,7 +7,7 @@
     <aside class="sidebar">
       <div class="sidebar__brand">
         <div class="devpro-brand">
-          <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="devpro-logo" />
+          <img src="/src/assets/company-logo.jpg" alt="DevPro" class="devpro-logo" />
           <div class="devpro-text">
             <span class="devpro-name">{{ t('devpro_name') }}</span>
             <span class="devpro-slogan">{{ t('powered_slogan') }}</span>
@@ -15,7 +15,7 @@
         </div>
         <div class="brand-divider"></div>
         <div class="app-brand">
-          <img src="/src/assets/devpro-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
+          <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
           <div class="brand-text">
             <span class="brand-name">{{ t('app_name') }}</span>
             <span class="brand-sub">{{ t('dashboard') }}</span>
