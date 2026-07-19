@@ -55,12 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('[SW] New service worker installed, activating')
                 // تفعيل الـ service worker الجديد فوراً
                 newWorker.postMessage({ type: 'SKIP_WAITING' })
-
-                // إظهار إشعار للمستخدم بوجود تحديث
-                if (confirm('🔄 تحديث متاح! هل تريد تحديث التطبيق الآن؟')) {
-                  // إعادة تحميل الصفحة لتفعيل التحديث
-                  window.location.reload()
-                }
+                // إعادة تحميل الصفحة تلقائياً بدون إزعاج المستخدم
+                window.location.reload()
               }
             })
           })
