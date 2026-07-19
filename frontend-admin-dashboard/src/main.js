@@ -20,4 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
   app.use(i18n)
   app.use(router)
   app.mount('#app')
+
+  // تسجيل Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+          console.log('Service Worker registered with scope:', registration.scope)
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error)
+        })
+    })
+  }
 })
