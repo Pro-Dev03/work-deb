@@ -306,7 +306,12 @@ const ar = {
   "force_checkout_success": "تم إنهاء الدوام بنجاح",
   "force_checkout_failed": "فشل إنهاء الدوام",
   "processing": "جارٍ المعالجة...",
-  "confirm_end_shift": "تأكيد إنهاء الدوام"
+  "confirm_end_shift": "تأكيد إنهاء الدوام",
+  "pwa_install_title": "تثبيت التطبيق",
+  "pwa_install_text": "ثبت التطبيق على جهازك",
+  "pull_to_refresh": "اسحب للتحديث",
+  "refreshing": "جاري التحديث...",
+  "release_to_refresh": "أطلق للتحديث"
 }
 
 const he = {
@@ -614,7 +619,12 @@ const he = {
   "force_checkout_success": "המשמרת הסתיימה בהצלחה",
   "force_checkout_failed": "סיום המשמרת נכשל",
   "processing": "מעבד...",
-  "confirm_end_shift": "אשר סיום משמרת"
+  "confirm_end_shift": "אשר סיום משמרת",
+  "pwa_install_title": "התקנת אפליקציה",
+  "pwa_install_text": "התקן את האפליקציה במכשיר שלך",
+  "pull_to_refresh": "משוך לרענון",
+  "refreshing": "מרענן...",
+  "release_to_refresh": "שחרר לרענון"
 }
 
 const en = {
@@ -922,7 +932,12 @@ const en = {
   "force_checkout_success": "Shift ended successfully",
   "force_checkout_failed": "Failed to end shift",
   "processing": "Processing...",
-  "confirm_end_shift": "Confirm End Shift"
+  "confirm_end_shift": "Confirm End Shift",
+  "pwa_install_title": "Install App",
+  "pwa_install_text": "Install the app on your device",
+  "pull_to_refresh": "Pull to refresh",
+  "refreshing": "Refreshing...",
+  "release_to_refresh": "Release to refresh"
 }
 
 // =============================================
@@ -970,17 +985,27 @@ const i18nState = reactive({
   },
   
   t(key) {
-    const lang = i18nState.currentLang
-    const translation = messages[lang]?.[key]
-    if (translation !== undefined && translation !== null) {
-      return translation
+    const keys = key.split('.')
+    let translation = messages[i18nState.currentLang]
+    
+    for (const k of keys) {
+      if (translation && translation[k]) {
+        translation = translation[k]
+      } else {
+        // البحث في اللغة الافتراضية
+        let fallbackTranslation = messages['ar']
+        for (const fk of keys) {
+          if (fallbackTranslation && fallbackTranslation[fk]) {
+            fallbackTranslation = fallbackTranslation[fk]
+          } else {
+            console.warn(`⚠️ مفتاح الترجمة غير موجود: ${key}`)
+            return key
+          }
+        }
+        return fallbackTranslation
+      }
     }
-    const fallback = messages['ar']?.[key]
-    if (fallback !== undefined && fallback !== null) {
-      return fallback
-    }
-    console.warn(`⚠️ مفتاح الترجمة غير موجود: ${key}`)
-    return key
+    return translation
   }
 })
 

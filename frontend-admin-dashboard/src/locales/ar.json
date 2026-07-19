@@ -310,5 +310,7 @@
   "pwa": {
     "installTitle": "تثبيت التطبيق",
     "installText": "تثبيت التطبيق"
-  }
+  },
+  "pwa_install_title": "تثبيت التطبيق",
+  "pwa_install_text": "ثبت التطبيق على جهازك"
 }

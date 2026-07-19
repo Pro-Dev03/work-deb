@@ -48,16 +48,27 @@ const i18nState = reactive({
   },
   
   t(key) {
-    const translation = messages[this.currentLang]?.[key]
-    if (translation !== undefined && translation !== null) {
-      return translation
+    const keys = key.split('.')
+    let translation = messages[this.currentLang]
+    
+    for (const k of keys) {
+      if (translation && translation[k]) {
+        translation = translation[k]
+      } else {
+        // البحث في اللغة الافتراضية
+        let fallbackTranslation = messages['ar']
+        for (const fk of keys) {
+          if (fallbackTranslation && fallbackTranslation[fk]) {
+            fallbackTranslation = fallbackTranslation[fk]
+          } else {
+            console.warn(`⚠️ مفتاح الترجمة غير موجود: ${key}`)
+            return key
+          }
+        }
+        return fallbackTranslation
+      }
     }
-    const fallback = messages['ar']?.[key]
-    if (fallback !== undefined && fallback !== null) {
-      return fallback
-    }
-    console.warn(`⚠️ مفتاح الترجمة غير موجود: ${key}`)
-    return key
+    return translation
   }
 })
 
