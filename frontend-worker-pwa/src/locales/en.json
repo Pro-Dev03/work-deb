@@ -166,5 +166,9 @@
   "device_model_not_registered": "🔒 Device model not registered",
   "pull_to_refresh": "Pull to refresh",
   "refreshing": "Refreshing...",
-  "release_to_refresh": "Release to refresh"
+  "release_to_refresh": "Release to refresh",
+  "pwa": {
+    "installTitle": "Install App",
+    "installText": "Install App"
+  }
 }

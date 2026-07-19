@@ -13,7 +13,9 @@
     </div>
 
     <template v-else>
-      <TaskCard v-for="task in tasksStore.items" :key="task.id" :task="task" />
+      <SwipeNav :items-per-view="1" :show-indicators="true">
+        <TaskCard v-for="task in tasksStore.items" :key="task.id" :task="task" class="swipe-item" />
+      </SwipeNav>
     </template>
   </div>
 </template>
@@ -23,6 +25,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../services/i18n'
 import { tasksStore } from '../store/tasks'
 import TaskCard from '../components/TaskCard.vue'
+import SwipeNav from '../components/SwipeNav.vue'
 import wsService from '../services/websocket'
 
 const { t } = useI18n()
@@ -62,5 +65,13 @@ function disconnectWebSocket() {
 
 <style scoped>
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+
+.swipe-item {
+  flex: 0 0 100%;
+  width: 100%;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
 .page-head h2 { font-size: 19px; }
 </style>

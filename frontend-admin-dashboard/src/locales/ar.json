@@ -306,5 +306,9 @@
   "confirm_end_shift": "تأكيد إنهاء الدوام",
   "pull_to_refresh": "اسحب للتحديث",
   "refreshing": "جاري التحديث...",
-  "release_to_refresh": "أفعل للتحديث"
+  "release_to_refresh": "أفعل للتحديث",
+  "pwa": {
+    "installTitle": "تثبيت التطبيق",
+    "installText": "تثبيت التطبيق"
+  }
 }

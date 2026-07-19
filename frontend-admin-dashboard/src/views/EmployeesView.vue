@@ -85,9 +85,10 @@
         </table>
       </div>
       
-      <!-- بطاقات للشاشات الصغيرة -->
+      <!-- بطاقات للشاشات الصغيرة مع التنقل باللمس -->
       <div class="mobile-cards mobile-only">
-        <div v-for="emp in employees" :key="emp.id" class="employee-card">
+        <SwipeNav :items-per-view="1" :show-indicators="true">
+          <div v-for="emp in employees" :key="emp.id" class="employee-card swipe-item">
           <div class="employee-card__header">
             <div class="employee-card__person">
               <span class="table__avatar">{{ emp.full_name?.slice(0, 1) || '?' }}</span>
@@ -139,6 +140,7 @@
             </button>
           </div>
         </div>
+        </SwipeNav>
       </div>
     </div>
 
@@ -279,6 +281,7 @@
 import { ref, onMounted, watch } from 'vue'
 import api from '../services/api'
 import EmployeeFormModal from '../components/EmployeeFormModal.vue'
+import SwipeNav from '../components/SwipeNav.vue'
 import { useI18n } from '../services/i18n'
 
 const { t, currentLang } = useI18n()
@@ -1114,6 +1117,13 @@ onMounted(fetchEmployees)
   
   .card {
     border-radius: var(--radius-sm);
+  }
+  
+  .swipe-item {
+    flex: 0 0 100%;
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
   }
 }
 

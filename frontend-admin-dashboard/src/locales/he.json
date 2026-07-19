@@ -306,5 +306,9 @@
   "confirm_end_shift": "אשר סיום משמרת",
   "pull_to_refresh": "משוך לרענן",
   "refreshing": "מרענן...",
-  "release_to_refresh": "שחרר לרענן"
+  "release_to_refresh": "שחרר לרענן",
+  "pwa": {
+    "installTitle": "התקן אפליקציה",
+    "installText": "התקן אפליקציה"
+  }
 }

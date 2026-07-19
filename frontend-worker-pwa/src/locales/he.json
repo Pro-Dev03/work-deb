@@ -156,5 +156,9 @@
   "failed_fetch_attendance_history": "נכשל באחזור היסטוריית נוכחות",
   "pull_to_refresh": "משוך לרענן",
   "refreshing": "מרענן...",
-  "release_to_refresh": "שחרר לרענן"
+  "release_to_refresh": "שחרר לרענן",
+  "pwa": {
+    "installTitle": "התקן אפליקציה",
+    "installText": "התקן אפליקציה"
+  }
 }

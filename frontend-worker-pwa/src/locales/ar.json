@@ -161,5 +161,9 @@
   "device_model_not_registered": "🔒 نموذج الجهاز غير مسجل",
   "pull_to_refresh": "اسحب للتحديث",
   "refreshing": "جاري التحديث...",
-  "release_to_refresh": "أفعل للتحديث"
+  "release_to_refresh": "أفعل للتحديث",
+  "pwa": {
+    "installTitle": "تثبيت التطبيق",
+    "installText": "تثبيت التطبيق"
+  }
 }
