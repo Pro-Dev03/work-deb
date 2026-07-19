@@ -44,7 +44,12 @@ const messages = {
     no_data: "لا توجد بيانات",
     error: "حدث خطأ",
     success: "تم بنجاح",
-    welcome: "مرحباً بك"
+    welcome: "مرحباً بك",
+    pull_to_refresh: "اسحب للتحديث",
+    refreshing: "جاري التحديث...",
+    release_to_refresh: "أطلق للتحديث",
+    pwa_install_title: "تثبيت التطبيق",
+    pwa_install_text: "ثبت التطبيق على جهازك"
   },
   he: {
     app_name: "WorkTrack", 
@@ -88,7 +93,12 @@ const messages = {
     no_data: "אין נתונים",
     error: "שגיאה",
     success: "הצלחה",
-    welcome: "ברוך הבא"
+    welcome: "ברוך הבא",
+    pull_to_refresh: "משוך לרענון",
+    refreshing: "מרענן...",
+    release_to_refresh: "שחרר לרענון",
+    pwa_install_title: "התקנת אפליקציה",
+    pwa_install_text: "התקן את האפליקציה במכשיר שלך"
   }
 }
 

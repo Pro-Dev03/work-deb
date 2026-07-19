@@ -5,10 +5,38 @@ import ar from '../locales/ar.json'
 import he from '../locales/he.json'
 import en from '../locales/en.json'
 
+// إضافة المفاتيح المفقودة للترجمة
+const arExtended = {
+  ...ar,
+  pull_to_refresh: "اسحب للتحديث",
+  refreshing: "جاري التحديث...",
+  release_to_refresh: "أطلق للتحديث",
+  pwa_install_title: "تثبيت التطبيق",
+  pwa_install_text: "ثبت التطبيق على جهازك"
+}
+
+const heExtended = {
+  ...he,
+  pull_to_refresh: "משוך לרענון",
+  refreshing: "מרענן...",
+  release_to_refresh: "שחרר לרענון",
+  pwa_install_title: "התקנת אפליקציה",
+  pwa_install_text: "התקן את האפליקציה במכשיר שלך"
+}
+
+const enExtended = {
+  ...en,
+  pull_to_refresh: "Pull to refresh",
+  refreshing: "Refreshing...",
+  release_to_refresh: "Release to refresh",
+  pwa_install_title: "Install App",
+  pwa_install_text: "Install the app on your device"
+}
+
 const messages = {
-  ar,
-  he,
-  en
+  ar: arExtended,
+  he: heExtended,
+  en: enExtended
 }
 
 const FALLBACK = 'ar'
