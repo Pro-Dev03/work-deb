@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { useI18n } from '../plugins/i18n'
+import { useI18n } from '../services/i18n'
 
 const { t } = useI18n()
 
