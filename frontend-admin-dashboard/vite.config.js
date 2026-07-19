@@ -18,7 +18,11 @@ export default defineConfig({
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router'],
           'leaflet-vendor': ['leaflet']
-        }
+        },
+        // إضافة timestamp تلقائي لضمان cache busting
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]'
       }
     }
   }

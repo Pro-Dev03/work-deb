@@ -40,6 +40,16 @@ services:
     buildCommand: npm install && npm run build
     publishDir: dist
     autoDeployTrigger: commit
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /*
+        name: Pragma
+        value: no-cache
+      - path: /*
+        name: Expires
+        value: 0
     envVars:
       - key: NODE_VERSION
         value: "18"
@@ -54,6 +64,16 @@ services:
     buildCommand: npm install && npm run build
     publishDir: dist
     autoDeployTrigger: commit
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /*
+        name: Pragma
+        value: no-cache
+      - path: /*
+        name: Expires
+        value: 0
     envVars:
       - key: NODE_VERSION
         value: "18"
@@ -68,6 +88,16 @@ services:
     buildCommand: npm install && npm run build
     publishDir: dist
     autoDeployTrigger: commit
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+      - path: /*
+        name: Pragma
+        value: no-cache
+      - path: /*
+        name: Expires
+        value: 0
     envVars:
       - key: NODE_VERSION
         value: "18"
