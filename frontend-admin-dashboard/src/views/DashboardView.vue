@@ -810,7 +810,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 .employee-item.status-inside { border-right: 4px solid var(--signal-in); }
-.employee-item.status-outside { 
+.employee-item.status-outside {
   border-right: 4px solid var(--signal-out);
   background: var(--signal-out-tint);
 }
@@ -878,6 +878,71 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 .employee-item__distance { font-size: 11px; color: var(--ink-soft); }
+
+/* ==========================================
+   تصميم محسّن للهواتف
+   ========================================== */
+@media (max-width: 600px) {
+  .employee-item {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .employee-item__avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .employee-item__info {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .employee-item__info strong {
+    font-size: 13px;
+  }
+
+  .employee-item__worksite {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .employee-item__time {
+    font-size: 10px;
+  }
+
+  .employee-item__status {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  .employee-item__distance {
+    font-size: 10px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .btn--sm {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
 
 /* ==========================================
    التحذيرات
@@ -1028,8 +1093,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 @media (max-width: 600px) {
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .employee-item { flex-wrap: wrap; }
-  .employee-item__status { flex-direction: row; align-items: center; gap: 8px; }
   .dashboard__tabs { flex-direction: column; }
   .tab-btn { width: 100%; text-align: center; }
 }
