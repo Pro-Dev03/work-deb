@@ -44,7 +44,7 @@
   "actions": "Actions",
   "phone": "Phone",
   "admin_role": "Admin",
-  "field_employee": "Field",
+  "field_employee": "Field employee",
   "confirm_delete_title": "Confirm Delete",
   "confirm_delete_message": "Are you sure you want to delete employee",
   "delete_irreversible": "This action cannot be undone",

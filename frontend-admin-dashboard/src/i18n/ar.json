@@ -44,7 +44,7 @@
   "actions": "الإجراءات",
   "phone": "الهاتف",
   "admin_role": "مدير",
-  "field_employee": "ميداني",
+  "field_employee": "موظف ميداني",
   "confirm_delete_title": "تأكيد الحذف",
   "confirm_delete_message": "هل أنت متأكد من حذف الموظف",
   "delete_irreversible": "هذا الإجراء لا يمكن التراجع عنه",

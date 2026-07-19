@@ -44,7 +44,7 @@
   "actions": "פעולות",
   "phone": "טלפון",
   "admin_role": "מנהל",
-  "field_employee": "שטח",
+  "field_employee": "עובד שטח",
   "confirm_delete_title": "אישור מחיקה",
   "confirm_delete_message": "האם אתה בטוח שברצונך למחוק את העובד",
   "delete_irreversible": "פעולה זו אינה ניתנת לביטול",
