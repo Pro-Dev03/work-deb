@@ -859,7 +859,7 @@ onMounted(fetchEmployees)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .attendance-card__label {
@@ -867,6 +867,7 @@ onMounted(fetchEmployees)
   color: var(--ink-soft);
   font-weight: 500;
   flex-shrink: 0;
+  min-width: 80px;
 }
 
 .attendance-card__value {
@@ -876,13 +877,25 @@ onMounted(fetchEmployees)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 180px;
+  flex: 1;
+  text-align: right;
+  max-width: none;
 }
 
 @media (max-width: 380px) {
-  .attendance-card__value {
-    max-width: 140px;
+  .attendance-card__label {
+    min-width: 70px;
+    font-size: 12px;
   }
+  
+  .attendance-card__value {
+    font-size: 13px;
+  }
+}
+
+/* دعم RTL لبطاقات الحضور */
+[dir="rtl"] .attendance-card__value {
+  text-align: left;
 }
 
 /* تصميم بطاقات الموظفين للهاتف */
@@ -904,11 +917,11 @@ onMounted(fetchEmployees)
 .employee-card__header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -924,6 +937,8 @@ onMounted(fetchEmployees)
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .employee-card__name {
@@ -933,15 +948,17 @@ onMounted(fetchEmployees)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 200px;
+  max-width: 100%;
 }
 
 .employee-card__badges {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 6px;
-  align-items: flex-end;
+  align-items: center;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .badge--compact {
@@ -962,7 +979,7 @@ onMounted(fetchEmployees)
 .employee-card__body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
@@ -970,7 +987,7 @@ onMounted(fetchEmployees)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .employee-card__label {
@@ -978,6 +995,7 @@ onMounted(fetchEmployees)
   color: var(--ink-soft);
   font-weight: 500;
   flex-shrink: 0;
+  min-width: 80px;
 }
 
 .employee-card__value {
@@ -987,7 +1005,9 @@ onMounted(fetchEmployees)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 180px;
+  flex: 1;
+  text-align: right;
+  max-width: none;
 }
 
 .employee-card__actions {
@@ -1027,12 +1047,32 @@ onMounted(fetchEmployees)
 }
 
 @media (max-width: 380px) {
+  .employee-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .employee-card__person {
+    width: 100%;
+  }
+  
+  .employee-card__badges {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
   .employee-card__name {
-    max-width: 150px;
+    max-width: 100%;
+  }
+  
+  .employee-card__label {
+    min-width: 70px;
+    font-size: 12px;
   }
   
   .employee-card__value {
-    max-width: 130px;
+    font-size: 13px;
   }
   
   .employee-card__actions .btn {
@@ -1055,12 +1095,8 @@ onMounted(fetchEmployees)
     padding: 12px;
   }
   
-  .employee-card__header {
-    gap: 6px;
-  }
-  
   .employee-card__body {
-    gap: 6px;
+    gap: 8px;
   }
   
   .mobile-cards {
@@ -1124,6 +1160,34 @@ onMounted(fetchEmployees)
     width: 100%;
     padding: 0 8px;
     box-sizing: border-box;
+  }
+}
+
+/* دعم RTL للغة العربية */
+[dir="rtl"] .employee-card__header {
+  flex-direction: row;
+}
+
+[dir="rtl"] .employee-card__person {
+  flex-direction: row;
+}
+
+[dir="rtl"] .employee-card__value {
+  text-align: left;
+}
+
+[dir="rtl"] .employee-card__badges {
+  justify-content: flex-start;
+}
+
+@media (max-width: 380px) {
+  [dir="rtl"] .employee-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  [dir="rtl"] .employee-card__badges {
+    justify-content: flex-start;
   }
 }
 
