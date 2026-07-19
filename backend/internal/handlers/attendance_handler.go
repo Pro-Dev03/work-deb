@@ -631,7 +631,43 @@ func (h *AttendanceHandler) ForceCheckOut(c *gin.Context) {
 		return
 	}
 
-	adminID, _ := c.Get("user_id")
+	adminID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "غير مصرح"})
+		return
+	}
+
+	adminIDStr := adminID.(string)
+
+	// التحقق من حالة الاشتراك
+	var subscriptionStatus string
+	var subscriptionExpiresAt time.Time
+	err := h.Service.DB.QueryRow(`
+		SELECT subscription_status, subscription_expires_at
+		FROM users
+		WHERE id = $1
+	`, adminIDStr).Scan(&subscriptionStatus, &subscriptionExpiresAt)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب حالة الاشتراك: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من حالة الاشتراك"})
+		return
+	}
+
+	// التحقق من أن الاشتراك نشط
+	if subscriptionStatus == "canceled" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "اشتراكك ملغي، الرجاء التواصل مع الدعم"})
+		return
+	}
+
+	if subscriptionStatus == "expired" || (!subscriptionExpiresAt.IsZero() && time.Now().After(subscriptionExpiresAt)) {
+		// تحديث الحالة إلى منتهي إذا لزم الأمر
+		if subscriptionStatus != "expired" {
+			_, _ = h.Service.DB.Exec(`UPDATE users SET subscription_status = 'expired' WHERE id = $1`, adminIDStr)
+		}
+		c.JSON(http.StatusForbidden, gin.H{"error": "اشتراكك منتهي، الرجاء تجديده للتمكن من استخدام هذه الميزة"})
+		return
+	}
 
 	var req struct {
 		AttendanceID string `json:"attendance_id" binding:"required"`
@@ -643,9 +679,9 @@ func (h *AttendanceHandler) ForceCheckOut(c *gin.Context) {
 		return
 	}
 
-	log.Printf("📝 طلب ForceCheckOut: attendance_id=%s, admin_id=%s", req.AttendanceID, adminID)
+	log.Printf("📝 طلب ForceCheckOut: attendance_id=%s, admin_id=%s", req.AttendanceID, adminIDStr)
 
-	workedHours, err := h.Service.ForceCheckOut(req.AttendanceID, adminID.(string))
+	workedHours, err := h.Service.ForceCheckOut(req.AttendanceID, adminIDStr)
 	if err != nil {
 		log.Printf("❌ فشل ForceCheckOut: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
