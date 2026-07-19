@@ -2,14 +2,7 @@
 const CACHE_NAME = 'worktrack-admin-v__APP_VERSION__'
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/icon.ico',
-  '/icon-128x128.png',
-  '/icon-256x256.png',
-  '/icon-512x512.png',
-  '/company-logo.jpg'
+  '/manifest.json'
 ]
 
 // تثبيت Service Worker وتخزين الملفات الأساسية
