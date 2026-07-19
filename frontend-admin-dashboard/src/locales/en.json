@@ -303,5 +303,8 @@
   "force_checkout_success": "Shift ended successfully",
   "force_checkout_failed": "Failed to end shift",
   "processing": "Processing...",
-  "confirm_end_shift": "Confirm End Shift"
+  "confirm_end_shift": "Confirm End Shift",
+  "pull_to_refresh": "Pull to refresh",
+  "refreshing": "Refreshing...",
+  "release_to_refresh": "Release to refresh"
 }

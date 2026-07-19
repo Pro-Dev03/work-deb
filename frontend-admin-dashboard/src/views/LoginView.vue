@@ -1,6 +1,12 @@
 <template>
-  <div class="login-page">
-    <div class="login-card">
+  <PullToRefresh 
+    @refresh="handleRefresh"
+    :refresh-text="$t('pull_to_refresh')"
+    :refreshing-text="$t('refreshing')"
+    :release-text="$t('release_to_refresh')"
+  >
+    <div class="login-page">
+      <div class="login-card">
       <div class="login-header">
         <div class="powered-by">
           <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="powered-logo" />
@@ -54,7 +60,8 @@
         <p class="footer-powered">🚀 {{ $t('app_name') }} - {{ $t('dashboard') }}</p>
       </div>
     </div>
-  </div>
+    </div>
+  </PullToRefresh>
 </template>
 
 <script setup>
@@ -63,6 +70,7 @@ import { useRouter } from 'vue-router'
 import { login } from '../services/auth'
 import { authStore } from '../store/auth'
 import { useI18n } from '../services/i18n'
+import PullToRefresh from '../components/PullToRefresh.vue'
 
 const { t, currentLang, setLang } = useI18n()
 const router = useRouter()
@@ -88,6 +96,19 @@ const languages = [
 
 function changeLanguage(lang) {
   setLang(lang)
+}
+
+async function handleRefresh() {
+  // إرسال رسالة للـ Service Worker لتنظيف الكاش
+  if ('serviceWorker' in navigator) {
+    const registration = await navigator.serviceWorker.getRegistration()
+    if (registration) {
+      registration.active.postMessage({ type: 'CACHE_BUST' })
+    }
+  }
+  
+  // إعادة تحميل الصفحة
+  window.location.reload()
 }
 
 async function handleSubmit() {

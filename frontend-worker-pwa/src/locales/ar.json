@@ -158,5 +158,8 @@
   "login_failed": "❌ فشل تسجيل الدخول. تحقق من رقم الهاتف",
   "unknown_error": "خطأ غير معروف",
   "device_not_registered": "🔒 الجهاز غير مسجل",
-  "device_model_not_registered": "🔒 نموذج الجهاز غير مسجل"
+  "device_model_not_registered": "🔒 نموذج الجهاز غير مسجل",
+  "pull_to_refresh": "اسحب للتحديث",
+  "refreshing": "جاري التحديث...",
+  "release_to_refresh": "أفعل للتحديث"
 }

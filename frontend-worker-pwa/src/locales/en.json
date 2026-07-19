@@ -163,5 +163,8 @@
   "login_failed": "❌ Login failed. Please check the phone number",
   "unknown_error": "Unknown error",
   "device_not_registered": "🔒 Device not registered",
-  "device_model_not_registered": "🔒 Device model not registered"
+  "device_model_not_registered": "🔒 Device model not registered",
+  "pull_to_refresh": "Pull to refresh",
+  "refreshing": "Refreshing...",
+  "release_to_refresh": "Release to refresh"
 }

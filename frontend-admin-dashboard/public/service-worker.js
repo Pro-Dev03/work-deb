@@ -2,7 +2,14 @@
 const CACHE_NAME = 'worktrack-admin-v__APP_VERSION__'
 const urlsToCache = [
   '/',
-  '/manifest.json'
+  '/manifest.json',
+  '/index.html'
+]
+
+// دعم offline للصفحات الرئيسية
+const CACHE_PAGES = [
+  '/',
+  '/index.html'
 ]
 
 // تثبيت Service Worker وتخزين الملفات الأساسية
@@ -69,6 +76,26 @@ self.addEventListener('fetch', (event) => {
         })
       })
   )
+})
+
+// معالجة طلبات التحديث عبر pull-to-refresh
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+  
+  if (event.data && event.data.type === 'CACHE_BUST') {
+    // تنظيف الكاش القديم
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName)
+          }
+        })
+      )
+    })
+  }
 })
 
 // معالجة الإشعارات (للاستخدام المستقبلي)

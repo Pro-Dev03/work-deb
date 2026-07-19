@@ -1,6 +1,12 @@
 <template>
-  <div class="login-page">
-    <div class="login-card">
+  <PullToRefresh 
+    @refresh="handleRefresh"
+    :refresh-text="t('pull_to_refresh')"
+    :refreshing-text="t('refreshing')"
+    :release-text="t('release_to_refresh')"
+  >
+    <div class="login-page">
+      <div class="login-card">
       <div class="login-header">
         <div class="logo">
           <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
@@ -52,7 +58,8 @@
       </div>
       <p class="footer-small">{{ t('device_verify') }}</p>
     </div>
-  </div>
+    </div>
+  </PullToRefresh>
 </template>
 
 <script setup>
@@ -60,6 +67,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../services/i18n'
 import api from '../services/api'
+import PullToRefresh from '../components/PullToRefresh.vue'
 
 const { t, currentLang, setLang } = useI18n()
 const router = useRouter()
@@ -80,6 +88,19 @@ function changeLanguage(code) {
   setLang(code)
   // ✅ يتم إعادة تحميل الصفحة بعد تغيير اللغة
   // لضمان تطبيق التغيير على جميع المكونات
+}
+
+async function handleRefresh() {
+  // إرسال رسالة للـ Service Worker لتنظيف الكاش
+  if ('serviceWorker' in navigator) {
+    const registration = await navigator.serviceWorker.getRegistration()
+    if (registration) {
+      registration.active.postMessage({ type: 'CACHE_BUST' })
+    }
+  }
+  
+  // إعادة تحميل الصفحة
+  window.location.reload()
 }
 
 function getDeviceId() {
