@@ -295,5 +295,13 @@
   "failed_to_fetch_attendance_history": "אחזור היסטוריית נוכחות נכשל",
   "shift_restored": "🔄 המשמרת הפעילה שוחזרה",
   "current_worksite": "אתר עבודה נוכחי",
-  "currently_working": "עובד כעת"
+  "currently_working": "עובד כעת",
+  "end_shift": "סיום משמרת",
+  "force_checkout_title": "סיום משמרת בכפייה",
+  "force_checkout_message": "האם אתה בטוח שברצונך לסיים את המשמרת עבור העובד",
+  "force_checkout_warning": "⚠️ המשמרת תסתיים מיד ללא צורך בתחברות העובד. השתמש בתכונה זו רק במצבי חירום.",
+  "force_checkout_success": "המשמרת הסתיימה בהצלחה",
+  "force_checkout_failed": "סיום המשמרת נכשל",
+  "processing": "מעבד...",
+  "confirm_end_shift": "אשר סיום משמרת"
 }

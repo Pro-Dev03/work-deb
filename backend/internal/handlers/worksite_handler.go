@@ -103,7 +103,7 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 		}
 		
 		workingRows, err := h.DB.Query(`
-			SELECT DISTINCT u.id, u.full_name
+			SELECT DISTINCT u.id, u.full_name, a.id as attendance_id
 			FROM users u
 			JOIN attendance a ON u.id = a.user_id
 			WHERE a.status = 'in_progress' 
@@ -114,11 +114,12 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 		if err == nil {
 			var workingEmployees []gin.H
 			for workingRows.Next() {
-				var id, name string
-				if err := workingRows.Scan(&id, &name); err == nil {
+				var id, name, attendanceID string
+				if err := workingRows.Scan(&id, &name, &attendanceID); err == nil {
 					workingEmployees = append(workingEmployees, gin.H{
-						"id":   id,
-						"name": name,
+						"id":             id,
+						"name":           name,
+						"attendance_id":  attendanceID,
 					})
 				}
 			}
@@ -129,7 +130,7 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 
 	// إضافة خيار "غير معين" للموظفين الذين يعملون بدون نقطة عمل
 	unassignedRows, err := h.DB.Query(`
-		SELECT DISTINCT u.id, u.full_name
+		SELECT DISTINCT u.id, u.full_name, a.id as attendance_id
 		FROM users u
 		JOIN attendance a ON u.id = a.user_id
 		WHERE a.status = 'in_progress' 
@@ -139,11 +140,12 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 	if err == nil {
 		var unassignedEmployees []gin.H
 		for unassignedRows.Next() {
-			var id, name string
-			if err := unassignedRows.Scan(&id, &name); err == nil {
+			var id, name, attendanceID string
+			if err := unassignedRows.Scan(&id, &name, &attendanceID); err == nil {
 				unassignedEmployees = append(unassignedEmployees, gin.H{
-					"id":   id,
-					"name": name,
+					"id":             id,
+					"name":           name,
+					"attendance_id":  attendanceID,
 				})
 			}
 		}

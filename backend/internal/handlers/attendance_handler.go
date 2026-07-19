@@ -621,3 +621,39 @@ func (h *AttendanceHandler) CleanupOldRecords(c *gin.Context) {
 		"deleted_count": rowsAffected,
 	})
 }
+
+// ForceCheckOut إنهاء دوام الموظف من قبل المدير
+func (h *AttendanceHandler) ForceCheckOut(c *gin.Context) {
+	// التحقق من أن المستخدم مدير
+	userRole, _ := c.Get("user_role")
+	if userRole != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "غير مصرح لهذه العملية"})
+		return
+	}
+
+	adminID, _ := c.Get("user_id")
+
+	var req struct {
+		AttendanceID string `json:"attendance_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("❌ خطأ في البيانات: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
+		return
+	}
+
+	log.Printf("📝 طلب ForceCheckOut: attendance_id=%s, admin_id=%s", req.AttendanceID, adminID)
+
+	workedHours, err := h.Service.ForceCheckOut(req.AttendanceID, adminID.(string))
+	if err != nil {
+		log.Printf("❌ فشل ForceCheckOut: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "✅ تم إنهاء الدوام بنجاح",
+		"worked_hours": workedHours,
+	})
+}

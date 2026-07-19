@@ -295,5 +295,13 @@
   "failed_to_fetch_attendance_history": "فشل جلب سجل الحضور",
   "shift_restored": "🔄 تم استعادة الوردية النشطة",
   "current_worksite": "نقطة العمل الحالية",
-  "currently_working": "يعمل حالياً"
+  "currently_working": "يعمل حالياً",
+  "end_shift": "إنهاء الدوام",
+  "force_checkout_title": "إنهاء الدوام إجبارياً",
+  "force_checkout_message": "هل أنت متأكد من إنهاء دوام الموظف",
+  "force_checkout_warning": "⚠️ سيتم إنهاء الدوام فوراً بدون الحاجة لتختيم الموظف. استخدم هذه الميزة فقط في حالات الطوارئ.",
+  "force_checkout_success": "تم إنهاء الدوام بنجاح",
+  "force_checkout_failed": "فشل إنهاء الدوام",
+  "processing": "جارٍ المعالجة...",
+  "confirm_end_shift": "تأكيد إنهاء الدوام"
 }

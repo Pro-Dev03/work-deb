@@ -117,6 +117,7 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 				admin.GET("/attendance/employee/:id/history", attendanceHandler.GetEmployeeAttendanceHistory)
 				admin.GET("/attendance/employee/:id/monthly-summary", attendanceHandler.GetEmployeeMonthlySummary)
 				admin.POST("/attendance/cleanup-old-records", attendanceHandler.CleanupOldRecords)
+				admin.POST("/attendance/force-checkout", attendanceHandler.ForceCheckOut)
 
 				// الموقع والملاحظات الأمنية
 				admin.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)

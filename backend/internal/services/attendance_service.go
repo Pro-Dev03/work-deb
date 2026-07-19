@@ -200,3 +200,39 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 
 	return result, workedHours, nil
 }
+
+// ForceCheckOut إنهاء دوام الموظف من قبل المدير (بدون التحقق من الموقع)
+func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (float64, error) {
+	log.Printf("📌 ForceCheckOut - الـ ID: %s, المدير: %s", attendanceID, adminID)
+
+	var checkInTime time.Time
+	var userID string
+
+	// جلب معلومات الوردية
+	err := s.DB.QueryRow(`
+		SELECT user_id, check_in_time FROM attendance 
+		WHERE id = $1 AND status = 'in_progress'
+	`, attendanceID).Scan(&userID, &checkInTime)
+	if err != nil {
+		log.Printf("❌ لا يوجد وردية نشطة: %v", err)
+		return 0, errors.New("لا يوجد وردية نشطة")
+	}
+
+	now := utils.NowInJerusalem()
+	
+	// تحديث سجل الحضور بدون التحقق من الموقع
+	_, err = s.DB.Exec(`
+		UPDATE attendance
+		SET check_out_time = $1, status = 'completed', check_out_notes = 'تم إنهاء الدوام من قبل المدير'
+		WHERE id = $2
+	`, now, attendanceID)
+	if err != nil {
+		log.Printf("❌ فشل تحديث سجل الحضور: %v", err)
+		return 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
+	}
+
+	workedHours := now.Sub(checkInTime).Hours()
+	log.Printf("✅ تم إنهاء الدوام من قبل المدير: %.2f ساعة", workedHours)
+
+	return workedHours, nil
+}

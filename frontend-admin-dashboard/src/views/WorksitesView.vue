@@ -50,9 +50,18 @@
             {{ t('currently_working') }} ({{ site.working_employees.length }})
           </div>
           <div class="site-card__working-list">
-            <span v-for="emp in site.working_employees" :key="emp.id" class="badge badge--success badge--compact">
-              👤 {{ emp.name }}
-            </span>
+            <div v-for="emp in site.working_employees" :key="emp.id" class="working-employee-item">
+              <span class="badge badge--success badge--compact">
+                👤 {{ emp.name }}
+              </span>
+              <button 
+                class="btn btn--warning btn--xs" 
+                @click="confirmForceCheckout(emp)"
+                :disabled="forceCheckingOut"
+              >
+                ⏱️ {{ t('end_shift') }}
+              </button>
+            </div>
           </div>
         </div>
         
@@ -123,6 +132,26 @@
         </div>
       </div>
     </div>
+
+    <!-- مودال تأكيد إنهاء الدوام -->
+    <div v-if="showForceCheckoutModal" class="modal-backdrop" @click.self="showForceCheckoutModal = false">
+      <div class="modal card">
+        <div class="modal-header">
+          <h3>⏱️ {{ t('force_checkout_title') }}</h3>
+          <button class="modal-close" @click="showForceCheckoutModal = false">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>{{ t('force_checkout_message') }} <strong>{{ employeeToForceCheckout?.name }}</strong>؟</p>
+          <p class="text-warning">{{ t('force_checkout_warning') }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn--ghost" @click="showForceCheckoutModal = false">{{ t('cancel') }}</button>
+          <button class="btn btn--warning" @click="forceCheckoutEmployee" :disabled="forceCheckingOut">
+            {{ forceCheckingOut ? t('processing') : t('confirm_end_shift') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -139,11 +168,14 @@ const loading = ref(false)
 const loadingEmployees = ref(false)
 const deleting = ref(false)
 const assigning = ref(false)
+const forceCheckingOut = ref(false)
 const showModal = ref(false)
 const showDeleteModal = ref(false)
 const showAssignModal = ref(false)
+const showForceCheckoutModal = ref(false)
 const siteToDelete = ref(null)
 const worksiteToAssign = ref(null)
+const employeeToForceCheckout = ref(null)
 
 async function fetchWorksites() {
   loading.value = true
@@ -216,6 +248,32 @@ async function assignEmployee(employeeId) {
     alert('❌ ' + msg)
   } finally {
     assigning.value = false
+  }
+}
+
+function confirmForceCheckout(employee) {
+  employeeToForceCheckout.value = employee
+  showForceCheckoutModal.value = true
+}
+
+async function forceCheckoutEmployee() {
+  if (!employeeToForceCheckout.value) return
+  
+  forceCheckingOut.value = true
+  try {
+    const response = await api.post('/attendance/force-checkout', {
+      attendance_id: employeeToForceCheckout.value.attendance_id
+    })
+    
+    showForceCheckoutModal.value = false
+    alert('✅ ' + (response.data.message || t('force_checkout_success')))
+    await fetchWorksites()
+  } catch (error) {
+    console.error('❌ ' + t('force_checkout_failed'), error)
+    const msg = error.response?.data?.error || t('force_checkout_failed')
+    alert('❌ ' + msg)
+  } finally {
+    forceCheckingOut.value = false
   }
 }
 
@@ -306,8 +364,15 @@ onMounted(fetchWorksites)
 
 .site-card__working-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.working-employee-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .site-card--unassigned {
@@ -351,6 +416,22 @@ onMounted(fetchWorksites)
 .modal-body p { margin-bottom: 8px; }
 
 .text-danger { color: var(--signal-out); font-weight: 600; }
+.text-warning { color: #f59e0b; font-weight: 600; }
+
+.btn--xs {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.btn--warning {
+  background: #f59e0b;
+  color: white;
+  border: none;
+}
+
+.btn--warning:hover {
+  background: #d97706;
+}
 
 .modal-footer {
   display: flex; gap: 10px;

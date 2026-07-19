@@ -295,5 +295,13 @@
   "failed_to_fetch_attendance_history": "Failed to fetch attendance history",
   "shift_restored": "🔄 Active shift restored",
   "current_worksite": "Current Worksite",
-  "currently_working": "Currently Working"
+  "currently_working": "Currently Working",
+  "end_shift": "End Shift",
+  "force_checkout_title": "Force End Shift",
+  "force_checkout_message": "Are you sure you want to end the shift for employee",
+  "force_checkout_warning": "⚠️ The shift will be ended immediately without requiring employee punch-in. Use this feature only in emergency situations.",
+  "force_checkout_success": "Shift ended successfully",
+  "force_checkout_failed": "Failed to end shift",
+  "processing": "Processing...",
+  "confirm_end_shift": "Confirm End Shift"
 }
