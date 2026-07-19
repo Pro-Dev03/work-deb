@@ -3,14 +3,14 @@
     <button 
       @click="installPWA" 
       class="pwa-install-button"
-      :title="$t('pwa.installTitle') || 'تثبيت التطبيق'"
+      :title="pwaInstallTitle"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
         <polyline points="7 10 12 15 17 10"></polyline>
         <line x1="12" y1="15" x2="12" y2="3"></line>
       </svg>
-      <span>{{ $t('pwa.installText') || 'تثبيت التطبيق' }}</span>
+      <span>{{ pwaInstallText }}</span>
     </button>
   </div>
 </template>
@@ -24,13 +24,18 @@ export default {
       deferredPrompt: null
     }
   },
+  computed: {
+    pwaInstallTitle() {
+      return this.$t('pwa.installTitle') || 'تثبيت التطبيق'
+    },
+    pwaInstallText() {
+      return this.$t('pwa.installText') || 'تثبيت التطبيق'
+    }
+  },
   mounted() {
     // الاستماع إلى event توفر التثبيت
     window.addEventListener('pwa-install-available', this.handleInstallAvailable)
     window.addEventListener('pwa-install-success', this.handleInstallSuccess)
-    
-    // الاستماع لتغيير اللغة
-    window.addEventListener('language-changed', this.$forceUpdate)
     
     // التحقق من وجود deferredPrompt في window
     if (window.deferredPrompt) {
@@ -40,7 +45,6 @@ export default {
   beforeUnmount() {
     window.removeEventListener('pwa-install-available', this.handleInstallAvailable)
     window.removeEventListener('pwa-install-success', this.handleInstallSuccess)
-    window.removeEventListener('language-changed', this.$forceUpdate)
   },
   methods: {
     handleInstallAvailable() {

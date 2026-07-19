@@ -21,9 +21,25 @@ export default {
   data() {
     return {
       showInstallButton: false,
-      deferredPrompt: null,
-      pwaInstallTitle: 'تثبيت التطبيق',
-      pwaInstallText: 'تثبيت التطبيق'
+      deferredPrompt: null
+    }
+  },
+  computed: {
+    pwaInstallTitle() {
+      if (this.$t) {
+        return this.$t('pwa.installTitle') || 'تثبيت التطبيق'
+      } else if (window.i18nStore && window.i18nStore.t) {
+        return window.i18nStore.t('pwa.installTitle') || 'تثبيت التطبيق'
+      }
+      return 'تثبيت التطبيق'
+    },
+    pwaInstallText() {
+      if (this.$t) {
+        return this.$t('pwa.installText') || 'تثبيت التطبيق'
+      } else if (window.i18nStore && window.i18nStore.t) {
+        return window.i18nStore.t('pwa.installText') || 'تثبيت التطبيق'
+      }
+      return 'تثبيت التطبيق'
     }
   },
   mounted() {
@@ -31,33 +47,16 @@ export default {
     window.addEventListener('pwa-install-available', this.handleInstallAvailable)
     window.addEventListener('pwa-install-success', this.handleInstallSuccess)
     
-    // الاستماع لتغيير اللغة
-    window.addEventListener('language-changed', this.loadTranslations)
-    
     // التحقق من وجود deferredPrompt في window
     if (window.deferredPrompt) {
       this.showInstallButton = true
     }
-    
-    // جلب الترجمات
-    this.loadTranslations()
   },
   beforeUnmount() {
     window.removeEventListener('pwa-install-available', this.handleInstallAvailable)
     window.removeEventListener('pwa-install-success', this.handleInstallSuccess)
-    window.removeEventListener('language-changed', this.loadTranslations)
   },
   methods: {
-    loadTranslations() {
-      // محاولة جلب الترجمات من مصادر مختلفة باستخدام المفاتيح المتداخلة
-      if (this.$t) {
-        this.pwaInstallTitle = this.$t('pwa.installTitle') || 'تثبيت التطبيق'
-        this.pwaInstallText = this.$t('pwa.installText') || 'تثبيت التطبيق'
-      } else if (window.i18nStore && window.i18nStore.t) {
-        this.pwaInstallTitle = window.i18nStore.t('pwa.installTitle') || 'تثبيت التطبيق'
-        this.pwaInstallText = window.i18nStore.t('pwa.installText') || 'تثبيت التطبيق'
-      }
-    },
     handleInstallAvailable() {
       this.showInstallButton = true
     },
