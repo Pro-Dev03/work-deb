@@ -11,8 +11,15 @@
   "icons": [
     {
       "src": "/src/assets/company-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/company-logo.jpg",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     },
     {
       "src": "/favicon.ico",
@@ -52,14 +59,14 @@
       "short_name": "حضور",
       "description": "تسجيل الحضور والانصراف",
       "url": "/check-in",
-      "icons": [{ "src": "/src/assets/company-logo.jpg", "sizes": "192x192" }]
+      "icons": [{ "src": "/src/assets/company-logo.jpg", "sizes": "512x512" }]
     },
     {
       "name": "موقعي",
       "short_name": "موقع",
       "description": "عرض موقعي الحالي",
       "url": "/location",
-      "icons": [{ "src": "/src/assets/company-logo.jpg", "sizes": "192x192" }]
+      "icons": [{ "src": "/src/assets/company-logo.jpg", "sizes": "512x512" }]
     }
   ]
 }
