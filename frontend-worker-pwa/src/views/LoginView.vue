@@ -5,7 +5,7 @@
         <div class="logo">
           <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
         </div>
-        <h1 class="title">{{ t('app_name') }}</h1>
+        <h1 class="title">{{ t('app_name') }} אבן יסודות</h1>
         <p class="subtitle">{{ t('app_name') }} - Employee platform -</p>
         <p class="subtitle-small">{{ t('login') }}</p>
       </div>
@@ -229,6 +229,7 @@ async function handleSubmit() {
   font-weight: 800;
   color: #1E3A5F;
   margin: 0 0 4px 0;
+  direction: ltr;
 }
 
 .subtitle {
@@ -406,7 +407,7 @@ async function handleSubmit() {
   }
 
   .title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .lang-btn {
