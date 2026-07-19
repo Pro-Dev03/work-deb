@@ -85,10 +85,9 @@
         </table>
       </div>
       
-      <!-- بطاقات للشاشات الصغيرة مع التنقل باللمس -->
+      <!-- بطاقات للشاشات الصغيرة - قائمة عمودية -->
       <div class="mobile-cards mobile-only">
-        <SwipeNav :items-per-view="1" :show-indicators="true">
-          <div v-for="emp in employees" :key="emp.id" class="employee-card swipe-item">
+        <div v-for="emp in employees" :key="emp.id" class="employee-card">
           <div class="employee-card__header">
             <div class="employee-card__person">
               <span class="table__avatar">{{ emp.full_name?.slice(0, 1) || '?' }}</span>
@@ -140,7 +139,6 @@
             </button>
           </div>
         </div>
-        </SwipeNav>
       </div>
     </div>
 
@@ -243,7 +241,7 @@
               </table>
             </div>
             
-            <!-- بطاقات للشاشات الصغيرة -->
+            <!-- بطاقات للشاشات الصغيرة - قائمة عمودية -->
             <div class="mobile-cards mobile-only">
               <div v-for="record in attendanceHistory" :key="record.id" class="attendance-card">
                 <div class="attendance-card__header">
@@ -281,7 +279,6 @@
 import { ref, onMounted, watch } from 'vue'
 import api from '../services/api'
 import EmployeeFormModal from '../components/EmployeeFormModal.vue'
-import SwipeNav from '../components/SwipeNav.vue'
 import { useI18n } from '../services/i18n'
 
 const { t, currentLang } = useI18n()
@@ -814,9 +811,10 @@ onMounted(fetchEmployees)
 .mobile-cards {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
   box-sizing: border-box;
+  padding: 8px;
 }
 
 .attendance-card {
@@ -903,23 +901,25 @@ onMounted(fetchEmployees)
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 20px;
   transition: all 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .employee-card:hover {
   border-color: var(--brand);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
 }
 
 .employee-card__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
   gap: 12px;
   flex-wrap: wrap;
@@ -928,7 +928,7 @@ onMounted(fetchEmployees)
 .employee-card__person {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   min-width: 0; /* مهم للنصوص الطويلة */
 }
@@ -936,7 +936,7 @@ onMounted(fetchEmployees)
 .employee-card__info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -944,7 +944,7 @@ onMounted(fetchEmployees)
 .employee-card__name {
   font-weight: 600;
   color: var(--ink);
-  font-size: 15px;
+  font-size: 16px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -954,7 +954,7 @@ onMounted(fetchEmployees)
 .employee-card__badges {
   display: flex;
   flex-direction: row;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
   flex-shrink: 0;
   flex-wrap: wrap;
@@ -979,27 +979,28 @@ onMounted(fetchEmployees)
 .employee-card__body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
 .employee-card__row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  padding: 8px 0;
 }
 
 .employee-card__label {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-soft);
   font-weight: 500;
   flex-shrink: 0;
-  min-width: 80px;
+  min-width: 90px;
 }
 
 .employee-card__value {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink);
   font-weight: 500;
   overflow: hidden;
@@ -1012,28 +1013,29 @@ onMounted(fetchEmployees)
 
 .employee-card__actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .employee-card__actions .btn {
   flex: 1;
-  min-width: 110px;
-  font-size: 13px;
-  padding: 8px 12px;
+  min-width: 120px;
+  font-size: 14px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .btn--compact {
-  font-size: 12px;
-  padding: 6px 10px;
+  font-size: 13px;
+  padding: 8px 12px;
 }
 
 .btn--compact .btn-icon {
-  font-size: 14px;
+  font-size: 16px;
   flex-shrink: 0;
 }
 
@@ -1047,10 +1049,78 @@ onMounted(fetchEmployees)
 }
 
 @media (max-width: 380px) {
+  .employee-card {
+    padding: 16px;
+  }
+  
+  .employee-card__header {
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+  
+  .employee-card__person {
+    gap: 8px;
+  }
+  
+  .employee-card__name {
+    font-size: 15px;
+  }
+  
+  .employee-card__body {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .employee-card__row {
+    gap: 12px;
+    padding: 6px 0;
+  }
+  
+  .employee-card__label {
+    min-width: 75px;
+    font-size: 13px;
+  }
+  
+  .employee-card__value {
+    font-size: 14px;
+  }
+  
+  .employee-card__actions {
+    gap: 8px;
+  }
+  
+  .employee-card__actions .btn {
+    min-width: 100px;
+    font-size: 13px;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  
+  .btn--compact .btn-icon {
+    font-size: 14px;
+  }
+  
+  .badge--compact {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .mobile-cards {
+    padding: 6px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 340px) {
+  .employee-card {
+    padding: 14px;
+  }
+  
   .employee-card__header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
   }
   
   .employee-card__person {
@@ -1063,7 +1133,12 @@ onMounted(fetchEmployees)
   }
   
   .employee-card__name {
+    font-size: 15px;
     max-width: 100%;
+  }
+  
+  .employee-card__body {
+    gap: 10px;
   }
   
   .employee-card__label {
@@ -1075,91 +1150,24 @@ onMounted(fetchEmployees)
     font-size: 13px;
   }
   
-  .employee-card__actions .btn {
-    min-width: 95px;
-    font-size: 11px;
-    padding: 6px 8px;
-    gap: 4px;
-  }
-  
-  .btn--compact .btn-icon {
-    font-size: 12px;
-  }
-  
-  .badge--compact {
-    font-size: 10px;
-    padding: 3px 6px;
-  }
-  
-  .employee-card {
-    padding: 12px;
-  }
-  
-  .employee-card__body {
-    gap: 8px;
-  }
-  
-  .mobile-cards {
-    padding: 0 2px;
-  }
-}
-
-@media (max-width: 340px) {
   .employee-card__actions {
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
   
   .employee-card__actions .btn {
     min-width: 100%;
-    font-size: 12px;
-    padding: 8px 12px;
+    font-size: 13px;
+    padding: 10px 12px;
   }
   
   .btn--compact .btn-icon {
-    font-size: 14px;
-  }
-  
-  .employee-card {
-    padding: 10px;
-  }
-  
-  .employee-card__header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .employee-card__badges {
-    align-items: flex-start;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  
-  .employee-card__person {
-    width: 100%;
-  }
-  
-  .employee-card__name {
-    max-width: 100%;
-  }
-  
-  .employee-card__value {
-    max-width: 100%;
+    font-size: 15px;
   }
   
   .mobile-cards {
-    padding: 0;
-  }
-  
-  .card {
-    border-radius: var(--radius-sm);
-  }
-  
-  .swipe-item {
-    flex: 0 0 100%;
-    width: 100%;
-    padding: 0 8px;
-    box-sizing: border-box;
+    padding: 4px;
+    gap: 10px;
   }
 }
 
@@ -1181,6 +1189,17 @@ onMounted(fetchEmployees)
 }
 
 @media (max-width: 380px) {
+  [dir="rtl"] .employee-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  [dir="rtl"] .employee-card__badges {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 340px) {
   [dir="rtl"] .employee-card__header {
     flex-direction: column;
     align-items: flex-start;
@@ -1226,12 +1245,17 @@ onMounted(fetchEmployees)
     -webkit-overflow-scrolling: touch;
   }
   
+  .mobile-cards {
+    padding: 8px;
+    gap: 16px;
+  }
+  
   .employee-card {
-    margin: 0 4px 8px 4px;
+    margin: 0;
   }
   
   .attendance-card {
-    margin: 0 4px 8px 4px;
+    margin: 0;
   }
 }
 </style>
