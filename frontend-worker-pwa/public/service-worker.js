@@ -1,4 +1,5 @@
-const CACHE_NAME = 'worktrack-v2'
+// سيتم تحديث هذا الإصدار تلقائياً عند تغيير package.json
+const CACHE_NAME = 'worktrack-v__APP_VERSION__'
 const urlsToCache = [
   '/',
   '/index.html',
