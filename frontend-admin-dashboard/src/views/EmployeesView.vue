@@ -978,6 +978,7 @@ onMounted(fetchEmployees)
   border-bottom: 1px solid var(--line);
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .employee-card__person {
@@ -986,6 +987,7 @@ onMounted(fetchEmployees)
   gap: 12px;
   flex: 1;
   min-width: 0; /* مهم للنصوص الطويلة */
+  max-width: 100%;
 }
 
 .employee-card__info {
@@ -994,6 +996,8 @@ onMounted(fetchEmployees)
   gap: 6px;
   flex: 1;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .employee-card__name {
@@ -1013,20 +1017,22 @@ onMounted(fetchEmployees)
 .employee-card__badges {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   flex-shrink: 0;
   flex-wrap: wrap;
   justify-content: flex-end;
   max-width: 100%;
+  min-width: 0;
 }
 
 .badge--compact {
-  font-size: 11px;
-  padding: 4px 8px;
+  font-size: 10px;
+  padding: 3px 6px;
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
+  max-width: 100%;
 }
 
 .badge--success {
@@ -1123,12 +1129,20 @@ onMounted(fetchEmployees)
     gap: 8px;
     margin-bottom: 12px;
     padding-bottom: 12px;
+    flex-direction: column;
+    align-items: flex-start;
   }
   
   .employee-card__person {
     gap: 8px;
     flex: 1;
     min-width: 0;
+    width: 100%;
+  }
+  
+  .employee-card__badges {
+    width: 100%;
+    justify-content: flex-start;
   }
   
   .employee-card__name {
@@ -1136,6 +1150,7 @@ onMounted(fetchEmployees)
     max-width: 100%;
     word-break: break-word;
     overflow-wrap: break-word;
+    line-height: 1.3;
   }
   
   .employee-card__body {
@@ -1203,6 +1218,12 @@ onMounted(fetchEmployees)
     width: 100%;
     flex: 1;
     min-width: 0;
+    max-width: 100%;
+  }
+  
+  .employee-card__info {
+    max-width: 100%;
+    overflow: hidden;
   }
   
   .employee-card__badges {
@@ -1212,10 +1233,11 @@ onMounted(fetchEmployees)
   }
   
   .employee-card__name {
-    font-size: 15px;
+    font-size: 14px;
     max-width: 100%;
     word-break: break-word;
     overflow-wrap: break-word;
+    line-height: 1.3;
   }
   
   .employee-card__body {
@@ -1250,8 +1272,8 @@ onMounted(fetchEmployees)
   }
   
   .badge--compact {
-    font-size: 10px;
-    padding: 3px 6px;
+    font-size: 9px;
+    padding: 2px 5px;
     white-space: normal;
     word-break: break-word;
   }
@@ -1297,6 +1319,10 @@ onMounted(fetchEmployees)
     align-items: flex-start;
   }
   
+  [dir="rtl"] .employee-card__person {
+    flex-direction: row;
+  }
+  
   [dir="rtl"] .employee-card__badges {
     justify-content: flex-start;
   }
@@ -1306,6 +1332,10 @@ onMounted(fetchEmployees)
   [dir="rtl"] .employee-card__header {
     flex-direction: column;
     align-items: flex-start;
+  }
+  
+  [dir="rtl"] .employee-card__person {
+    flex-direction: row;
   }
   
   [dir="rtl"] .employee-card__badges {

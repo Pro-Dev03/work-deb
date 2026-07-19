@@ -33,7 +33,7 @@
         <div class="form-group">
           <label>🎯 الدور</label>
           <select v-model="form.role">
-            <option value="employee">موظف ميداني</option>
+            <option value="employee">ميداني</option>
             <option value="admin">مدير</option>
           </select>
         </div>
