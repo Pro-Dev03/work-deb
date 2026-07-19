@@ -80,5 +80,12 @@
   "no_notifications": "لا توجد إشعارات",
   "no_notifications 2": "لا توجد إشعارات",
   "completed": "مكتمل",
-  "completed 2": "مكتمل"
+  "completed 2": "مكتمل",
+  "pull_to_refresh": "اسحب للتحديث",
+  "refreshing": "جاري التحديث...",
+  "release_to_refresh": "أطلق للتحديث",
+  "pwa": {
+    "installTitle": "تثبيت التطبيق",
+    "installText": "ثبت التطبيق على جهازك"
+  }
 }

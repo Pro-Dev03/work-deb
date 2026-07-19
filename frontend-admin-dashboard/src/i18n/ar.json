@@ -26,5 +26,12 @@
   "name": "الاسم",
   "worksite": "نقطة العمل",
   "current_worksite": "نقطة العمل الحالية",
-  "currently_working": "يعمل حالياً"
+  "currently_working": "يعمل حالياً",
+  "pull_to_refresh": "اسحب للتحديث",
+  "refreshing": "جاري التحديث...",
+  "release_to_refresh": "أطلق للتحديث",
+  "pwa": {
+    "installTitle": "تثبيت التطبيق",
+    "installText": "ثبت التطبيق على جهازك"
+  }
 }

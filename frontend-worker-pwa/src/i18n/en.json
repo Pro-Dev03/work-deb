@@ -80,5 +80,12 @@
   "no_notifications": "No notifications",
   "no_notifications 2": "No notifications",
   "completed": "Completed",
-  "completed 2": "Completed"
+  "completed 2": "Completed",
+  "pull_to_refresh": "Pull to refresh",
+  "refreshing": "Refreshing...",
+  "release_to_refresh": "Release to refresh",
+  "pwa": {
+    "installTitle": "Install App",
+    "installText": "Install the app on your device"
+  }
 }

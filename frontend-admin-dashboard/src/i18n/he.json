@@ -26,5 +26,12 @@
   "name": "שם",
   "worksite": "אתר עבודה",
   "current_worksite": "אתר עבודה נוכחי",
-  "currently_working": "עובד כעת"
+  "currently_working": "עובד כעת",
+  "pull_to_refresh": "משוך לרענון",
+  "refreshing": "מרענן...",
+  "release_to_refresh": "שחרר לרענון",
+  "pwa": {
+    "installTitle": "התקנת אפליקציה",
+    "installText": "התקן את האפליקציה במכשיר שלך"
+  }
 }

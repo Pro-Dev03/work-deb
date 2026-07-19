@@ -3,7 +3,12 @@ const CACHE_NAME = 'worktrack-v__APP_VERSION__'
 const urlsToCache = [
   '/',
   '/manifest.json',
-  '/index.html'
+  '/index.html',
+  '/icon-128x128.png',
+  '/icon-192x192.png',
+  '/icon-256x256.png',
+  '/icon-512x512.png',
+  '/favicon.ico'
 ]
 
 // دعم offline للصفحات الرئيسية

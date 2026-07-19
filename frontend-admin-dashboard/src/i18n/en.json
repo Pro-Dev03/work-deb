@@ -26,5 +26,12 @@
   "name": "Name",
   "worksite": "Worksite",
   "current_worksite": "Current Worksite",
-  "currently_working": "Currently Working"
+  "currently_working": "Currently Working",
+  "pull_to_refresh": "Pull to refresh",
+  "refreshing": "Refreshing...",
+  "release_to_refresh": "Release to refresh",
+  "pwa": {
+    "installTitle": "Install App",
+    "installText": "Install the app on your device"
+  }
 }
