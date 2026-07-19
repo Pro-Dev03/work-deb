@@ -625,7 +625,7 @@ func (h *AttendanceHandler) CleanupOldRecords(c *gin.Context) {
 // ForceCheckOut إنهاء دوام الموظف من قبل المدير
 func (h *AttendanceHandler) ForceCheckOut(c *gin.Context) {
 	// التحقق من أن المستخدم مدير
-	userRole, _ := c.Get("user_role")
+	userRole, _ := c.Get("role")
 	if userRole != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "غير مصرح لهذه العملية"})
 		return
