@@ -7,7 +7,7 @@
     <aside class="sidebar">
       <div class="sidebar__brand">
         <div class="devpro-brand">
-          <img src="/src/assets/company-logo.jpg" alt="DevPro" class="devpro-logo" />
+          <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="devpro-logo" />
           <div class="devpro-text">
             <span class="devpro-name">{{ t('devpro_name') }}</span>
             <span class="devpro-slogan">{{ t('powered_slogan') }}</span>
