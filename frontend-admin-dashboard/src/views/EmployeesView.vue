@@ -642,15 +642,34 @@ onMounted(fetchEmployees)
   border-bottom: 2px solid var(--line);
 }
 
+.table th:first-child {
+  width: auto;
+  min-width: 200px;
+}
+
 .table td {
   padding: 12px 14px;
   font-size: 14px;
   border-bottom: 1px solid var(--line);
+  max-width: none;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.table td:first-child {
+  min-width: 200px;
+  max-width: none;
 }
 
 .table tr:last-child td { border-bottom: none; }
 
-.table__person { display: flex; align-items: center; gap: 10px; }
+.table__person { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
 
 .table__avatar {
   width: 32px; height: 32px;
@@ -664,6 +683,17 @@ onMounted(fetchEmployees)
   justify-content: center;
   flex-shrink: 0;
   margin-top: 2px;
+  line-height: 1;
+}
+
+.table__person span:not(.table__avatar) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
 }
 
 .table-actions {
