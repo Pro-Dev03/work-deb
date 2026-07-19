@@ -22,12 +22,6 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/company-logo.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    },
-    {
       "src": "/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
@@ -48,14 +42,14 @@
       "short_name": "حضور",
       "description": "تسجيل الحضور والانصراف",
       "url": "/check-in",
-      "icons": [{ "src": "/company-logo.jpg", "sizes": "512x512" }]
+      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512" }]
     },
     {
       "name": "موقعي",
       "short_name": "موقع",
       "description": "عرض موقعي الحالي",
       "url": "/location",
-      "icons": [{ "src": "/company-logo.jpg", "sizes": "512x512" }]
+      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512" }]
     }
   ]
 }

@@ -22,12 +22,6 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/company-logo.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    },
-    {
       "src": "/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
@@ -48,14 +42,14 @@
       "short_name": "مشاريع",
       "description": "عرض مشاريعي",
       "url": "/projects",
-      "icons": [{ "src": "/company-logo.jpg", "sizes": "512x512" }]
+      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512" }]
     },
     {
       "name": "التقارير",
       "short_name": "تقارير",
       "description": "عرض التقارير",
       "url": "/reports",
-      "icons": [{ "src": "/company-logo.jpg", "sizes": "512x512" }]
+      "icons": [{ "src": "/icon-512x512.png", "sizes": "512x512" }]
     }
   ]
 }
