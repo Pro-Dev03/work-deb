@@ -142,7 +142,23 @@ window.clearCache = () => {
   }
 }
 
+// دالة لمسح الكاش عبر Service Worker
+window.clearCacheSW = () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (registration) {
+        registration.active.postMessage({ type: 'CLEAR_CACHE' })
+        console.log('[SW] Clear cache message sent')
+        setTimeout(() => {
+          window.location.reload(true)
+        }, 1000)
+      }
+    })
+  }
+}
+
 // إضافة إمكانية استدعاء من وحدة التحكم
 console.log('🔧 Developer Tools Available:')
 console.log('  - window.forceUpdate() : تحديث Service Worker')
 console.log('  - window.clearCache()  : إفراغ الكاش وإعادة التحميل')
+console.log('  - window.clearCacheSW() : مسح الكاش عبر Service Worker')
