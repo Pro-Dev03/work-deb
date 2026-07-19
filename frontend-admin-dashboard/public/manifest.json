@@ -1,5 +1,5 @@
 {
-  "name": "WorkTrack",
+  "name": "app.worktrack.com",
   "short_name": "WorkTrack",
   "description": "نظام إدارة الموظفين والمشاريع",
   "start_url": "/?source=pwa",
