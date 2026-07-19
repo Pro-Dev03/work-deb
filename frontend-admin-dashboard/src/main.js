@@ -58,22 +58,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('[SW] Update check failed:', error)
               })
           }, 10000) // التحقق كل 10 ثواني
-          
+
           // الاستماع للتحديثات الجديدة
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing
             console.log('[SW] New service worker found')
-            
+
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 console.log('[SW] New service worker installed, activating')
                 // تفعيل الـ service worker الجديد فوراً
                 newWorker.postMessage({ type: 'SKIP_WAITING' })
-                
-                // إعادة تحميل الصفحة لتفعيل التحديث
-                setTimeout(() => {
+
+                // إظهار إشعار للمستخدم بوجود تحديث
+                if (confirm('🔄 تحديث متاح! هل تريد تحديث التطبيق الآن؟')) {
+                  // إعادة تحميل الصفحة لتفعيل التحديث
                   window.location.reload()
-                }, 1000)
+                }
               }
             })
           })
@@ -113,7 +114,35 @@ window.forceUpdate = () => {
       if (registration) {
         registration.update()
         console.log('[SW] Manual update triggered')
+
+        // إجبار جميع العملاء على التحديث
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          console.log('[SW] Skipping waiting worker')
+        }
       }
     })
   }
 }
+
+// دالة لإفراغ الكاش بالكامل
+window.clearCache = () => {
+  if ('caches' in window) {
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          console.log('[SW] Deleting cache:', cacheName)
+          return caches.delete(cacheName)
+        })
+      )
+    }).then(() => {
+      console.log('[SW] All caches cleared')
+      window.location.reload(true) // Force reload
+    })
+  }
+}
+
+// إضافة إمكانية استدعاء من وحدة التحكم
+console.log('🔧 Developer Tools Available:')
+console.log('  - window.forceUpdate() : تحديث Service Worker')
+console.log('  - window.clearCache()  : إفراغ الكاش وإعادة التحميل')

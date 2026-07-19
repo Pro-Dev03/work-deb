@@ -1,42 +1,8 @@
-// سيتم تحديث هذا الإصدار تلقائياً عند تغيير package.json
-const CACHE_NAME = 'worktrack-v__APP_VERSION__'
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-  '/index.html',
-  '/icon-128x128.png',
-  '/icon-192x192.png',
-  '/icon-256x256.png',
-  '/icon-512x512.png',
-  '/favicon.ico'
-]
+// Service Worker بدون كاش - يعتمد على الشبكة فقط
 
-// الملفات التي يجب عدم تخزينها في الكاش (JavaScript/CSS dynamic)
-const DYNAMIC_CACHE_PATTERNS = [
-  /\.js$/,
-  /\.css$/,
-  /\/assets\//i
-]
-
-// دعم offline للصفحات الرئيسية
-const CACHE_PAGES = [
-  '/',
-  '/index.html'
-]
-
-// تثبيت Service Worker وتخزين الملفات الأساسية
+// تثبيت Service Worker
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing new service worker')
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[SW] Opened cache:', CACHE_NAME)
-        return cache.addAll(urlsToCache)
-      })
-      .catch((error) => {
-        console.error('[SW] Cache installation failed:', error)
-      })
-  )
   // تفعيل الـ service worker الجديد فوراً
   self.skipWaiting()
 })
@@ -48,10 +14,8 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[SW] Deleting old cache:', cacheName)
-            return caches.delete(cacheName)
-          }
+          console.log('[SW] Deleting cache:', cacheName)
+          return caches.delete(cacheName)
         })
       )
     })
@@ -60,70 +24,16 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// استقبال الطلبات وتخزينها
+// استقبال الطلبات وجلبها من الشبكة فقط (بدون كاش)
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url)
-
-  // التحقق مما إذا كان الطلب لملف ديناميكي (JS/CSS/assets)
-  const isDynamic = DYNAMIC_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))
-
-  // للملفات الديناميكية، جلب دائماً من الشبكة (لا كاش)
-  if (isDynamic) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // التحقق من صحة الاستجابة
-          if (!response || response.status !== 200) {
-            return response
-          }
-
-          // استنساخ الاستجابة لأنها يمكن استخدامها مرة واحدة فقط
-          const responseToCache = response.clone()
-
-          // تخزين الاستجابة في الكاش للاستخدام offline
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache)
-          })
-
-          return response
-        })
-        .catch(() => {
-          // في حالة فشل الشبكة، محاولة العودة إلى الكاش
-          return caches.match(event.request)
-        })
-    )
-    return
-  }
-
-  // للملفات الثابتة، استخدام الكاش أولاً
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // إذا كان الطلب موجود في الكاش، إرجاعه
-        if (response) {
-          return response
-        }
-
-        // خلاف ذلك، جلب الطلب من الشبكة
-        return fetch(event.request).then((response) => {
-          // التحقق من صحة الاستجابة
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response
-          }
-
-          // استنساخ الاستجابة لأنها يمكن استخدامها مرة واحدة فقط
-          const responseToCache = response.clone()
-
-          // تخزين الاستجابة في الكاش
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache)
-          })
-
-          return response
-        }).catch(() => {
-          // في حالة فشل الشبكة، محاولة العودة إلى الكاش
-          return caches.match(event.request)
-        })
+    fetch(event.request)
+      .then(response => {
+        return response
+      })
+      .catch(error => {
+        console.error('[SW] Fetch failed:', error)
+        throw error
       })
   )
 })
@@ -133,26 +43,6 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[SW] Skip waiting requested')
     self.skipWaiting()
-  }
-  
-  if (event.data && event.data.type === 'CACHE_BUST') {
-    console.log('[SW] Cache bust requested')
-    // تنظيف الكاش القديم
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName)
-          }
-        })
-      )
-    })
-  }
-  
-  if (event.data && event.data.type === 'CHECK_UPDATE') {
-    console.log('[SW] Update check requested')
-    // إرسال إشعار بأن هناك تحديث متاح
-    event.ports[0].postMessage({ type: 'UPDATE_AVAILABLE' })
   }
 })
 
