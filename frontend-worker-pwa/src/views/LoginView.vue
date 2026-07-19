@@ -47,7 +47,7 @@
       <div class="footer">
         <p>{{ t('created_by_admin') }}</p>
         <div class="devpro-logo">
-          <img src="/src/assets/devpro-logo.jpg" alt="DevPro Logo" class="devpro-img" />
+          <img src="/src/assets/company-logo.jpg" alt="DevPro Logo" class="devpro-img" />
         </div>
       </div>
       <p class="footer-small">{{ t('device_verify') }}</p>

@@ -164,7 +164,7 @@
 
     <!-- DevPro Branding -->
     <div class="devpro-branding">
-      <img src="/src/assets/devpro-logo.jpg" alt="DevPro Logo" class="devpro-logo-img" />
+      <img src="/src/assets/company-logo.jpg" alt="DevPro Logo" class="devpro-logo-img" />
       <p class="devpro-text">Powered by DevPro</p>
     </div>
 
