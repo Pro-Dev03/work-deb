@@ -42,7 +42,7 @@
       <l-marker
         v-for="emp in employees"
         :key="emp.id"
-        :lat-lng="[emp.latitude, emp.longitude]"
+        :lat-lng="getEmployeePosition(emp)"
       >
         <l-icon>
           <div class="employee-marker" :class="emp.status">
@@ -103,6 +103,10 @@ const emit = defineEmits(['update:zoom', 'showDetails'])
 const mapRef = ref(null)
 let watchId = null
 let observer = null
+
+// نظام الحركة المتحركة للموظفين
+const employeePositions = ref({})
+const animationFrames = ref({})
 
 // ✅ اكتشاف الوضع الداكن مع مراقبة التغييرات
 const isDarkMode = ref(document.documentElement.getAttribute('data-theme') === 'dark')
@@ -165,6 +169,55 @@ function formatDistance(meters) {
   return Math.round(meters) + ' متر'
 }
 
+// ✅ دالة الحركة المتحركة السلسة للموظفين
+function getEmployeePosition(emp) {
+  const empId = emp.id
+  const currentPos = employeePositions.value[empId]
+  const targetLat = emp.latitude
+  const targetLng = emp.longitude
+
+  // إذا لم يكن هناك موقع سابق أو كان نفس الموقع، ارجع الموقع مباشرة
+  if (!currentPos || (currentPos.lat === targetLat && currentPos.lng === targetLng)) {
+    employeePositions.value[empId] = { lat: targetLat, lng: targetLng }
+    return [targetLat, targetLng]
+  }
+
+  // إذا كانت هناك حركة جارية، أوقفها
+  if (animationFrames.value[empId]) {
+    cancelAnimationFrame(animationFrames.value[empId])
+  }
+
+  // ابدأ حركة متحركة سلسة
+  const startLat = currentPos.lat
+  const startLng = currentPos.lng
+  const startTime = performance.now()
+  const duration = 1000 // مدة الحركة بالميلي ثانية (1 ثانية)
+
+  function animate(currentTime) {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / duration, 1)
+
+    // دالة easing للحركة السلسة
+    const easeProgress = 1 - Math.pow(1 - progress, 3)
+
+    const newLat = startLat + (targetLat - startLat) * easeProgress
+    const newLng = startLng + (targetLng - startLng) * easeProgress
+
+    employeePositions.value[empId] = { lat: newLat, lng: newLng }
+
+    if (progress < 1) {
+      animationFrames.value[empId] = requestAnimationFrame(animate)
+    } else {
+      // انتهت الحركة، احذف الإطار
+      delete animationFrames.value[empId]
+    }
+  }
+
+  animationFrames.value[empId] = requestAnimationFrame(animate)
+
+  return [currentPos.lat, currentPos.lng]
+}
+
 function getUserLocation() {
   if (!('geolocation' in navigator)) return
 
@@ -189,6 +242,11 @@ onUnmounted(() => {
   if (observer) {
     observer.disconnect()
   }
+  // ✅ تنظيف جميع إطارات الحركة المتحركة
+  Object.values(animationFrames.value).forEach(frameId => {
+    cancelAnimationFrame(frameId)
+  })
+  animationFrames.value = {}
 })
 </script>
 
