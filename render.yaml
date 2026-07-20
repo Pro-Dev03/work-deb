@@ -41,20 +41,22 @@ services:
     publishDir: dist
     autoDeployTrigger: commit
     headers:
-      - path: /*
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
         name: Cache-Control
         value: no-cache, no-store, must-revalidate
       - path: /*
-        name: Pragma
-        value: no-cache
-      - path: /*
-        name: Expires
-        value: 0
+        name: Cache-Control
+        value: public, max-age=3600
     envVars:
       - key: NODE_VERSION
         value: "18"
       - key: ELECTRON
         value: "false"
+      - key: VITE_API_BASE_URL
+        value: https://worktrack-api-n3ns.onrender.com/api/v1
 
   - type: web
     name: worktrack-worker
@@ -65,20 +67,22 @@ services:
     publishDir: dist
     autoDeployTrigger: commit
     headers:
-      - path: /*
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
         name: Cache-Control
         value: no-cache, no-store, must-revalidate
       - path: /*
-        name: Pragma
-        value: no-cache
-      - path: /*
-        name: Expires
-        value: 0
+        name: Cache-Control
+        value: public, max-age=3600
     envVars:
       - key: NODE_VERSION
         value: "18"
       - key: ELECTRON
         value: "false"
+      - key: VITE_API_BASE_URL
+        value: https://worktrack-api-n3ns.onrender.com/api/v1
 
   - type: web
     name: worktrack-client-portal
@@ -89,17 +93,19 @@ services:
     publishDir: dist
     autoDeployTrigger: commit
     headers:
-      - path: /*
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
         name: Cache-Control
         value: no-cache, no-store, must-revalidate
       - path: /*
-        name: Pragma
-        value: no-cache
-      - path: /*
-        name: Expires
-        value: 0
+        name: Cache-Control
+        value: public, max-age=3600
     envVars:
       - key: NODE_VERSION
         value: "18"
       - key: ELECTRON
         value: "false"
+      - key: VITE_API_BASE_URL
+        value: https://worktrack-api-n3ns.onrender.com/api/v1
