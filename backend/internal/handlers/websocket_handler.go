@@ -17,6 +17,9 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // السماح بجميع المصادر في وضع التطوير
 	},
+	HandshakeTimeout: 10 * time.Second,
+	ReadBufferSize:   1024,
+	WriteBufferSize:  1024,
 }
 
 // WebSocketHub - مركز إدارة اتصالات WebSocket
@@ -26,6 +29,7 @@ type WebSocketHub struct {
 	register   chan *websocket.Conn
 	unregister chan *websocket.Conn
 	mu         sync.Mutex
+	maxClients int
 }
 
 // WSHandler - معالج WebSocket
@@ -37,9 +41,10 @@ type WSHandler struct {
 func NewWSHandler() *WSHandler {
 	hub := &WebSocketHub{
 		clients:    make(map[*websocket.Conn]bool),
-		broadcast:  make(chan []byte),
-		register:   make(chan *websocket.Conn),
-		unregister: make(chan *websocket.Conn),
+		broadcast:  make(chan []byte, 256), // Buffered channel to prevent blocking
+		register:   make(chan *websocket.Conn, 256),
+		unregister: make(chan *websocket.Conn, 256),
+		maxClients: 100, // Limit concurrent WebSocket connections
 	}
 
 	handler := &WSHandler{hub: hub}
@@ -54,9 +59,14 @@ func (h *WebSocketHub) run() {
 		select {
 		case client := <-h.register:
 			h.mu.Lock()
-			h.clients[client] = true
+			if len(h.clients) >= h.maxClients {
+				log.Printf("⚠️ تم رفض اتصال WebSocket جديد - الحد الأقصى %d", h.maxClients)
+				client.Close()
+			} else {
+				h.clients[client] = true
+				log.Println("✅ تم تسجيل عميل WebSocket جديد")
+			}
 			h.mu.Unlock()
-			log.Println("✅ تم تسجيل عميل WebSocket جديد")
 
 		case client := <-h.unregister:
 			h.mu.Lock()

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"runtime/debug"
 
 	"worktrack/backend/internal/config"
 	"worktrack/backend/internal/database"
@@ -10,6 +11,9 @@ import (
 )
 
 func main() {
+	// Set memory limit to prevent OOM crashes
+	debug.SetMemoryLimit(512 * 1024 * 1024) // 512MB
+
 	cfg := config.Load()
 	if err := cfg.ValidateProduction(); err != nil {
 		log.Fatalf("❌ invalid production configuration: %v", err)
@@ -35,7 +39,8 @@ func main() {
 
 	log.Printf("🚀 WorkTrack API يعمل على المنفذ %s", cfg.Port)
 	log.Println("📁 الصور متاحة على: http://localhost:" + cfg.Port + "/uploads/")
-	
+	log.Println("🧠 حد الذاكرة: 512MB")
+
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("❌ فشل تشغيل السيرفر: %v", err)
 	}
