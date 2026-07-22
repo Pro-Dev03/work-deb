@@ -101,7 +101,6 @@ const props = defineProps({
 const emit = defineEmits(['update:zoom', 'showDetails'])
 
 const mapRef = ref(null)
-let watchId = null
 let observer = null
 
 // ✅ اكتشاف الوضع الداكن مع مراقبة التغييرات
@@ -165,27 +164,11 @@ function formatDistance(meters) {
   return Math.round(meters) + ' متر'
 }
 
-function getUserLocation() {
-  if (!('geolocation' in navigator)) return
-
-  watchId = navigator.geolocation.watchPosition(
-    (pos) => {
-      // يمكن استخدام موقع المدير إذا أردت
-    },
-    (err) => console.error('فشل تحديد الموقع:', err),
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-  )
-}
-
 onMounted(() => {
-  getUserLocation()
   observeThemeChanges()
 })
 
 onUnmounted(() => {
-  if (watchId) {
-    navigator.geolocation.clearWatch(watchId)
-  }
   if (observer) {
     observer.disconnect()
   }
