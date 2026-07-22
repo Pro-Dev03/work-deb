@@ -133,8 +133,8 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 		SELECT DISTINCT u.id, u.full_name, a.id as attendance_id
 		FROM users u
 		JOIN attendance a ON u.id = a.user_id
-		WHERE a.status = 'in_progress' 
-		AND (a.worksite_id IS NULL OR a.worksite_id = '')
+		WHERE a.status = 'in_progress'
+		AND a.worksite_id IS NULL
 		AND u.role = 'employee'
 	`)
 	if err == nil {
