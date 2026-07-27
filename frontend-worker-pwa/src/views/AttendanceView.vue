@@ -231,9 +231,9 @@
                   <td>{{ record.worksite_name || '—' }}</td>
                   <td class="mono">{{ formatTime(record.check_in_time) }}</td>
                   <td class="mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</td>
-                  <td class="mono">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
-                  <td class="mono">{{ record.night_hours ? record.night_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
-                  <td class="mono">{{ record.day_hours ? record.day_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
+                  <td class="mono">{{ formatHours(record.worked_hours) }}</td>
+                  <td class="mono">{{ formatHours(record.night_hours) }}</td>
+                  <td class="mono">{{ formatHours(record.day_hours) }}</td>
                   <td class="mono">{{ formatDistance(record.check_in_distance_meters) }}</td>
                 </tr>
               </tbody>
@@ -587,12 +587,12 @@ async function checkOut() {
       latitude: userLocation.value.lat,
       longitude: userLocation.value.lng
     })
-    success.value = `${t('checkout_success')} (${data.worked_hours?.toFixed(2)} ${t('checkout_success_hours')})`
+    success.value = `${t('checkout_success')} (${data.worked_hours ? formatHours(data.worked_hours) : '—'})`
     isWorking.value = false
     clearInterval(timerInterval)
     clearInterval(locationInterval)
     await fetchSummary()
-    debugInfo.value = `${t('checkout_completed_after')} ${data.worked_hours?.toFixed(2)} ${t('checkout_success_hours')}`
+    debugInfo.value = `${t('checkout_completed_after')} ${data.worked_hours ? formatHours(data.worked_hours) : '—'}`
 
     hasClickedLocation.value = false
   } catch(e) {
@@ -691,6 +691,19 @@ function formatDate(date) {
 function formatTime(date) {
   if (!date) return '—'
   return new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+function formatHours(hours) {
+  if (!hours || hours === 0) return '—'
+  
+  const totalSeconds = Math.floor(hours * 3600)
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  
+  // تنسيق HH:MM:SS
+  const pad = (num) => num.toString().padStart(2, '0')
+  return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
 
 // ==========================================

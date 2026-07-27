@@ -173,7 +173,7 @@
                 <span class="employee-item__worksite">📍 {{ emp.worksite.name }}</span>
                 <span class="employee-item__time">
                   🕐 {{ formatTime(emp.check_in_time) }} |
-                  ⏱️ {{ emp.hours_worked.toFixed(1) }} {{ t('hours') }}
+                  ⏱️ {{ formatHours(emp.hours_worked) }}
                 </span>
               </div>
               <div class="employee-item__status">
@@ -253,7 +253,7 @@
                 <span class="employee-item__worksite">📍 {{ emp.worksite_name }}</span>
                 <span class="employee-item__time">
                   ✅ {{ formatTime(emp.check_out_time) }} |
-                  ⏱️ {{ emp.hours_worked.toFixed(1) }} {{ t('hours') }}
+                  ⏱️ {{ formatHours(emp.hours_worked) }}
                 </span>
               </div>
               <div class="employee-item__status">
@@ -330,7 +330,7 @@
               </div>
               <div class="info-row">
                 <span class="info-label">⏱️ {{ t('working_hours_label') }}</span>
-                <span>{{ (selectedEmployee.hours_worked || 0).toFixed(1) }} {{ t('hours') }}</span>
+                <span>{{ formatHours(selectedEmployee.hours_worked) }}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">🕐 {{ t('last_update_label') }}</span>
@@ -422,6 +422,19 @@ function formatDistance(meters) {
     return (meters / 1000).toFixed(2) + ' ' + t('kilometers')
   }
   return Math.round(meters) + ' ' + t('meters')
+}
+
+function formatHours(hours) {
+  if (!hours || hours === 0) return '0:00:00'
+  
+  const totalSeconds = Math.floor(hours * 3600)
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  
+  // تنسيق HH:MM:SS
+  const pad = (num) => num.toString().padStart(2, '0')
+  return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
 
 // ==========================================

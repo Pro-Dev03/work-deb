@@ -57,7 +57,7 @@
             <h4>👤 {{ emp.full_name }}</h4>
             <p>📍 {{ emp.worksite.name }}</p>
             <p>📏 المسافة: {{ formatDistance(emp.worksite.distance) }}</p>
-            <p>⏱️ {{ emp.hours_worked.toFixed(1) }} ساعة</p>
+            <p>⏱️ {{ formatHours(emp.hours_worked) }}</p>
             <p>
               <span class="badge" :class="emp.status === 'inside' ? 'badge--in' : 'badge--out'">
                 {{ emp.status_text }}
@@ -162,6 +162,19 @@ function formatDistance(meters) {
     return (meters / 1000).toFixed(2) + ' كيلومتر'
   }
   return Math.round(meters) + ' متر'
+}
+
+function formatHours(hours) {
+  if (!hours || hours === 0) return '0:00:00'
+  
+  const totalSeconds = Math.floor(hours * 3600)
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  
+  // تنسيق HH:MM:SS
+  const pad = (num) => num.toString().padStart(2, '0')
+  return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
 
 onMounted(() => {
