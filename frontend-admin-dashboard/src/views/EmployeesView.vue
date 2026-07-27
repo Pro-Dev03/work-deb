@@ -456,7 +456,7 @@ async function exportToPDF() {
         distanceLabel: 'المسافة',
         hoursUnit: 'ساعة',
         daysUnit: 'يوم',
-        footer: 'تم إنشاء هذا التقرير من WorkTrack',
+        footer: 'تم إنشاء هذا التقرير من אבן יסודות',
         direction: 'rtl'
       },
       en: {
@@ -473,7 +473,7 @@ async function exportToPDF() {
         distanceLabel: 'Distance',
         hoursUnit: 'hours',
         daysUnit: 'days',
-        footer: 'Report generated from WorkTrack',
+        footer: 'Report generated from אבן יסודות',
         direction: 'ltr'
       },
       he: {
@@ -490,7 +490,7 @@ async function exportToPDF() {
         distanceLabel: 'מרחק',
         hoursUnit: 'שעות',
         daysUnit: 'ימים',
-        footer: 'הדוח נוצר מ-WorkTrack',
+        footer: 'הדוח נוצר מ-אבן יסודות',
         direction: 'rtl'
       }
     }
