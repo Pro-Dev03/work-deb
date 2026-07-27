@@ -40,7 +40,6 @@ reset_password.sql
 create_morad_user.sql
 test_morad_user.sql
 schema_final.sql
-schema_updated.sql
 check_user_queries.sql
 
 # Temporary images (keep project icons)
