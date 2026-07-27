@@ -172,9 +172,19 @@ function formatHours(hours) {
   const m = Math.floor((totalSeconds % 3600) / 60)
   const s = totalSeconds % 60
   
-  // تنسيق HH:MM:SS
+  // تنسيق ذكي: إظهار الساعات فقط إذا كانت > 0
   const pad = (num) => num.toString().padStart(2, '0')
-  return `${pad(h)}:${pad(m)}:${pad(s)}`
+  
+  if (h > 0) {
+    // إذا كانت هناك ساعات، إظهار HH:MM:SS
+    return `${pad(h)}:${pad(m)}:${pad(s)}`
+  } else if (m > 0) {
+    // إذا لم تكن هناك ساعات ولكن هناك دقائق، إظهار MM:SS
+    return `${pad(m)}:${pad(s)}`
+  } else {
+    // إذا لم تكن هناك ساعات ولا دقائق، إظهار SS ثانية
+    return `${s}ث`
+  }
 }
 
 onMounted(() => {
