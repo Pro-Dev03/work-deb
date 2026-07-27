@@ -181,19 +181,19 @@ func (h *AttendanceHandler) GetAttendanceSummary(c *gin.Context) {
 	var todayHours, weekHours, monthHours float64
 
 	_ = h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
+		SELECT COALESCE(SUM(COALESCE(worked_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 AND DATE(check_in_time) = CURRENT_DATE AND check_out_time IS NOT NULL
 	`, userID).Scan(&todayHours)
 
 	_ = h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
+		SELECT COALESCE(SUM(COALESCE(worked_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 AND DATE(check_in_time) >= DATE_TRUNC('week', CURRENT_DATE) AND check_out_time IS NOT NULL
 	`, userID).Scan(&weekHours)
 
 	_ = h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
+		SELECT COALESCE(SUM(COALESCE(worked_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 AND DATE(check_in_time) >= DATE_TRUNC('month', CURRENT_DATE) AND check_out_time IS NOT NULL
 	`, userID).Scan(&monthHours)
@@ -288,7 +288,8 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 			a.day_two_hours,
 			a.night_hours,
 			a.day_hours,
-			a.is_night_shift
+			a.is_night_shift,
+			a.worked_hours
 		FROM attendance a
 		LEFT JOIN worksites w ON a.worksite_id = w.id
 		WHERE a.user_id = $1
@@ -324,26 +325,25 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 		var status string
 		var spansMultipleDays bool
 		var dayOneDate, dayTwoDate *time.Time
-		var dayOneHours, dayTwoHours, nightHours, dayHours *float64
+		var dayOneHours, dayTwoHours, nightHours, dayHours, workedHours *float64
 		var isNightShift *bool
 
 		err := rows.Scan(
 			&id, &worksiteID, &worksiteName, &checkInTime, &checkInLat, &checkInLng, &checkInDistance,
 			&checkOutTime, &checkOutLat, &checkOutLng, &checkOutDistance, &status, &createdAt,
 			&spansMultipleDays, &dayOneDate, &dayTwoDate, &dayOneHours, &dayTwoHours,
-			&nightHours, &dayHours, &isNightShift,
+			&nightHours, &dayHours, &isNightShift, &workedHours,
 		)
 		if err != nil {
 			log.Printf("❌ خطأ في قراءة البيانات: %v", err)
 			continue
 		}
 
-		// حساب worked_hours كمجموع الساعات الليلية والنهارية لضمان الاتساق
-		var workedHours *float64
-		if nightHours != nil && dayHours != nil {
+		// حساب worked_hours من قاعدة البيانات (مخزن كمجموع night_hours + day_hours)
+		if workedHours == nil && nightHours != nil && dayHours != nil {
 			total := *nightHours + *dayHours
 			workedHours = &total
-		} else if checkOutTime.After(checkInTime) {
+		} else if workedHours == nil && checkOutTime.After(checkInTime) {
 			hours := checkOutTime.Sub(checkInTime).Hours()
 			workedHours = &hours
 		}
@@ -395,7 +395,7 @@ func (h *AttendanceHandler) GetEmployeeMonthlySummary(c *gin.Context) {
 	// جلب إجمالي الساعات للشهر
 	var totalHours float64
 	err := h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
+		SELECT COALESCE(SUM(COALESCE(worked_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 
 		AND EXTRACT(YEAR FROM check_in_time) = $2
@@ -485,7 +485,8 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 			a.day_two_hours,
 			a.night_hours,
 			a.day_hours,
-			a.is_night_shift
+			a.is_night_shift,
+			a.worked_hours
 		FROM attendance a
 		LEFT JOIN worksites w ON a.worksite_id = w.id
 		WHERE a.user_id = $1
@@ -524,26 +525,25 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 		var status string
 		var spansMultipleDays bool
 		var dayOneDate, dayTwoDate *time.Time
-		var dayOneHours, dayTwoHours, nightHours, dayHours *float64
+		var dayOneHours, dayTwoHours, nightHours, dayHours, workedHours *float64
 		var isNightShift *bool
 
 		err := rows.Scan(
 			&id, &worksiteID, &worksiteName, &checkInTime, &checkInLat, &checkInLng, &checkInDistance,
 			&checkOutTime, &checkOutLat, &checkOutLng, &checkOutDistance, &status, &createdAt,
 			&spansMultipleDays, &dayOneDate, &dayTwoDate, &dayOneHours, &dayTwoHours,
-			&nightHours, &dayHours, &isNightShift,
+			&nightHours, &dayHours, &isNightShift, &workedHours,
 		)
 		if err != nil {
 			log.Printf("❌ خطأ في قراءة البيانات: %v", err)
 			continue
 		}
 
-		// حساب worked_hours كمجموع الساعات الليلية والنهارية لضمان الاتساق
-		var workedHours *float64
-		if nightHours != nil && dayHours != nil {
+		// حساب worked_hours من قاعدة البيانات (مخزن كمجموع night_hours + day_hours)
+		if workedHours == nil && nightHours != nil && dayHours != nil {
 			total := *nightHours + *dayHours
 			workedHours = &total
-		} else if checkOutTime.After(checkInTime) {
+		} else if workedHours == nil && checkOutTime.After(checkInTime) {
 			hours := checkOutTime.Sub(checkInTime).Hours()
 			workedHours = &hours
 		}
@@ -596,7 +596,7 @@ func (h *AttendanceHandler) GetMyMonthlySummary(c *gin.Context) {
 	// جلب إجمالي الساعات للشهر
 	var totalHours float64
 	err := h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
+		SELECT COALESCE(SUM(COALESCE(worked_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 
 		AND EXTRACT(YEAR FROM check_in_time) = $2

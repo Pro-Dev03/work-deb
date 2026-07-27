@@ -193,11 +193,13 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 			SET check_out_time = $1, status = 'completed',
 			    spans_multiple_days = $2, day_one_date = $3, day_two_date = $4,
 			    day_one_hours = $5, day_two_hours = $6,
-			    night_hours = $7, day_hours = $8, is_night_shift = $9
-			WHERE id = $10
+			    night_hours = $7, day_hours = $8, is_night_shift = $9,
+			    worked_hours = $10
+			WHERE id = $11
 		`, now, spansMultipleDays, dayOneDate, dayTwoDate,
 			dayOneHours, dayTwoHours,
 			dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+			workedHours,
 			attendanceID)
 
 		if err != nil {
@@ -245,12 +247,14 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 		    check_out_distance_meters = $4, status = 'completed',
 		    spans_multiple_days = $5, day_one_date = $6, day_two_date = $7,
 		    day_one_hours = $8, day_two_hours = $9,
-		    night_hours = $10, day_hours = $11, is_night_shift = $12
-		WHERE id = $13`,
+		    night_hours = $10, day_hours = $11, is_night_shift = $12,
+		    worked_hours = $13
+		WHERE id = $14`,
 		now, lat, lng, distance,
 		spansMultipleDays, dayOneDate, dayTwoDate,
 		dayOneHours, dayTwoHours,
 		dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+		workedHours,
 		attendanceID,
 	)
 	if err != nil {
@@ -306,11 +310,13 @@ func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (
 		SET check_out_time = $1, status = 'completed', check_out_notes = 'تم إنهاء الدوام من قبل المدير',
 		    spans_multiple_days = $2, day_one_date = $3, day_two_date = $4,
 		    day_one_hours = $5, day_two_hours = $6,
-		    night_hours = $7, day_hours = $8, is_night_shift = $9
-		WHERE id = $10
+		    night_hours = $7, day_hours = $8, is_night_shift = $9,
+		    worked_hours = $10
+		WHERE id = $11
 	`, now, spansMultipleDays, dayOneDate, dayTwoDate,
 		dayOneHours, dayTwoHours,
 		dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+		workedHours,
 		attendanceID)
 
 	// إذا فشل بسبب عدم وجود عمود check_out_notes، حاول بدونه
@@ -321,11 +327,13 @@ func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (
 			SET check_out_time = $1, status = 'completed',
 			    spans_multiple_days = $2, day_one_date = $3, day_two_date = $4,
 			    day_one_hours = $5, day_two_hours = $6,
-			    night_hours = $7, day_hours = $8, is_night_shift = $9
-			WHERE id = $10
+			    night_hours = $7, day_hours = $8, is_night_shift = $9,
+			    worked_hours = $10
+			WHERE id = $11
 		`, now, spansMultipleDays, dayOneDate, dayTwoDate,
 			dayOneHours, dayTwoHours,
 			dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+			workedHours,
 			attendanceID)
 		if err != nil {
 			log.Printf("❌ فشل تحديث سجل الحضور: %v", err)

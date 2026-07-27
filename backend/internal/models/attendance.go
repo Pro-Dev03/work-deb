@@ -37,4 +37,5 @@ type Attendance struct {
 	NightHours   *float64 `json:"night_hours,omitempty"`   // ساعات العمل الليلي (10 مساءً - 6 صباحاً)
 	DayHours     *float64 `json:"day_hours,omitempty"`     // ساعات العمل النهاري (6 صباحاً - 10 مساءً)
 	IsNightShift bool     `json:"is_night_shift,omitempty"` // هل الوردية ليلية بشكل أساسي
+	WorkedHours  *float64 `json:"worked_hours,omitempty"`  // إجمالي ساعات العمل (night_hours + day_hours)
 }
