@@ -159,7 +159,7 @@
 
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="success" class="success">{{ success }}</p>
-      <p v-if="debugInfo" class="debug-info mono">{{ debugInfo }}</p>
+      <!-- <p v-if="debugInfo" class="debug-info mono">{{ debugInfo }}</p> -->
     </div>
 
     <!-- DevPro Branding -->

@@ -44,7 +44,7 @@
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
-        <div v-if="debugInfo" class="debug">{{ debugInfo }}</div>
+        <!-- <div v-if="debugInfo" class="debug">{{ debugInfo }}</div> -->
 
         <button class="btn-login" type="submit" :disabled="loading">
           {{ loading ? '⏳' : '📱' }} {{ t('login') }}
@@ -57,7 +57,7 @@
           <img src="/src/assets/company-logo.jpg" alt="DevPro Logo" class="devpro-img" />
         </div>
       </div>
-      <p class="footer-small">{{ t('device_verify') }}</p>
+      <!-- <p class="footer-small">{{ t('device_verify') }}</p> -->
     </div>
     </div>
   </PullToRefresh>
@@ -184,10 +184,10 @@ async function handleSubmit() {
     console.error('❌ Login failed:', e.response?.data)
 
     if (e.response?.data?.device_mismatch) {
-      error.value = '⚠️ This device is not authorized. Please contact the admin to reset your device.'
+      error.value = '⚠️ Login failed. Please contact the admin.'
       debugInfo.value = '🔒 Device not registered'
     } else if (e.response?.data?.model_mismatch) {
-      error.value = '⚠️ Device model mismatch. Please contact the admin.'
+      error.value = '⚠️ Login failed. Please contact the admin.'
       debugInfo.value = '🔒 Device model not registered'
     } else {
       error.value = e.response?.data?.error || '❌ Login failed. Please check the phone number.'
