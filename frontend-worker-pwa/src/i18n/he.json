@@ -100,5 +100,7 @@
     "remindLater": "תזכיר לי מאוחר יותר"
   },
   "pwa_install_title": "התקנת אפליקציה",
-  "pwa_install_text": "התקן את האפליקציה במכשיר שלך"
+  "pwa_install_text": "התקן את האפליקציה במכשיר שלך",
+  "night_hours": "שעות לילה",
+  "day_hours": "שעות יום"
 }
