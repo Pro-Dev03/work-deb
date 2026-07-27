@@ -244,13 +244,13 @@ func (h *WorksiteHandler) Create(c *gin.Context) {
 	}
 
 	id := uuid.NewString()
-	_, err = h.DB.Exec(`
+	_, errInsert := h.DB.Exec(`
 		INSERT INTO worksites (id, name, address, latitude, longitude, radius_meters, is_active, is_deleted, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, TRUE, FALSE, now(), now())`,
 		id, req.Name, req.Address, req.Latitude, req.Longitude, req.RadiusMeters,
 	)
-	if err != nil {
-		log.Printf("❌ فشل الإضافة: %v", err)
+	if errInsert != nil {
+		log.Printf("❌ فشل الإضافة: %v", errInsert)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل الإضافة"})
 		return
 	}
