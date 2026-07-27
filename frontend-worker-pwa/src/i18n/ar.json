@@ -101,5 +101,6 @@
   },
   "pwa_install_title": "تثبيت التطبيق",
   "pwa_install_text": "ثبت التطبيق على جهازك",
-  "shift_restored": "تم استعادة الوردية"
+  "shift_restored": "تم استعادة الوردية",
+  "checkout_failed": "فشل تسجيل الخروج"
 }

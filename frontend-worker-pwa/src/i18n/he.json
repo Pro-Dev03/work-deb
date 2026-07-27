@@ -101,5 +101,6 @@
   },
   "pwa_install_title": "התקנת אפליקציה",
   "pwa_install_text": "התקן את האפליקציה במכשיר שלך",
-  "shift_restored": "המשמרת שוחזרה"
+  "shift_restored": "המשמרת שוחזרה",
+  "checkout_failed": "הרישום ליציאה נכשל"
 }

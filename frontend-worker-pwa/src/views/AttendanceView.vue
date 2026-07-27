@@ -583,12 +583,12 @@ async function checkOut() {
       latitude: userLocation.value.lat,
       longitude: userLocation.value.lng
     })
-    success.value = `${t('checkout_success')} (${data.worked_hours ? formatHours(data.worked_hours) : '—'})`
+    success.value = `${t('checkout_success')} (${data.worked_hours ? data.worked_hours.toFixed(1) + ' ' + t('hours') : '—'})`
     isWorking.value = false
     clearInterval(timerInterval)
     clearInterval(locationInterval)
     await fetchSummary()
-    debugInfo.value = `${t('checkout_completed_after')} ${data.worked_hours ? formatHours(data.worked_hours) : '—'}`
+    debugInfo.value = `${t('checkout_completed_after')} ${data.worked_hours ? data.worked_hours.toFixed(1) + ' ' + t('hours') : '—'}`
 
     hasClickedLocation.value = false
   } catch(e) {

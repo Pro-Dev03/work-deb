@@ -101,5 +101,6 @@
   },
   "pwa_install_title": "Install App",
   "pwa_install_text": "Install the app on your device",
-  "shift_restored": "Shift restored"
+  "shift_restored": "Shift restored",
+  "checkout_failed": "Check-out failed"
 }
