@@ -112,30 +112,3 @@ func TestSplitShiftAcrossDays(t *testing.T) {
 		t.Errorf("Expected 2.0 dayTwoHours, got %.2f", dayTwoHours)
 	}
 }
-
-func TestDebugOneMinuteShift(t *testing.T) {
-	location := JerusalemLocation()
-
-	// اختبار حالة محددة: البدء 00:15، النهاية 00:16
-	start := time.Date(2026, 7, 28, 0, 15, 0, 0, location)
-	end := time.Date(2026, 7, 28, 0, 16, 0, 0, location)
-	
-	// حساب الفرق الحقيقي
-	diff := end.Sub(start)
-	t.Logf("الفرق الحقيقي: %.0f ثانية = %.6f ساعة", diff.Seconds(), diff.Hours())
-	
-	// حساب باستخدام دالة CalculateDayNightHours
-	result := CalculateDayNightHours(start, end)
-	t.Logf("الساعات الليلية: %.6f ساعة", result.NightHours)
-	t.Logf("الساعات النهارية: %.6f ساعة", result.DayHours)
-	t.Logf("المجموع: %.6f ساعة", result.NightHours + result.DayHours)
-	
-	// التحقق من النتيجة المتوقعة
-	expectedHours := 1.0 / 60.0 // 1 دقيقة = 1/60 ساعة
-	totalCalculated := result.NightHours + result.DayHours
-	
-	// السماح بفرق صغير جداً بسبب الحسابات العشرية
-	if totalCalculated < expectedHours-0.001 || totalCalculated > expectedHours+0.001 {
-		t.Errorf("Expected %.6f hours (1 minute), got %.6f hours", expectedHours, totalCalculated)
-	}
-}

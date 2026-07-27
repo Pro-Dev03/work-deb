@@ -253,7 +253,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 
 -- =====================================================
--- جدول الحضور والانصراف (محدث لدعم حذف نقاط العمل)
+-- جدول الحضور والانصراف (نسخة مبسطة - الحساب الأصلي)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS attendance (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -334,26 +334,6 @@ BEGIN
     ADD CONSTRAINT attendance_worksite_id_fkey 
     FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE SET NULL;
 END $$;
-
--- =====================================================
--- حقول إضافية لسجلات الحضور (إذا لم تكن موجودة)
--- =====================================================
-
--- حقول تقسيم الورديات عبر منتصف الليل
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS spans_multiple_days BOOLEAN DEFAULT FALSE;
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS day_one_date TIMESTAMPTZ;
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS day_two_date TIMESTAMPTZ;
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS day_one_hours DOUBLE PRECISION;
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS day_two_hours DOUBLE PRECISION;
-
--- حقول التمييز بين العمل الليلي والنهاري
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS night_hours DOUBLE PRECISION;
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS day_hours DOUBLE PRECISION;
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS is_night_shift BOOLEAN DEFAULT FALSE;
-
--- حقل worked_hours لحساب إجمالي الساعات (night_hours + day_hours)
--- هذا الحقل يُحسب ويُخزن لضمان الاتساق وتسهيل الحسابات المحاسبية
-ALTER TABLE attendance ADD COLUMN IF NOT EXISTS worked_hours DOUBLE PRECISION;
 
 -- جدول طلبات الخدمة
 CREATE TABLE IF NOT EXISTS service_requests (
@@ -453,10 +433,6 @@ CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id
 CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time
     ON attendance(check_in_time);
 
--- فهرس لحقل worked_hours لتحسين استعلامات الملخصات والحسابات المحاسبية
-CREATE INDEX IF NOT EXISTS idx_attendance_worked_hours
-    ON attendance(worked_hours) WHERE worked_hours IS NOT NULL;
-
 CREATE INDEX IF NOT EXISTS idx_service_requests_client_id
     ON service_requests(client_id);
 
@@ -499,12 +475,9 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id
 --    - إضافة حقل worksite_name_for_history لحفظ اسم نقطة العمل تاريخياً
 --    - تغيير worksite_id إلى nullable في جدول attendance
 --    - تغيير قيد الحذف من ON DELETE RESTRICT إلى ON DELETE SET NULL
---    - إضافة حقول تقسيم الورديات (spans_multiple_days, day_one_date, day_two_date, etc.)
---    - إضافة حقول العمل الليلي/النهاري (night_hours, day_hours, is_night_shift)
---    - إضافة حقل worked_hours لحساب إجمالي الساعات (night_hours + day_hours)
 --    - إضافة فهرس idx_worksites_is_deleted
---    - إضافة فهرس idx_attendance_worked_hours لتحسين استعلامات الملخصات
 --    - إضافة فهارس محسّنة للأداء
+--    - استخدام الحساب البسيط الأصلي للساعات (بدون تقسيم ليلي/نهاري)
 --
 -- 5. السكريبت آمن للتشغيل المتعدد - يستخدم IF NOT EXISTS و ON CONFLICT
 --
