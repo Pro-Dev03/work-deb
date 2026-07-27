@@ -238,7 +238,7 @@ func (h *WorksiteHandler) Create(c *gin.Context) {
 	if exists {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "اسم نقطة العمل موجود بالفعل",
-			"suggestion": "يمكنك استخدام اسم مختلف أو استعادة النقطة المحذوفة"
+			"suggestion": "يمكنك استخدام اسم مختلف أو استعادة النقطة المحذوفة",
 		})
 		return
 	}
