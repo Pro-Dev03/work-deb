@@ -65,7 +65,7 @@ func (s *AttendanceService) CheckIn(userID, worksiteID string, lat, lng float64)
 	var worksite models.Worksite
 	err := s.DB.QueryRow(`
 		SELECT id, name, address, latitude, longitude, radius_meters, is_active
-		FROM worksites WHERE id = $1 AND is_active = TRUE
+		FROM worksites WHERE id = $1 AND is_active = TRUE AND is_deleted = FALSE
 	`, worksiteID).Scan(&worksite.ID, &worksite.Name, &worksite.Address,
 		&worksite.Latitude, &worksite.Longitude, &worksite.RadiusMeters,
 		&worksite.IsActive)
@@ -161,7 +161,7 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 	if worksiteID != nil {
 		err = s.DB.QueryRow(`
 			SELECT id, name, latitude, longitude, radius_meters
-			FROM worksites WHERE id = $1
+			FROM worksites WHERE id = $1 AND is_deleted = FALSE
 		`, *worksiteID).Scan(&worksite.ID, &worksite.Name,
 			&worksite.Latitude, &worksite.Longitude, &worksite.RadiusMeters)
 		if err != nil {

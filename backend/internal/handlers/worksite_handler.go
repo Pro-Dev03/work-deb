@@ -179,7 +179,7 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 func (h *WorksiteHandler) GetAvailableWorksites(c *gin.Context) {
 	rows, err := h.DB.Query(`
 		SELECT id, name, address, latitude, longitude, radius_meters
-		FROM worksites WHERE is_active = TRUE ORDER BY name`)
+		FROM worksites WHERE is_active = TRUE AND is_deleted = FALSE ORDER BY name`)
 	if err != nil {
 		log.Printf("❌ فشل جلب نقاط العمل المتاحة: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب نقاط العمل"})
