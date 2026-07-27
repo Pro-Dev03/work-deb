@@ -245,17 +245,17 @@ func (h *WorksiteHandler) Delete(c *gin.Context) {
 	}
 	defer tx.Rollback()
 
-	// 1. حذف سجلات الحضور المرتبطة
+	// 1. حفظ سجلات الحضور المرتبطة (تعديل بدلاً من الحذف)
 	result, err := tx.Exec(`
-		DELETE FROM attendance WHERE worksite_id = $1
+		UPDATE attendance SET worksite_id = NULL WHERE worksite_id = $1
 	`, id)
 	if err != nil {
-		log.Printf("❌ فشل حذف سجلات الحضور: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل حذف سجلات الحضور"})
+		log.Printf("❌ فشل حفظ سجلات الحضور: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل حفظ سجلات الحضور"})
 		return
 	}
 	attendanceRows, _ := result.RowsAffected()
-	log.Printf("🗑️ تم حذف %d سجل حضور", attendanceRows)
+	log.Printf("💾 تم حفظ %d سجل حضور (تم تعديل worksite_id إلى NULL)", attendanceRows)
 
 	// 2. حذف المهام المرتبطة
 	result, err = tx.Exec(`
@@ -293,10 +293,10 @@ func (h *WorksiteHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	log.Printf("✅ تم حذف نقطة العمل: %s (حذف %d حضور، %d مهام)", id, attendanceRows, tasksRows)
+	log.Printf("✅ تم حذف نقطة العمل: %s (حفظ %d سجل حضور، حذف %d مهام)", id, attendanceRows, tasksRows)
 	c.JSON(http.StatusOK, gin.H{
 		"message":            "تم حذف نقطة العمل بنجاح",
-		"attendance_deleted": attendanceRows,
+		"attendance_preserved": attendanceRows,
 		"tasks_deleted":      tasksRows,
 	})
 }
