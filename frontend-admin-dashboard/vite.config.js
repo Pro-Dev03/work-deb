@@ -7,10 +7,11 @@ export default defineConfig({
     port: 3001,
     cors: true
   },
+  publicDir: 'public',
   optimizeDeps: {
     include: ['vue', 'vue-router', 'leaflet']
   },
-  assetsInclude: ['**/*.json'],
+  assetsInclude: ['**/*.json', '**/*.jpg', '**/*.png', '**/*.svg'],
   build: {
     cssCodeSplit: true,
     rollupOptions: {
