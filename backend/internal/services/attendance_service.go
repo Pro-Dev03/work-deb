@@ -29,7 +29,7 @@ func (s *AttendanceService) GetCurrentAttendance(userID string) (*models.Attenda
 
 	err := s.DB.QueryRow(`
 		SELECT id, worksite_id, check_in_time, status
-		FROM attendance 
+		FROM attendance
 		WHERE user_id = $1 AND status = 'in_progress'
 		ORDER BY check_in_time DESC
 		LIMIT 1
@@ -177,20 +177,38 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 	}
 
 	now := utils.NowInJerusalem()
+
+	// حساب التقسيم عبر الأيام
+	dayOneDate, dayTwoDate, dayOneHours, dayTwoHours := utils.SplitShiftAcrossDays(checkInTime, now)
+	spansMultipleDays := dayTwoDate != nil
+
+	// حساب ساعات العمل الليلية والنهارية
+	dayNightPeriods := utils.CalculateDayNightHours(checkInTime, now)
+	totalHours := now.Sub(checkInTime).Hours()
+	isNightShift := utils.IsNightShift(dayNightPeriods.NightHours, totalHours)
+
+	// تحديث سجل الحضور مع الحقول الجديدة
 	_, err = s.DB.Exec(`
 		UPDATE attendance
 		SET check_out_time = $1, check_out_lat = $2, check_out_lng = $3,
-		    check_out_distance_meters = $4, status = 'completed'
-		WHERE id = $5`,
-		now, lat, lng, distance, attendanceID,
+		    check_out_distance_meters = $4, status = 'completed',
+		    spans_multiple_days = $5, day_one_date = $6, day_two_date = $7,
+		    day_one_hours = $8, day_two_hours = $9,
+		    night_hours = $10, day_hours = $11, is_night_shift = $12
+		WHERE id = $13`,
+		now, lat, lng, distance,
+		spansMultipleDays, dayOneDate, dayTwoDate,
+		dayOneHours, dayTwoHours,
+		dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+		attendanceID,
 	)
 	if err != nil {
 		log.Printf("❌ فشل تحديث سجل الحضور: %v", err)
 		return nil, 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
 	}
 
-	workedHours := now.Sub(checkInTime).Hours()
-	log.Printf("✅ تم تسجيل إنهاء الدوام: %.2f ساعة", workedHours)
+	workedHours := totalHours
+	log.Printf("✅ تم تسجيل إنهاء الدوام: %.2f ساعة (ليلي: %.2f، نهاري: %.2f)", workedHours, dayNightPeriods.NightHours, dayNightPeriods.DayHours)
 
 	result := &GeofenceCheckResult{
 		IsWithinRange:  true,
@@ -220,29 +238,50 @@ func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (
 
 	now := utils.NowInJerusalem()
 
+	// حساب التقسيم عبر الأيام
+	dayOneDate, dayTwoDate, dayOneHours, dayTwoHours := utils.SplitShiftAcrossDays(checkInTime, now)
+	spansMultipleDays := dayTwoDate != nil
+
+	// حساب ساعات العمل الليلية والنهارية
+	dayNightPeriods := utils.CalculateDayNightHours(checkInTime, now)
+	totalHours := now.Sub(checkInTime).Hours()
+	isNightShift := utils.IsNightShift(dayNightPeriods.NightHours, totalHours)
+
 	// محاولة التحديث مع check_out_notes أولاً
 	_, err = s.DB.Exec(`
 		UPDATE attendance
-		SET check_out_time = $1, status = 'completed', check_out_notes = 'تم إنهاء الدوام من قبل المدير'
-		WHERE id = $2
-	`, now, attendanceID)
+		SET check_out_time = $1, status = 'completed', check_out_notes = 'تم إنهاء الدوام من قبل المدير',
+		    spans_multiple_days = $2, day_one_date = $3, day_two_date = $4,
+		    day_one_hours = $5, day_two_hours = $6,
+		    night_hours = $7, day_hours = $8, is_night_shift = $9
+		WHERE id = $10
+	`, now, spansMultipleDays, dayOneDate, dayTwoDate,
+		dayOneHours, dayTwoHours,
+		dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+		attendanceID)
 
 	// إذا فشل بسبب عدم وجود عمود check_out_notes، حاول بدونه
 	if err != nil {
 		log.Printf("⚠️ فشل التحديث مع check_out_notes، محاولة بدونه: %v", err)
 		_, err = s.DB.Exec(`
 			UPDATE attendance
-			SET check_out_time = $1, status = 'completed'
-			WHERE id = $2
-		`, now, attendanceID)
+			SET check_out_time = $1, status = 'completed',
+			    spans_multiple_days = $2, day_one_date = $3, day_two_date = $4,
+			    day_one_hours = $5, day_two_hours = $6,
+			    night_hours = $7, day_hours = $8, is_night_shift = $9
+			WHERE id = $10
+		`, now, spansMultipleDays, dayOneDate, dayTwoDate,
+			dayOneHours, dayTwoHours,
+			dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+			attendanceID)
 		if err != nil {
 			log.Printf("❌ فشل تحديث سجل الحضور: %v", err)
 			return 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
 		}
 	}
 
-	workedHours := now.Sub(checkInTime).Hours()
-	log.Printf("✅ تم إنهاء الدوام من قبل المدير: %.2f ساعة", workedHours)
+	workedHours := totalHours
+	log.Printf("✅ تم إنهاء الدوام من قبل المدير: %.2f ساعة (ليلي: %.2f، نهاري: %.2f)", workedHours, dayNightPeriods.NightHours, dayNightPeriods.DayHours)
 
 	return workedHours, nil
 }

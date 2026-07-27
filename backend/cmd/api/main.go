@@ -25,6 +25,13 @@ func main() {
 	}
 	defer db.Close()
 
+	// تشغيل الترحيلات
+	migrationsDir := "./internal/database/migrations"
+	if err := database.Migrate(db, migrationsDir); err != nil {
+		log.Printf("⚠️  فشل تشغيل الترحيلات: %v", err)
+		// لا نوقف الخادم إذا فشلت الترحيلات، قد تكون قاعدة البيانات موجودة بالفعل
+	}
+
 	r := router.Setup(db, cfg)
 
 	// إنشاء مجلد uploads

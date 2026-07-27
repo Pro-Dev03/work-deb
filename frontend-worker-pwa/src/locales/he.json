@@ -162,5 +162,13 @@
     "installText": "התקן אפליקציה"
   },
   "pwa_install_title": "התקנת אפליקציה",
-  "pwa_install_text": "התקן את האפליקציה במכשיר שלך"
+  "pwa_install_text": "התקן את האפליקציה במכשיר שלך",
+  "spans_multiple_days": "משמרת רב-יומית",
+  "day_one_hours": "שעות יום 1",
+  "day_two_hours": "שעות יום 2",
+  "night_hours": "שעות עבודה לילה",
+  "day_hours": "שעות עבודה יום",
+  "is_night_shift": "משמרת לילה",
+  "shift_details": "פרטי משמרת",
+  "shift_analysis": "ניתוח משמרת"
 }

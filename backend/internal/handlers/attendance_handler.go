@@ -267,7 +267,7 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 	
 	// بناء الاستعلام حسب الفلتر
 	query := `
-		SELECT 
+		SELECT
 			a.id,
 			a.worksite_id,
 			w.name as worksite_name,
@@ -280,7 +280,15 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 			a.check_out_lng,
 			a.check_out_distance_meters,
 			a.status,
-			a.created_at
+			a.created_at,
+			a.spans_multiple_days,
+			a.day_one_date,
+			a.day_two_date,
+			a.day_one_hours,
+			a.day_two_hours,
+			a.night_hours,
+			a.day_hours,
+			a.is_night_shift
 		FROM attendance a
 		LEFT JOIN worksites w ON a.worksite_id = w.id
 		WHERE a.user_id = $1
@@ -314,10 +322,16 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 		var checkInTime, checkOutTime, createdAt time.Time
 		var checkInLat, checkInLng, checkInDistance, checkOutLat, checkOutLng, checkOutDistance *float64
 		var status string
+		var spansMultipleDays bool
+		var dayOneDate, dayTwoDate *time.Time
+		var dayOneHours, dayTwoHours, nightHours, dayHours *float64
+		var isNightShift *bool
 
 		err := rows.Scan(
 			&id, &worksiteID, &worksiteName, &checkInTime, &checkInLat, &checkInLng, &checkInDistance,
 			&checkOutTime, &checkOutLat, &checkOutLng, &checkOutDistance, &status, &createdAt,
+			&spansMultipleDays, &dayOneDate, &dayTwoDate, &dayOneHours, &dayTwoHours,
+			&nightHours, &dayHours, &isNightShift,
 		)
 		if err != nil {
 			log.Printf("❌ خطأ في قراءة البيانات: %v", err)
@@ -345,8 +359,16 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 			"status":                    status,
 			"worked_hours":              workedHours,
 			"created_at":                createdAt,
+			"spans_multiple_days":       spansMultipleDays,
+			"day_one_date":              dayOneDate,
+			"day_two_date":              dayTwoDate,
+			"day_one_hours":             dayOneHours,
+			"day_two_hours":             dayTwoHours,
+			"night_hours":               nightHours,
+			"day_hours":                 dayHours,
+			"is_night_shift":            isNightShift,
 		}
-		
+
 		history = append(history, record)
 	}
 	
@@ -451,7 +473,15 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 			a.check_out_lng,
 			a.check_out_distance_meters,
 			a.status,
-			a.created_at
+			a.created_at,
+			a.spans_multiple_days,
+			a.day_one_date,
+			a.day_two_date,
+			a.day_one_hours,
+			a.day_two_hours,
+			a.night_hours,
+			a.day_hours,
+			a.is_night_shift
 		FROM attendance a
 		LEFT JOIN worksites w ON a.worksite_id = w.id
 		WHERE a.user_id = $1
@@ -488,10 +518,16 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 		var checkInTime, checkOutTime, createdAt time.Time
 		var checkInLat, checkInLng, checkInDistance, checkOutLat, checkOutLng, checkOutDistance *float64
 		var status string
+		var spansMultipleDays bool
+		var dayOneDate, dayTwoDate *time.Time
+		var dayOneHours, dayTwoHours, nightHours, dayHours *float64
+		var isNightShift *bool
 
 		err := rows.Scan(
 			&id, &worksiteID, &worksiteName, &checkInTime, &checkInLat, &checkInLng, &checkInDistance,
 			&checkOutTime, &checkOutLat, &checkOutLng, &checkOutDistance, &status, &createdAt,
+			&spansMultipleDays, &dayOneDate, &dayTwoDate, &dayOneHours, &dayTwoHours,
+			&nightHours, &dayHours, &isNightShift,
 		)
 		if err != nil {
 			log.Printf("❌ خطأ في قراءة البيانات: %v", err)
@@ -519,6 +555,14 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 			"status":                    status,
 			"worked_hours":              workedHours,
 			"created_at":                createdAt,
+			"spans_multiple_days":       spansMultipleDays,
+			"day_one_date":              dayOneDate,
+			"day_two_date":              dayTwoDate,
+			"day_one_hours":             dayOneHours,
+			"day_two_hours":             dayTwoHours,
+			"night_hours":               nightHours,
+			"day_hours":                 dayHours,
+			"is_night_shift":            isNightShift,
 		}
 
 		history = append(history, record)

@@ -172,5 +172,13 @@
     "installText": "Install App"
   },
   "pwa_install_title": "Install App",
-  "pwa_install_text": "Install the app on your device"
+  "pwa_install_text": "Install the app on your device",
+  "spans_multiple_days": "Multi-day shift",
+  "day_one_hours": "Day 1 hours",
+  "day_two_hours": "Day 2 hours",
+  "night_hours": "Night work hours",
+  "day_hours": "Day work hours",
+  "is_night_shift": "Night shift",
+  "shift_details": "Shift details",
+  "shift_analysis": "Shift analysis"
 }

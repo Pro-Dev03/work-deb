@@ -312,5 +312,13 @@
     "installText": "تثبيت التطبيق"
   },
   "pwa_install_title": "تثبيت التطبيق",
-  "pwa_install_text": "ثبت التطبيق على جهازك"
+  "pwa_install_text": "ثبت التطبيق على جهازك",
+  "spans_multiple_days": "وردية عبر أيام",
+  "day_one_hours": "ساعات اليوم الأول",
+  "day_two_hours": "ساعات اليوم الثاني",
+  "night_hours": "ساعات العمل الليلي",
+  "day_hours": "ساعات العمل النهاري",
+  "is_night_shift": "وردية ليلية",
+  "shift_details": "تفاصيل الوردية",
+  "shift_analysis": "تحليل الوردية"
 }

@@ -225,6 +225,8 @@
                     <th>{{ t('check_in') }}</th>
                     <th>{{ t('check_out') }}</th>
                     <th>{{ t('worked_hours') }}</th>
+                    <th>{{ t('night_hours') }}</th>
+                    <th>{{ t('day_hours') }}</th>
                     <th>{{ t('location') }}</th>
                   </tr>
                 </thead>
@@ -235,6 +237,8 @@
                     <td class="mono">{{ formatTime(record.check_in_time) }}</td>
                     <td class="mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</td>
                     <td class="mono">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
+                    <td class="mono">{{ record.night_hours ? record.night_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
+                    <td class="mono">{{ record.day_hours ? record.day_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
                     <td class="mono">{{ formatDistance(record.check_in_distance_meters) }}</td>
                   </tr>
                 </tbody>
@@ -260,6 +264,14 @@
                   <div class="attendance-card__row">
                     <span class="attendance-card__label">{{ t('check_out') }}</span>
                     <span class="attendance-card__value mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</span>
+                  </div>
+                  <div class="attendance-card__row">
+                    <span class="attendance-card__label">{{ t('night_hours') }}</span>
+                    <span class="attendance-card__value mono">{{ record.night_hours ? record.night_hours.toFixed(1) + ' ' + t('hours') : '—' }}</span>
+                  </div>
+                  <div class="attendance-card__row">
+                    <span class="attendance-card__label">{{ t('day_hours') }}</span>
+                    <span class="attendance-card__value mono">{{ record.day_hours ? record.day_hours.toFixed(1) + ' ' + t('hours') : '—' }}</span>
                   </div>
                   <div class="attendance-card__row">
                     <span class="attendance-card__label">{{ t('location') }}</span>
@@ -439,6 +451,8 @@ async function exportToPDF() {
         checkInLabel: 'بداية العمل',
         checkOutLabel: 'نهاية العمل',
         workedHoursLabel: 'ساعات العمل',
+        nightHoursLabel: 'ساعات العمل الليلي',
+        dayHoursLabel: 'ساعات العمل النهاري',
         distanceLabel: 'المسافة',
         hoursUnit: 'ساعة',
         daysUnit: 'يوم',
@@ -456,6 +470,8 @@ async function exportToPDF() {
         checkInLabel: 'Check In',
         checkOutLabel: 'Check Out',
         workedHoursLabel: 'Worked Hours',
+        nightHoursLabel: 'Night Work Hours',
+        dayHoursLabel: 'Day Work Hours',
         distanceLabel: 'Distance',
         hoursUnit: 'hours',
         daysUnit: 'days',
@@ -473,6 +489,8 @@ async function exportToPDF() {
         checkInLabel: 'כניסה',
         checkOutLabel: 'יציאה',
         workedHoursLabel: 'שעות עבודה',
+        nightHoursLabel: 'שעות עבודה לילה',
+        dayHoursLabel: 'שעות עבודה יום',
         distanceLabel: 'מרחק',
         hoursUnit: 'שעות',
         daysUnit: 'ימים',
@@ -534,6 +552,8 @@ async function exportToPDF() {
               <th>${trans.checkInLabel}</th>
               <th>${trans.checkOutLabel}</th>
               <th>${trans.workedHoursLabel}</th>
+              <th>${trans.nightHoursLabel}</th>
+              <th>${trans.dayHoursLabel}</th>
               <th>${trans.distanceLabel}</th>
             </tr>
           </thead>
@@ -545,6 +565,8 @@ async function exportToPDF() {
                 <td>${formatTime(record.check_in_time)}</td>
                 <td>${record.check_out_time ? formatTime(record.check_out_time) : '—'}</td>
                 <td>${record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + trans.hoursUnit : '—'}</td>
+                <td>${record.night_hours ? record.night_hours.toFixed(1) + ' ' + trans.hoursUnit : '—'}</td>
+                <td>${record.day_hours ? record.day_hours.toFixed(1) + ' ' + trans.hoursUnit : '—'}</td>
                 <td>${formatDistance(record.check_in_distance_meters)}</td>
               </tr>
             `).join('')}

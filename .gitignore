@@ -66,3 +66,4 @@ test_results_report.md
 # Temporary build files
 backend/worktrack-api
 backend/bin/
+backend/api
