@@ -423,6 +423,20 @@ async function exportToPDF() {
   if (!selectedEmployee.value || !attendanceHistory.value.length) return
 
   try {
+    // قراءة الصورة وتحويلها إلى base64
+    const response = await fetch('/src/assets/company-logo.jpg')
+    const blob = await response.blob()
+    const reader = new FileReader()
+    
+    const getBase64Image = () => {
+      return new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result)
+        reader.readAsDataURL(blob)
+      })
+    }
+    
+    const base64Image = await getBase64Image()
+
     // الحصول على اللغة الحالية
     const currentLangValue = currentLang.value
 
@@ -439,8 +453,6 @@ async function exportToPDF() {
         checkInLabel: 'بداية العمل',
         checkOutLabel: 'نهاية العمل',
         workedHoursLabel: 'ساعات العمل',
-        nightHoursLabel: 'ساعات العمل الليلي',
-        dayHoursLabel: 'ساعات العمل النهاري',
         distanceLabel: 'المسافة',
         hoursUnit: 'ساعة',
         daysUnit: 'يوم',
@@ -458,8 +470,6 @@ async function exportToPDF() {
         checkInLabel: 'Check In',
         checkOutLabel: 'Check Out',
         workedHoursLabel: 'Worked Hours',
-        nightHoursLabel: 'Night Work Hours',
-        dayHoursLabel: 'Day Work Hours',
         distanceLabel: 'Distance',
         hoursUnit: 'hours',
         daysUnit: 'days',
@@ -477,8 +487,6 @@ async function exportToPDF() {
         checkInLabel: 'כניסה',
         checkOutLabel: 'יציאה',
         workedHoursLabel: 'שעות עבודה',
-        nightHoursLabel: 'שעות עבודה לילה',
-        dayHoursLabel: 'שעות עבודה יום',
         distanceLabel: 'מרחק',
         hoursUnit: 'שעות',
         daysUnit: 'ימים',
@@ -505,7 +513,7 @@ async function exportToPDF() {
             font-family: Arial, sans-serif; 
             padding: 20px; 
             direction: ${trans.direction};
-            background-image: url('/src/assets/company-logo.jpg');
+            background-image: url('${base64Image}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
