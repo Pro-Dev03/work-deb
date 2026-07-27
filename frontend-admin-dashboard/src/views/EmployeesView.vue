@@ -501,7 +501,23 @@ async function exportToPDF() {
         <meta charset="UTF-8">
         <title>${trans.title} - ${selectedEmployee.value.full_name}</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; direction: ${trans.direction}; }
+          body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            direction: ${trans.direction};
+            background-image: url('/src/assets/company-logo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-blend-mode: overlay;
+          }
+          .content-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+          }
           h1 { text-align: center; color: #333; }
           .summary { display: flex; justify-content: space-around; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
           .summary-item { text-align: center; }
@@ -517,49 +533,51 @@ async function exportToPDF() {
         </style>
       </head>
       <body>
-        <h1>${trans.title}</h1>
-        <h2 style="text-align: center; color: #666;">${trans.employeeLabel}: ${selectedEmployee.value.full_name}</h2>
-        <p style="text-align: center; color: #666;">${trans.periodLabel}: ${monthName} ${selectedYear.value}</p>
+        <div class="content-wrapper">
+          <h1>${trans.title}</h1>
+          <h2 style="text-align: center; color: #666;">${trans.employeeLabel}: ${selectedEmployee.value.full_name}</h2>
+          <p style="text-align: center; color: #666;">${trans.periodLabel}: ${monthName} ${selectedYear.value}</p>
 
-        <div class="summary">
-          <div class="summary-item">
-            <div class="summary-label">${trans.totalHoursLabel}</div>
-            <div class="summary-value">${monthlySummary.value?.summary?.total_hours ? monthlySummary.value.summary.total_hours.toFixed(1) + ' ' + trans.hoursUnit : '0 ' + trans.hoursUnit}</div>
+          <div class="summary">
+            <div class="summary-item">
+              <div class="summary-label">${trans.totalHoursLabel}</div>
+              <div class="summary-value">${monthlySummary.value?.summary?.total_hours ? monthlySummary.value.summary.total_hours.toFixed(1) + ' ' + trans.hoursUnit : '0 ' + trans.hoursUnit}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">${trans.workDaysLabel}</div>
+              <div class="summary-value">${monthlySummary.value?.summary?.work_days || 0} ${trans.daysUnit}</div>
+            </div>
           </div>
-          <div class="summary-item">
-            <div class="summary-label">${trans.workDaysLabel}</div>
-            <div class="summary-value">${monthlySummary.value?.summary?.work_days || 0} ${trans.daysUnit}</div>
-          </div>
-        </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>${trans.dateLabel}</th>
-              <th>${trans.worksiteLabel}</th>
-              <th>${trans.checkInLabel}</th>
-              <th>${trans.checkOutLabel}</th>
-              <th>${trans.workedHoursLabel}</th>
-              <th>${trans.distanceLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${attendanceHistory.value.map(record => `
+          <table>
+            <thead>
               <tr>
-                <td>${formatDate(record.check_in_time)}</td>
-                <td>${record.worksite_name || '—'}</td>
-                <td>${formatTime(record.check_in_time)}</td>
-                <td>${record.check_out_time ? formatTime(record.check_out_time) : '—'}</td>
-                <td>${record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + trans.hoursUnit : '—'}</td>
-                <td>${formatDistance(record.check_in_distance_meters)}</td>
+                <th>${trans.dateLabel}</th>
+                <th>${trans.worksiteLabel}</th>
+                <th>${trans.checkInLabel}</th>
+                <th>${trans.checkOutLabel}</th>
+                <th>${trans.workedHoursLabel}</th>
+                <th>${trans.distanceLabel}</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${attendanceHistory.value.map(record => `
+                <tr>
+                  <td>${formatDate(record.check_in_time)}</td>
+                  <td>${record.worksite_name || '—'}</td>
+                  <td>${formatTime(record.check_in_time)}</td>
+                  <td>${record.check_out_time ? formatTime(record.check_out_time) : '—'}</td>
+                  <td>${record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + trans.hoursUnit : '—'}</td>
+                  <td>${formatDistance(record.check_in_distance_meters)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
 
-        <div class="footer">
-          <p>${trans.footer}</p>
-          <p>${new Date().toLocaleDateString('en-GB')} - ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+          <div class="footer">
+            <p>${trans.footer}</p>
+            <p>${new Date().toLocaleDateString('en-GB')} - ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+          </div>
         </div>
       </body>
       </html>
