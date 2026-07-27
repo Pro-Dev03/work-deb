@@ -222,15 +222,15 @@ func (h *WorksiteHandler) Create(c *gin.Context) {
 
 	// التحقق من وجود الاسم في النقاط النشطة فقط (تجاهل المحذوفة)
 	var exists bool
-	err := h.DB.QueryRow(`
+	errCheck := h.DB.QueryRow(`
 		SELECT EXISTS (
 			SELECT 1 FROM worksites 
 			WHERE name = $1 AND is_deleted = FALSE
 		)
 	`, req.Name).Scan(&exists)
 	
-	if err != nil {
-		log.Printf("❌ فشل التحقق من الاسم: %v", err)
+	if errCheck != nil {
+		log.Printf("❌ فشل التحقق من الاسم: %v", errCheck)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من الاسم"})
 		return
 	}
