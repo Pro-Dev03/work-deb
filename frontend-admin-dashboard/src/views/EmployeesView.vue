@@ -424,7 +424,7 @@ async function exportToPDF() {
 
   try {
     // قراءة الصورة وتحويلها إلى base64
-    const response = await fetch('/src/assets/company-logo.jpg')
+    const response = await fetch('/company-logo.jpg')
     const blob = await response.blob()
     const reader = new FileReader()
     
