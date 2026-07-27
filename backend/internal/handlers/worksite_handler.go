@@ -111,6 +111,7 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 			WHERE a.status = 'in_progress' 
 			AND a.worksite_id = $1
 			AND u.role = 'employee'
+			AND a.worksite_id IS NOT NULL
 		`, ws["id"])
 		
 		if err == nil {

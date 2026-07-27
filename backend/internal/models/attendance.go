@@ -8,7 +8,10 @@ type Attendance struct {
 	ID         string `json:"id"`
 	UserID     string `json:"user_id"`
 	TaskID     *string `json:"task_id,omitempty"`
-	WorksiteID string `json:"worksite_id"`
+	WorksiteID *string `json:"worksite_id,omitempty"` // يمكن أن يكون null إذا تم حذف نقطة العمل
+
+	// حقول لتخزين معلومات نقطة العمل للسجل التاريخي
+	WorksiteNameForHistory *string `json:"worksite_name_for_history,omitempty"` // اسم نقطة العمل المحفوظ للسجل التاريخي
 
 	CheckInTime           *time.Time `json:"check_in_time,omitempty"`
 	CheckInLat            *float64   `json:"check_in_lat,omitempty"`

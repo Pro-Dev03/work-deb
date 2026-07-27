@@ -145,7 +145,7 @@ func (h *UploadHandler) GetAttendancePhotos(c *gin.Context) {
 			u.full_name as employee_name,
 			u.email as employee_email,
 			COALESCE(t.title, 'بدون مهمة') as task_title,
-			COALESCE(w.name, 'بدون موقع') as worksite_name
+			COALESCE(w.name, a.worksite_name_for_history, 'بدون موقع') as worksite_name
 		FROM attendance a
 		JOIN users u ON a.user_id = u.id
 		LEFT JOIN tasks t ON a.task_id = t.id

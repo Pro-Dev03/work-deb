@@ -28,12 +28,12 @@ func (s *AttendanceService) GetCurrentAttendance(userID string) (*models.Attenda
 	var checkInTime time.Time
 
 	err := s.DB.QueryRow(`
-		SELECT id, worksite_id, check_in_time, status
+		SELECT id, worksite_id, worksite_name_for_history, check_in_time, status
 		FROM attendance
 		WHERE user_id = $1 AND status = 'in_progress'
 		ORDER BY check_in_time DESC
 		LIMIT 1
-	`, userID).Scan(&attendance.ID, &attendance.WorksiteID, &checkInTime, &attendance.Status)
+	`, userID).Scan(&attendance.ID, &attendance.WorksiteID, &attendance.WorksiteNameForHistory, &checkInTime, &attendance.Status)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -75,6 +75,10 @@ func (s *AttendanceService) CheckIn(userID, worksiteID string, lat, lng float64)
 		return nil, nil, fmt.Errorf("نقطة العمل غير موجودة: %w", err)
 	}
 
+	// حفظ اسم نقطة العمل في سجل الحضور للرجوع إليه لاحقاً
+	// هذا مهم في حال تم حذف نقطة العمل
+	var worksiteNameForHistory string = worksite.Name
+
 	log.Printf("📍 نقطة العمل: %s (%.6f, %.6f) - النطاق: %d متر",
 		worksite.Name, worksite.Latitude, worksite.Longitude, worksite.RadiusMeters)
 
@@ -100,10 +104,10 @@ func (s *AttendanceService) CheckIn(userID, worksiteID string, lat, lng float64)
 	now := utils.NowInJerusalem()
 
 	_, err = s.DB.Exec(`
-		INSERT INTO attendance (id, user_id, worksite_id, check_in_time, 
+		INSERT INTO attendance (id, user_id, worksite_id, worksite_name_for_history, check_in_time, 
 			check_in_lat, check_in_lng, check_in_distance_meters, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, 'in_progress')`,
-		id, userID, worksite.ID, now, lat, lng, distance,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'in_progress')`,
+		id, userID, worksite.ID, worksiteNameForHistory, now, lat, lng, distance,
 	)
 	if err != nil {
 		log.Printf("❌ فشل حفظ بداية الدوام: %v", err)
@@ -119,7 +123,8 @@ func (s *AttendanceService) CheckIn(userID, worksiteID string, lat, lng float64)
 	attendance := &models.Attendance{
 		ID:                    id,
 		UserID:                userID,
-		WorksiteID:            worksite.ID,
+		WorksiteID:            &worksite.ID,
+		WorksiteNameForHistory: &worksiteNameForHistory,
 		CheckInTime:           &now,
 		CheckInLat:            &lat,
 		CheckInLng:            &lng,
@@ -139,11 +144,11 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 		return nil, 0, errors.New("إحداثيات غير صالحة")
 	}
 
-	var worksiteID string
+	var worksiteID *string
 	var checkInTime time.Time
 
 	err := s.DB.QueryRow(`
-		SELECT worksite_id, check_in_time FROM attendance 
+		SELECT worksite_id, check_in_time FROM attendance
 		WHERE id = $1 AND user_id = $2 AND status = 'in_progress'
 	`, attendanceID, userID).Scan(&worksiteID, &checkInTime)
 	if err != nil {
@@ -152,14 +157,55 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 	}
 
 	var worksite models.Worksite
-	err = s.DB.QueryRow(`
-		SELECT id, name, latitude, longitude, radius_meters
-		FROM worksites WHERE id = $1
-	`, worksiteID).Scan(&worksite.ID, &worksite.Name,
-		&worksite.Latitude, &worksite.Longitude, &worksite.RadiusMeters)
-	if err != nil {
-		log.Printf("❌ نقطة العمل غير موجودة: %v", err)
-		return nil, 0, fmt.Errorf("نقطة العمل غير موجودة: %w", err)
+	// إذا كانت نقطة العمل لا تزال موجودة، جلب بياناتها
+	if worksiteID != nil {
+		err = s.DB.QueryRow(`
+			SELECT id, name, latitude, longitude, radius_meters
+			FROM worksites WHERE id = $1
+		`, *worksiteID).Scan(&worksite.ID, &worksite.Name,
+			&worksite.Latitude, &worksite.Longitude, &worksite.RadiusMeters)
+		if err != nil {
+			log.Printf("❌ نقطة العمل غير موجودة: %v", err)
+			return nil, 0, fmt.Errorf("نقطة العمل غير موجودة: %w", err)
+		}
+	} else {
+		// إذا تم حذف نقطة العمل، لا يمكن التحقق من المسافة
+		// سنسمح بالخروج بدون التحقق من الموقع
+		log.Printf("⚠️ نقطة العمل محذوفة، السماح بالخروج بدون التحقق من المسافة")
+
+		now := utils.NowInJerusalem()
+
+		// حساب التقسيم عبر الأيام
+		dayOneDate, dayTwoDate, dayOneHours, dayTwoHours := utils.SplitShiftAcrossDays(checkInTime, now)
+		spansMultipleDays := dayTwoDate != nil
+
+		// حساب ساعات العمل الليلية والنهارية
+		dayNightPeriods := utils.CalculateDayNightHours(checkInTime, now)
+		totalHours := now.Sub(checkInTime).Hours()
+		isNightShift := utils.IsNightShift(dayNightPeriods.NightHours, totalHours)
+
+		// تحديث سجل الحضور بدون التحقق من المسافة
+		_, err = s.DB.Exec(`
+			UPDATE attendance
+			SET check_out_time = $1, status = 'completed',
+			    spans_multiple_days = $2, day_one_date = $3, day_two_date = $4,
+			    day_one_hours = $5, day_two_hours = $6,
+			    night_hours = $7, day_hours = $8, is_night_shift = $9
+			WHERE id = $10
+		`, now, spansMultipleDays, dayOneDate, dayTwoDate,
+			dayOneHours, dayTwoHours,
+			dayNightPeriods.NightHours, dayNightPeriods.DayHours, isNightShift,
+			attendanceID)
+
+		if err != nil {
+			log.Printf("❌ فشل تحديث سجل الحضور: %v", err)
+			return nil, 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
+		}
+
+		workedHours := totalHours
+		log.Printf("✅ تم تسجيل إنهاء الدوام (نقطة عمل محذوفة): %.2f ساعة", workedHours)
+
+		return nil, workedHours, nil
 	}
 
 	// حساب المسافة عند الخروج

@@ -112,13 +112,13 @@ func (h *ReportHandler) GetCompletedEmployees(c *gin.Context) {
 			u.full_name,
 			u.email,
 			u.phone,
-			w.name as worksite_name,
+			COALESCE(w.name, a.worksite_name_for_history) as worksite_name,
 			a.check_in_time,
 			a.check_out_time,
 			EXTRACT(EPOCH FROM (a.check_out_time - a.check_in_time)) / 3600 as hours_worked
 		FROM users u
 		JOIN attendance a ON a.user_id = u.id
-		JOIN worksites w ON a.worksite_id = w.id
+		LEFT JOIN worksites w ON a.worksite_id = w.id
 		WHERE u.role = 'employee'
 		AND u.is_active = TRUE
 		AND DATE(a.check_in_time) = CURRENT_DATE

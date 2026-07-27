@@ -79,18 +79,24 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 
 // checkGeofenceViolation - التحقق من خروج الموظف عن النطاق
 func (h *LocationHandler) checkGeofenceViolation(userID string, lat, lng float64) {
-	var attendanceID, worksiteID string
+	var attendanceID string
+	var worksiteID *string
 	var worksiteLat, worksiteLng float64
 	var radiusMeters int
 
 	err := h.DB.QueryRow(`
 		SELECT a.id, a.worksite_id, w.latitude, w.longitude, w.radius_meters
 		FROM attendance a
-		JOIN worksites w ON a.worksite_id = w.id
+		LEFT JOIN worksites w ON a.worksite_id = w.id
 		WHERE a.user_id = $1 AND a.status = 'in_progress'
 	`, userID).Scan(&attendanceID, &worksiteID, &worksiteLat, &worksiteLng, &radiusMeters)
 
 	if err != nil {
+		return
+	}
+
+	// إذا كانت نقطة العمل محذوفة، لا يمكن التحقق من المسافة
+	if worksiteID == nil {
 		return
 	}
 
@@ -118,25 +124,25 @@ func (h *LocationHandler) checkGeofenceViolation(userID string, lat, lng float64
 func (h *LocationHandler) GetActiveEmployees(c *gin.Context) {
 	rows, err := h.DB.Query(`
 		SELECT DISTINCT ON (u.id)
-			u.id, 
-			u.full_name, 
-			u.email, 
+			u.id,
+			u.full_name,
+			u.email,
 			u.phone,
-			lt.latitude, 
-			lt.longitude, 
+			lt.latitude,
+			lt.longitude,
 			lt.recorded_at,
 			a.id as attendance_id,
 			a.check_in_time,
-			w.id as worksite_id, 
-			w.name as worksite_name,
-			w.latitude as worksite_lat, 
-			w.longitude as worksite_lng, 
+			w.id as worksite_id,
+			COALESCE(w.name, a.worksite_name_for_history) as worksite_name,
+			w.latitude as worksite_lat,
+			w.longitude as worksite_lng,
 			w.radius_meters,
 			EXTRACT(EPOCH FROM (now() - a.check_in_time)) / 3600 as hours_worked
 		FROM users u
 		JOIN attendance a ON a.user_id = u.id AND a.status = 'in_progress'
 		JOIN location_tracking lt ON lt.user_id = u.id
-		JOIN worksites w ON a.worksite_id = w.id
+		LEFT JOIN worksites w ON a.worksite_id = w.id
 		WHERE u.role = 'employee' AND u.is_active = TRUE
 		ORDER BY u.id, lt.recorded_at DESC
 	`)
@@ -291,13 +297,13 @@ func (h *LocationHandler) GetEmployeeSecurityNotes(c *gin.Context) {
 // GetLocationLogs - جلب سجل المواقع للمدير
 func (h *LocationHandler) GetLocationLogs(c *gin.Context) {
 	rows, err := h.DB.Query(`
-		SELECT 
+		SELECT
 			lt.latitude,
 			lt.longitude,
 			lt.recorded_at,
 			u.full_name,
 			u.email,
-			w.name as worksite_name,
+			COALESCE(w.name, a.worksite_name_for_history) as worksite_name,
 			a.status as attendance_status
 		FROM location_tracking lt
 		JOIN users u ON lt.user_id = u.id

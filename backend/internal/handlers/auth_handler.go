@@ -138,10 +138,10 @@ func (h *AuthHandler) ListEmployees(c *gin.Context) {
 	log.Println("📋 جلب قائمة الموظفين...")
 
 	rows, err := h.DB.Query(`
-		SELECT 
+		SELECT
 			u.id, u.full_name, u.email, u.phone, u.role, u.is_active, u.created_at,
 			COALESCE(u.device_model, '') as device_model,
-			ws.name as current_worksite,
+			COALESCE(ws.name, a.worksite_name_for_history) as current_worksite,
 			ws.id as current_worksite_id
 		FROM users u
 		LEFT JOIN attendance a ON u.id = a.user_id AND a.status = 'in_progress'

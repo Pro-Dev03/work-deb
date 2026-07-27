@@ -270,7 +270,7 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 		SELECT
 			a.id,
 			a.worksite_id,
-			w.name as worksite_name,
+			COALESCE(w.name, a.worksite_name_for_history) as worksite_name,
 			a.check_in_time,
 			a.check_in_lat,
 			a.check_in_lng,
@@ -463,7 +463,7 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 		SELECT
 			a.id,
 			a.worksite_id,
-			w.name as worksite_name,
+			COALESCE(w.name, a.worksite_name_for_history) as worksite_name,
 			a.check_in_time,
 			a.check_in_lat,
 			a.check_in_lng,
