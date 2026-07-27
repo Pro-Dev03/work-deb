@@ -199,7 +199,7 @@
           <div v-if="monthlySummary" class="monthly-summary">
             <div class="summary-card">
               <span class="summary-label">{{ t('total_hours') }}</span>
-              <span class="summary-value">{{ formatHours(monthlySummary.summary?.total_hours) }}</span>
+              <span class="summary-value">{{ monthlySummary.summary?.total_hours ? monthlySummary.summary.total_hours.toFixed(1) + ' ' + t('hours') : '0 ' + t('hours') }}</span>
             </div>
             <div class="summary-card">
               <span class="summary-label">{{ t('work_days') }}</span>
@@ -225,8 +225,6 @@
                     <th>{{ t('check_in') }}</th>
                     <th>{{ t('check_out') }}</th>
                     <th>{{ t('worked_hours') }}</th>
-                    <th>{{ t('night_hours') }}</th>
-                    <th>{{ t('day_hours') }}</th>
                     <th>{{ t('location') }}</th>
                   </tr>
                 </thead>
@@ -236,9 +234,7 @@
                     <td>{{ record.worksite_name || '—' }}</td>
                     <td class="mono">{{ formatTime(record.check_in_time) }}</td>
                     <td class="mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</td>
-                    <td class="mono">{{ formatHours(record.worked_hours) }}</td>
-                    <td class="mono">{{ formatHours(record.night_hours) }}</td>
-                    <td class="mono">{{ formatHours(record.day_hours) }}</td>
+                    <td class="mono">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
                     <td class="mono">{{ formatDistance(record.check_in_distance_meters) }}</td>
                   </tr>
                 </tbody>
@@ -250,7 +246,7 @@
               <div v-for="record in attendanceHistory" :key="record.id" class="attendance-card">
                 <div class="attendance-card__header">
                   <span class="attendance-card__date">{{ formatDate(record.check_in_time) }}</span>
-                  <span class="badge badge--info">{{ formatHours(record.worked_hours) }}</span>
+                  <span class="badge badge--info">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</span>
                 </div>
                 <div class="attendance-card__body">
                   <div class="attendance-card__row">
@@ -264,14 +260,6 @@
                   <div class="attendance-card__row">
                     <span class="attendance-card__label">{{ t('check_out') }}</span>
                     <span class="attendance-card__value mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</span>
-                  </div>
-                  <div class="attendance-card__row">
-                    <span class="attendance-card__label">{{ t('night_hours') }}</span>
-                    <span class="attendance-card__value mono">{{ formatHours(record.night_hours) }}</span>
-                  </div>
-                  <div class="attendance-card__row">
-                    <span class="attendance-card__label">{{ t('day_hours') }}</span>
-                    <span class="attendance-card__value mono">{{ formatHours(record.day_hours) }}</span>
                   </div>
                   <div class="attendance-card__row">
                     <span class="attendance-card__label">{{ t('location') }}</span>
@@ -387,29 +375,6 @@ function formatDistance(meters) {
     return (meters / 1000).toFixed(2) + ' ' + t('kilometers')
   }
   return Math.round(meters) + ' ' + t('meters')
-}
-
-function formatHours(hours) {
-  if (!hours || hours === 0) return '—'
-  
-  const totalSeconds = Math.floor(hours * 3600)
-  const h = Math.floor(totalSeconds / 3600)
-  const m = Math.floor((totalSeconds % 3600) / 60)
-  const s = totalSeconds % 60
-  
-  // تنسيق ذكي: إظهار الساعات فقط إذا كانت > 0
-  const pad = (num) => num.toString().padStart(2, '0')
-  
-  if (h > 0) {
-    // إذا كانت هناك ساعات، إظهار HH:MM:SS
-    return `${pad(h)}:${pad(m)}:${pad(s)}`
-  } else if (m > 0) {
-    // إذا لم تكن هناك ساعات ولكن هناك دقائق، إظهار MM:SS
-    return `${pad(m)}:${pad(s)}`
-  } else {
-    // إذا لم تكن هناك ساعات ولا دقائق، إظهار SS ثانية
-    return `${s}ث`
-  }
 }
 
 // دوال سجل الحضور
@@ -559,7 +524,7 @@ async function exportToPDF() {
         <div class="summary">
           <div class="summary-item">
             <div class="summary-label">${trans.totalHoursLabel}</div>
-            <div class="summary-value">${formatHours(monthlySummary.value?.summary?.total_hours)}</div>
+            <div class="summary-value">${monthlySummary.value?.summary?.total_hours ? monthlySummary.value.summary.total_hours.toFixed(1) + ' ' + trans.hoursUnit : '0 ' + trans.hoursUnit}</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">${trans.workDaysLabel}</div>
@@ -575,8 +540,6 @@ async function exportToPDF() {
               <th>${trans.checkInLabel}</th>
               <th>${trans.checkOutLabel}</th>
               <th>${trans.workedHoursLabel}</th>
-              <th>${trans.nightHoursLabel}</th>
-              <th>${trans.dayHoursLabel}</th>
               <th>${trans.distanceLabel}</th>
             </tr>
           </thead>
@@ -587,9 +550,7 @@ async function exportToPDF() {
                 <td>${record.worksite_name || '—'}</td>
                 <td>${formatTime(record.check_in_time)}</td>
                 <td>${record.check_out_time ? formatTime(record.check_out_time) : '—'}</td>
-                <td>${formatHours(record.worked_hours)}</td>
-                <td>${formatHours(record.night_hours)}</td>
-                <td>${formatHours(record.day_hours)}</td>
+                <td>${record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + trans.hoursUnit : '—'}</td>
                 <td>${formatDistance(record.check_in_distance_meters)}</td>
               </tr>
             `).join('')}

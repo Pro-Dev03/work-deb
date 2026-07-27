@@ -57,7 +57,7 @@
             <h4>👤 {{ emp.full_name }}</h4>
             <p>📍 {{ emp.worksite.name }}</p>
             <p>📏 المسافة: {{ formatDistance(emp.worksite.distance) }}</p>
-            <p>⏱️ {{ formatHours(emp.hours_worked) }}</p>
+            <p>⏱️ {{ emp.hours_worked ? emp.hours_worked.toFixed(1) + ' ' + t('hours') : '—' }}</p>
             <p>
               <span class="badge" :class="emp.status === 'inside' ? 'badge--in' : 'badge--out'">
                 {{ emp.status_text }}
@@ -162,29 +162,6 @@ function formatDistance(meters) {
     return (meters / 1000).toFixed(2) + ' كيلومتر'
   }
   return Math.round(meters) + ' متر'
-}
-
-function formatHours(hours) {
-  if (!hours || hours === 0) return '0:00:00'
-  
-  const totalSeconds = Math.floor(hours * 3600)
-  const h = Math.floor(totalSeconds / 3600)
-  const m = Math.floor((totalSeconds % 3600) / 60)
-  const s = totalSeconds % 60
-  
-  // تنسيق ذكي: إظهار الساعات فقط إذا كانت > 0
-  const pad = (num) => num.toString().padStart(2, '0')
-  
-  if (h > 0) {
-    // إذا كانت هناك ساعات، إظهار HH:MM:SS
-    return `${pad(h)}:${pad(m)}:${pad(s)}`
-  } else if (m > 0) {
-    // إذا لم تكن هناك ساعات ولكن هناك دقائق، إظهار MM:SS
-    return `${pad(m)}:${pad(s)}`
-  } else {
-    // إذا لم تكن هناك ساعات ولا دقائق، إظهار SS ثانية
-    return `${s}ث`
-  }
 }
 
 onMounted(() => {

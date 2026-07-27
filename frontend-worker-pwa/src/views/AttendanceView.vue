@@ -220,8 +220,6 @@
                   <th>{{ t('check_in') }}</th>
                   <th>{{ t('check_out') }}</th>
                   <th>{{ t('worked_hours') }}</th>
-                  <th>{{ t('night_hours') }}</th>
-                  <th>{{ t('day_hours') }}</th>
                   <th>{{ t('location') }}</th>
                 </tr>
               </thead>
@@ -231,9 +229,7 @@
                   <td>{{ record.worksite_name || '—' }}</td>
                   <td class="mono">{{ formatTime(record.check_in_time) }}</td>
                   <td class="mono">{{ record.check_out_time ? formatTime(record.check_out_time) : '—' }}</td>
-                  <td class="mono">{{ formatHours(record.worked_hours) }}</td>
-                  <td class="mono">{{ formatHours(record.night_hours) }}</td>
-                  <td class="mono">{{ formatHours(record.day_hours) }}</td>
+                  <td class="mono">{{ record.worked_hours ? record.worked_hours.toFixed(1) + ' ' + t('hours') : '—' }}</td>
                   <td class="mono">{{ formatDistance(record.check_in_distance_meters) }}</td>
                 </tr>
               </tbody>
@@ -691,29 +687,6 @@ function formatDate(date) {
 function formatTime(date) {
   if (!date) return '—'
   return new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
-function formatHours(hours) {
-  if (!hours || hours === 0) return '—'
-  
-  const totalSeconds = Math.floor(hours * 3600)
-  const h = Math.floor(totalSeconds / 3600)
-  const m = Math.floor((totalSeconds % 3600) / 60)
-  const s = totalSeconds % 60
-  
-  // تنسيق ذكي: إظهار الساعات فقط إذا كانت > 0
-  const pad = (num) => num.toString().padStart(2, '0')
-  
-  if (h > 0) {
-    // إذا كانت هناك ساعات، إظهار HH:MM:SS
-    return `${pad(h)}:${pad(m)}:${pad(s)}`
-  } else if (m > 0) {
-    // إذا لم تكن هناك ساعات ولكن هناك دقائق، إظهار MM:SS
-    return `${pad(m)}:${pad(s)}`
-  } else {
-    // إذا لم تكن هناك ساعات ولا دقائق، إظهار SS ثانية
-    return `${s}ث`
-  }
 }
 
 // ==========================================

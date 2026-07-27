@@ -100,7 +100,5 @@
     "remindLater": "Remind me later"
   },
   "pwa_install_title": "Install App",
-  "pwa_install_text": "Install the app on your device",
-  "night_hours": "Night Hours",
-  "day_hours": "Day Hours"
+  "pwa_install_text": "Install the app on your device"
 }

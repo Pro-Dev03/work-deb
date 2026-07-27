@@ -100,7 +100,5 @@
     "remindLater": "ذكرني لاحقاً"
   },
   "pwa_install_title": "تثبيت التطبيق",
-  "pwa_install_text": "ثبت التطبيق على جهازك",
-  "night_hours": "الساعات الليلية",
-  "day_hours": "الساعات النهارية"
+  "pwa_install_text": "ثبت التطبيق على جهازك"
 }
