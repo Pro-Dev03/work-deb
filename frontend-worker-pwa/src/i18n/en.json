@@ -100,5 +100,6 @@
     "remindLater": "Remind me later"
   },
   "pwa_install_title": "Install App",
-  "pwa_install_text": "Install the app on your device"
+  "pwa_install_text": "Install the app on your device",
+  "shift_restored": "Shift restored"
 }

@@ -100,5 +100,6 @@
     "remindLater": "ذكرني لاحقاً"
   },
   "pwa_install_title": "تثبيت التطبيق",
-  "pwa_install_text": "ثبت التطبيق على جهازك"
+  "pwa_install_text": "ثبت التطبيق على جهازك",
+  "shift_restored": "تم استعادة الوردية"
 }

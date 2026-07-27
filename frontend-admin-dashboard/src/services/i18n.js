@@ -327,9 +327,7 @@ const ar = {
     "benefit3": "🎨 تصميم شبيه بالتطبيقات",
     "gotIt": "فهمت ✓",
     "remindLater": "ذكرني لاحقاً"
-  },
-  "night_hours": "الساعات الليلية",
-  "day_hours": "الساعات النهارية"
+  }
 }
 
 const he = {
@@ -658,9 +656,7 @@ const he = {
     "benefit3": "🎨 עיצוב דמוי אפליקציה",
     "gotIt": "הבנתי ✓",
     "remindLater": "תזכיר לי מאוחר יותר"
-  },
-  "night_hours": "שעות לילה",
-  "day_hours": "שעות יום"
+  }
 }
 
 const en = {
@@ -989,9 +985,7 @@ const en = {
     "benefit3": "🎨 App-like design",
     "gotIt": "Got it ✓",
     "remindLater": "Remind me later"
-  },
-  "night_hours": "Night Hours",
-  "day_hours": "Day Hours"
+  }
 }
 
 // =============================================
