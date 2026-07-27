@@ -40,12 +40,14 @@ func (h *WorksiteHandler) List(c *gin.Context) {
 				u.id as assigned_employee_id, u.full_name as assigned_employee_name
 			FROM worksites w
 			LEFT JOIN users u ON w.assigned_employee_id = u.id
+			WHERE w.is_deleted = FALSE
 			ORDER BY w.created_at DESC`)
 	} else {
 		// استخدام الاستعلام بدون assigned_employee_id (للتوافق مع الإصدارات القديمة)
 		rows, err = h.DB.Query(`
 			SELECT w.id, w.name, w.address, w.latitude, w.longitude, w.radius_meters, w.is_active, w.created_at
 			FROM worksites w
+			WHERE w.is_deleted = FALSE
 			ORDER BY w.created_at DESC`)
 	}
 
@@ -217,10 +219,34 @@ func (h *WorksiteHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
 		return
 	}
+
+	// التحقق من وجود الاسم في النقاط النشطة فقط (تجاهل المحذوفة)
+	var exists bool
+	err := h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM worksites 
+			WHERE name = $1 AND is_deleted = FALSE
+		)
+	`, req.Name).Scan(&exists)
+	
+	if err != nil {
+		log.Printf("❌ فشل التحقق من الاسم: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من الاسم"})
+		return
+	}
+	
+	if exists {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "اسم نقطة العمل موجود بالفعل",
+			"suggestion": "يمكنك استخدام اسم مختلف أو استعادة النقطة المحذوفة"
+		})
+		return
+	}
+
 	id := uuid.NewString()
-	_, err := h.DB.Exec(`
-		INSERT INTO worksites (id, name, address, latitude, longitude, radius_meters, is_active, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, TRUE, now(), now())`,
+	_, err = h.DB.Exec(`
+		INSERT INTO worksites (id, name, address, latitude, longitude, radius_meters, is_active, is_deleted, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, TRUE, FALSE, now(), now())`,
 		id, req.Name, req.Address, req.Latitude, req.Longitude, req.RadiusMeters,
 	)
 	if err != nil {
@@ -231,7 +257,7 @@ func (h *WorksiteHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id, "message": "تم الإضافة"})
 }
 
-// Delete - حذف نقطة العمل مع كل ما يرتبط بها
+// Delete - حذف نقطة العمل (Soft Delete)
 func (h *WorksiteHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	log.Printf("🗑️ محاولة حذف نقطة العمل: %s", id)
@@ -245,20 +271,8 @@ func (h *WorksiteHandler) Delete(c *gin.Context) {
 	}
 	defer tx.Rollback()
 
-	// 1. حفظ سجلات الحضور المرتبطة (تعديل بدلاً من الحذف)
+	// 1. حذف المهام المرتبطة
 	result, err := tx.Exec(`
-		UPDATE attendance SET worksite_id = NULL WHERE worksite_id = $1
-	`, id)
-	if err != nil {
-		log.Printf("❌ فشل حفظ سجلات الحضور: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل حفظ سجلات الحضور"})
-		return
-	}
-	attendanceRows, _ := result.RowsAffected()
-	log.Printf("💾 تم حفظ %d سجل حضور (تم تعديل worksite_id إلى NULL)", attendanceRows)
-
-	// 2. حذف المهام المرتبطة
-	result, err = tx.Exec(`
 		DELETE FROM tasks WHERE worksite_id = $1
 	`, id)
 	if err != nil {
@@ -269,9 +283,9 @@ func (h *WorksiteHandler) Delete(c *gin.Context) {
 	tasksRows, _ := result.RowsAffected()
 	log.Printf("🗑️ تم حذف %d مهمة", tasksRows)
 
-	// 3. حذف نقاط العمل
+	// 2. Soft Delete لنقطة العمل (بدلاً من الحذف الفعلي)
 	result, err = tx.Exec(`
-		DELETE FROM worksites WHERE id = $1
+		UPDATE worksites SET is_deleted = TRUE, updated_at = now() WHERE id = $1
 	`, id)
 	if err != nil {
 		log.Printf("❌ فشل حذف نقطة العمل: %v", err)
@@ -293,11 +307,11 @@ func (h *WorksiteHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	log.Printf("✅ تم حذف نقطة العمل: %s (حفظ %d سجل حضور، حذف %d مهام)", id, attendanceRows, tasksRows)
+	log.Printf("✅ تم حذف نقطة العمل: %s (Soft Delete، حذف %d مهام)", id, tasksRows)
 	c.JSON(http.StatusOK, gin.H{
-		"message":            "تم حذف نقطة العمل بنجاح",
-		"attendance_preserved": attendanceRows,
-		"tasks_deleted":      tasksRows,
+		"message":       "تم حذف نقطة العمل بنجاح",
+		"tasks_deleted": tasksRows,
+		"soft_delete":   true,
 	})
 }
 
