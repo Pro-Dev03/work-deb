@@ -184,6 +184,9 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 		totalHours := now.Sub(checkInTime).Hours()
 		isNightShift := utils.IsNightShift(dayNightPeriods.NightHours, totalHours)
 
+		// استخدام مجموع الساعات الليلية والنهارية لضمان الاتساق
+		workedHours := dayNightPeriods.NightHours + dayNightPeriods.DayHours
+
 		// تحديث سجل الحضور بدون التحقق من المسافة
 		_, err = s.DB.Exec(`
 			UPDATE attendance
@@ -202,8 +205,7 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 			return nil, 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
 		}
 
-		workedHours := totalHours
-		log.Printf("✅ تم تسجيل إنهاء الدوام (نقطة عمل محذوفة): %.2f ساعة", workedHours)
+		log.Printf("✅ تم تسجيل إنهاء الدوام (نقطة عمل محذوفة): %.2f ساعة (ليلي: %.2f، نهاري: %.2f)", workedHours, dayNightPeriods.NightHours, dayNightPeriods.DayHours)
 
 		return nil, workedHours, nil
 	}
@@ -233,6 +235,9 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 	totalHours := now.Sub(checkInTime).Hours()
 	isNightShift := utils.IsNightShift(dayNightPeriods.NightHours, totalHours)
 
+	// استخدام مجموع الساعات الليلية والنهارية لضمان الاتساق
+	workedHours := dayNightPeriods.NightHours + dayNightPeriods.DayHours
+
 	// تحديث سجل الحضور مع الحقول الجديدة
 	_, err = s.DB.Exec(`
 		UPDATE attendance
@@ -253,7 +258,6 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 		return nil, 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
 	}
 
-	workedHours := totalHours
 	log.Printf("✅ تم تسجيل إنهاء الدوام: %.2f ساعة (ليلي: %.2f، نهاري: %.2f)", workedHours, dayNightPeriods.NightHours, dayNightPeriods.DayHours)
 
 	result := &GeofenceCheckResult{
@@ -293,6 +297,9 @@ func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (
 	totalHours := now.Sub(checkInTime).Hours()
 	isNightShift := utils.IsNightShift(dayNightPeriods.NightHours, totalHours)
 
+	// استخدام مجموع الساعات الليلية والنهارية لضمان الاتساق
+	workedHours := dayNightPeriods.NightHours + dayNightPeriods.DayHours
+
 	// محاولة التحديث مع check_out_notes أولاً
 	_, err = s.DB.Exec(`
 		UPDATE attendance
@@ -326,7 +333,8 @@ func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (
 		}
 	}
 
-	workedHours := totalHours
+	// استخدام مجموع الساعات الليلية والنهارية لضمان الاتساق
+	workedHours = dayNightPeriods.NightHours + dayNightPeriods.DayHours
 	log.Printf("✅ تم إنهاء الدوام من قبل المدير: %.2f ساعة (ليلي: %.2f، نهاري: %.2f)", workedHours, dayNightPeriods.NightHours, dayNightPeriods.DayHours)
 
 	return workedHours, nil

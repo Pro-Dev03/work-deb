@@ -181,19 +181,19 @@ func (h *AttendanceHandler) GetAttendanceSummary(c *gin.Context) {
 	var todayHours, weekHours, monthHours float64
 
 	_ = h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600), 0)
+		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 AND DATE(check_in_time) = CURRENT_DATE AND check_out_time IS NOT NULL
 	`, userID).Scan(&todayHours)
 
 	_ = h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600), 0)
+		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 AND DATE(check_in_time) >= DATE_TRUNC('week', CURRENT_DATE) AND check_out_time IS NOT NULL
 	`, userID).Scan(&weekHours)
 
 	_ = h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600), 0)
+		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 AND DATE(check_in_time) >= DATE_TRUNC('month', CURRENT_DATE) AND check_out_time IS NOT NULL
 	`, userID).Scan(&monthHours)
@@ -338,8 +338,12 @@ func (h *AttendanceHandler) GetEmployeeAttendanceHistory(c *gin.Context) {
 			continue
 		}
 
+		// حساب worked_hours كمجموع الساعات الليلية والنهارية لضمان الاتساق
 		var workedHours *float64
-		if checkOutTime.After(checkInTime) {
+		if nightHours != nil && dayHours != nil {
+			total := *nightHours + *dayHours
+			workedHours = &total
+		} else if checkOutTime.After(checkInTime) {
 			hours := checkOutTime.Sub(checkInTime).Hours()
 			workedHours = &hours
 		}
@@ -391,7 +395,7 @@ func (h *AttendanceHandler) GetEmployeeMonthlySummary(c *gin.Context) {
 	// جلب إجمالي الساعات للشهر
 	var totalHours float64
 	err := h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600), 0)
+		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 
 		AND EXTRACT(YEAR FROM check_in_time) = $2
@@ -534,8 +538,12 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 			continue
 		}
 
+		// حساب worked_hours كمجموع الساعات الليلية والنهارية لضمان الاتساق
 		var workedHours *float64
-		if checkOutTime.After(checkInTime) {
+		if nightHours != nil && dayHours != nil {
+			total := *nightHours + *dayHours
+			workedHours = &total
+		} else if checkOutTime.After(checkInTime) {
 			hours := checkOutTime.Sub(checkInTime).Hours()
 			workedHours = &hours
 		}
@@ -588,7 +596,7 @@ func (h *AttendanceHandler) GetMyMonthlySummary(c *gin.Context) {
 	// جلب إجمالي الساعات للشهر
 	var totalHours float64
 	err := h.Service.DB.QueryRow(`
-		SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 3600), 0)
+		SELECT COALESCE(SUM(COALESCE(night_hours, 0) + COALESCE(day_hours, 0)), 0)
 		FROM attendance 
 		WHERE user_id = $1 
 		AND EXTRACT(YEAR FROM check_in_time) = $2
