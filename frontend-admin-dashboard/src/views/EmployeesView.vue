@@ -636,10 +636,9 @@ onMounted(fetchEmployees)
 </script>
 
 <style scoped>
-/* خلفية الصفحة مع الشعار */
+/* خلفية الصفحة */
 .template-wrapper {
   min-height: 100vh;
-  background-color: #f0f8f0;
   position: relative;
 }
 
