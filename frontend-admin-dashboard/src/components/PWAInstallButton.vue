@@ -196,7 +196,7 @@ export default {
 .pwa-install-container {
   position: fixed;
   bottom: 16px;
-  right: 16px;
+  left: 16px;
   z-index: 1000;
 }
 
@@ -451,8 +451,8 @@ export default {
 
 /* RTL support */
 [dir="rtl"] .pwa-install-container {
-  right: auto;
   left: 16px;
+  right: auto;
 }
 
 [dir="rtl"] .close-btn {
@@ -463,12 +463,12 @@ export default {
 @media (max-width: 768px) {
   .pwa-install-container {
     bottom: 12px;
-    right: 12px;
+    left: 12px;
   }
   
   [dir="rtl"] .pwa-install-container {
-    right: auto;
     left: 12px;
+    right: auto;
   }
   
   .pwa-install-icon {
