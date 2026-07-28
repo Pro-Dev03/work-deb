@@ -526,9 +526,10 @@ async function exportToPDF() {
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            opacity: 0.95;
           }
           .content-wrapper {
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
