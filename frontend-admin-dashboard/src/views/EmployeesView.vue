@@ -423,8 +423,14 @@ async function exportToPDF() {
   if (!selectedEmployee.value || !attendanceHistory.value.length) return
 
   try {
+    // استخدام الصورة من المسار النسبي
+    const imageUrl = `${window.location.origin}/company-logo.jpg`
+    
     // قراءة الصورة وتحويلها إلى base64
-    const response = await fetch('/company-logo.jpg')
+    const response = await fetch(imageUrl)
+    if (!response.ok) {
+      throw new Error('Failed to load image')
+    }
     const blob = await response.blob()
     const reader = new FileReader()
     
@@ -513,18 +519,19 @@ async function exportToPDF() {
             font-family: Arial, sans-serif; 
             padding: 20px; 
             direction: ${trans.direction};
+            background-color: #f0f8f0;
             background-image: url('${base64Image}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            background-blend-mode: overlay;
           }
           .content-wrapper {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border: 2px solid #4CAF50;
           }
           h1 { text-align: center; color: #333; }
           .summary { display: flex; justify-content: space-around; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
