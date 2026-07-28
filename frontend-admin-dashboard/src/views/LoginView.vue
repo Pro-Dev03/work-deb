@@ -195,13 +195,15 @@ async function handleSubmit() {
 }
 
 .login-card {
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
   border-radius: 24px;
   padding: 40px 44px;
   max-width: 420px;
   width: 100%;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
   animation: fadeIn 0.5s ease;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 @keyframes fadeIn {
