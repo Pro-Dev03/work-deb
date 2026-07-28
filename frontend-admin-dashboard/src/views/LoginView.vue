@@ -199,7 +199,7 @@ async function handleSubmit() {
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(25px);
   border-radius: 24px;
   padding: 40px 44px;
@@ -464,7 +464,8 @@ async function handleSubmit() {
 
 @media (max-width: 480px) {
   .login-card {
-    padding: 28px 20px;
+    padding: 24px 18px;
+    max-width: 340px;
   }
   
   .company-logo {
