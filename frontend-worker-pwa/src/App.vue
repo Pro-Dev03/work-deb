@@ -1,6 +1,6 @@
 <template>
   <div class="shell">
-    <header class="topbar">
+    <header v-if="!isLoginPage" class="topbar">
       <div class="brand">
         <div class="brand-mark">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -15,8 +15,8 @@
       </div>
       <router-link to="/profile" class="avatar">{{ initials }}</router-link>
     </header>
-    <main class="content"><router-view /></main>
-    <nav class="tabbar">
+    <main class="content" :class="{ 'content--login': isLoginPage }"><router-view /></main>
+    <nav v-if="!isLoginPage" class="tabbar">
       <router-link to="/attendance" class="tab" active-class="tab--active">
         <span class="tab__icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -41,11 +41,14 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from './services/i18n'
 import { authStore } from './store/auth'
 
+const route = useRoute()
 const { t } = useI18n()
 const initials = computed(() => (authStore.user?.full_name || 'م ع').slice(0, 1))
+const isLoginPage = computed(() => route.path === '/login')
 </script>
 
 <style scoped>
@@ -137,6 +140,10 @@ const initials = computed(() => (authStore.user?.full_name || 'م ع').slice(0, 
   width: 100%; 
   margin: 0 auto;
   animation: fadeIn 0.4s ease;
+}
+
+.content--login {
+  padding-bottom: 16px;
 }
 
 .tabbar { 
