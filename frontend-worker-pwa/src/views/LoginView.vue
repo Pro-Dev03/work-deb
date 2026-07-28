@@ -12,8 +12,8 @@
         <div class="logo">
           <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
         </div>
-        <h1 class="title">{{ t('app_name') }} אבן יסודות</h1>
-        <p class="subtitle">{{ t('app_name') }} - Employee platform -</p>
+        <h1 class="title">אבן יסודות</h1>
+        <p class="subtitle">Employee platform</p>
         <p class="subtitle-small">{{ t('login') }}</p>
       </div>
 
