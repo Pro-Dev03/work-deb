@@ -194,6 +194,11 @@ async function handleSubmit() {
   z-index: 1;
 }
 
+.login-page .pwa-install-container {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
 .login-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(15px);
