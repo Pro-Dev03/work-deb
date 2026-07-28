@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="template-wrapper">
     <div class="page-head">
       <div>
         <h2>{{ t('employees_title') }}</h2>
@@ -636,6 +636,34 @@ onMounted(fetchEmployees)
 </script>
 
 <style scoped>
+/* خلفية الصفحة مع الشعار */
+.template-wrapper {
+  min-height: 100vh;
+  background-color: #f0f8f0;
+  background-image: url('../assets/company-logo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.template-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 0;
+}
+
+.template-wrapper > * {
+  position: relative;
+  z-index: 1;
+}
+
 .page-head {
   display: flex;
   align-items: center;

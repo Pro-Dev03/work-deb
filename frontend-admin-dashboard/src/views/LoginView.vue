@@ -166,11 +166,32 @@ async function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1E3A5F 0%, #0D1B3E 100%);
+  background-color: #f0f8f0;
+  background-image: url('../assets/company-logo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   padding: 20px;
   margin: 0;
   min-height: 100vh;
   width: 100%;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(30, 58, 95, 0.85);
+  z-index: 0;
+}
+
+.login-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .login-card {
