@@ -88,6 +88,9 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { LMap, LTileLayer, LMarker, LPopup, LIcon } from '@vue-leaflet/vue-leaflet'
 import 'leaflet/dist/leaflet.css'
+import { useI18n } from '../services/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   employees: { type: Array, default: () => [] },
