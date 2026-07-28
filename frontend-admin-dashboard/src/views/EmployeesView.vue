@@ -280,7 +280,7 @@ import { ref, onMounted, watch } from 'vue'
 import api from '../services/api'
 import EmployeeFormModal from '../components/EmployeeFormModal.vue'
 import { useI18n } from '../services/i18n'
-import companyLogoUrl from '/company-logo.jpg?url'
+import companyLogoUrl from '../assets/company-logo.jpg'
 
 const { t, currentLang } = useI18n()
 const employees = ref([])
