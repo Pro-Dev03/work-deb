@@ -522,11 +522,10 @@ async function exportToPDF() {
             direction: ${trans.direction};
             background-color: #f0f8f0;
             background-image: url('${base64Image}');
-            background-size: cover;
+            background-size: 50% auto;
             background-position: center;
             background-repeat: no-repeat;
-            background-attachment: fixed;
-            opacity: 0.95;
+            opacity: 1;
           }
           .content-wrapper {
             background: rgba(255, 255, 255, 0.95);
