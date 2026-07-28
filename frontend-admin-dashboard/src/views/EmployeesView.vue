@@ -865,8 +865,9 @@ onMounted(fetchEmployees)
 }
 
 .attendance-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-md);
   padding: 16px;
   transition: all 0.2s ease;
@@ -932,8 +933,9 @@ onMounted(fetchEmployees)
 
 /* تصميم بطاقات الموظفين للهاتف */
 .employee-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-md);
   padding: 16px;
   transition: all 0.2s ease;
@@ -1097,7 +1099,13 @@ onMounted(fetchEmployees)
   }
   
   .employee-card {
-    padding: 12px;
+    padding: 10px;
+    max-width: 320px;
+  }
+  
+  .attendance-card {
+    padding: 10px;
+    max-width: 320px;
   }
   
   .employee-card__header {
