@@ -9,9 +9,6 @@
       <PWAInstallButton />
       <div class="login-card">
       <div class="login-header">
-        <div class="company-logo-container">
-          <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="company-logo" />
-        </div>
         <div class="powered-by">
           <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="powered-logo" />
           <span class="powered-text">
@@ -19,6 +16,9 @@
             <strong>DevPro</strong>
             <span class="powered-slogan">{{ $t('powered_slogan') }}</span>
           </span>
+        </div>
+        <div class="company-logo-container">
+          <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="company-logo" />
         </div>
 
         <p class="subtitle">{{ $t('login') }}</p>
@@ -184,7 +184,7 @@ async function handleSubmit() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(30, 58, 95, 0.85);
+  background: rgba(30, 58, 95, 0.4);
   z-index: 0;
 }
 
@@ -199,15 +199,15 @@ async function handleSubmit() {
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(25px);
   border-radius: 24px;
   padding: 40px 44px;
   max-width: 420px;
   width: 100%;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
   animation: fadeIn 0.5s ease;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 @keyframes fadeIn {
