@@ -9,6 +9,9 @@
       <PWAInstallButton />
       <div class="login-card">
       <div class="login-header">
+        <div class="company-logo-container">
+          <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="company-logo" />
+        </div>
         <div class="powered-by">
           <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="powered-logo" />
           <span class="powered-text">
@@ -18,10 +21,6 @@
           </span>
         </div>
 
-        <div class="app-brand">
-          <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
-          <h1 class="title">{{ $t('app_name') }}</h1>
-        </div>
         <p class="subtitle">{{ $t('login') }}</p>
       </div>
 
@@ -200,15 +199,15 @@ async function handleSubmit() {
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 40px 44px;
   max-width: 420px;
   width: 100%;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
   animation: fadeIn 0.5s ease;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 @keyframes fadeIn {
@@ -260,6 +259,22 @@ async function handleSubmit() {
   font-size: 9px;
   color: #8899AA;
   font-weight: 400;
+}
+
+.company-logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.company-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .app-brand {
@@ -352,7 +367,8 @@ async function handleSubmit() {
   font-size: 15px;
   transition: all 0.3s ease;
   font-family: inherit;
-  background: #F8FAFC;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
   width: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -384,7 +400,8 @@ async function handleSubmit() {
 
 .btn-login {
   padding: 16px;
-  background: #1E3A5F;
+  background: rgba(30, 58, 95, 0.9);
+  backdrop-filter: blur(10px);
   color: white;
   border: none;
   border-radius: 12px;
@@ -448,6 +465,16 @@ async function handleSubmit() {
 @media (max-width: 480px) {
   .login-card {
     padding: 28px 20px;
+  }
+  
+  .company-logo {
+    width: 100px;
+    height: 100px;
+    padding: 10px;
+  }
+  
+  .company-logo-container {
+    margin-bottom: 20px;
   }
   
   .title {
