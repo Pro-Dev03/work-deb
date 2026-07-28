@@ -207,7 +207,7 @@ async function handleSubmit() {
   align-items: center;
   justify-content: center;
   background-color: #f0f8f0;
-  background-image: url('/src/assets/company-logo.jpg');
+  background-image: url('../assets/company-logo.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
