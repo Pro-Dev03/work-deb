@@ -280,6 +280,7 @@ import { ref, onMounted, watch } from 'vue'
 import api from '../services/api'
 import EmployeeFormModal from '../components/EmployeeFormModal.vue'
 import { useI18n } from '../services/i18n'
+import companyLogoUrl from '/company-logo.jpg?url'
 
 const { t, currentLang } = useI18n()
 const employees = ref([])
@@ -423,8 +424,8 @@ async function exportToPDF() {
   if (!selectedEmployee.value || !attendanceHistory.value.length) return
 
   try {
-    // استخدام الصورة من المسار النسبي
-    const imageUrl = `${window.location.origin}/company-logo.jpg`
+    // استخدام الصورة من المسار المستورد
+    const imageUrl = companyLogoUrl
     
     // قراءة الصورة وتحويلها إلى base64
     const response = await fetch(imageUrl)
