@@ -104,6 +104,7 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 
 				// نقاط العمل
 				admin.POST("/worksites", worksiteHandler.Create)
+				admin.PUT("/worksites/:id", worksiteHandler.Update)
 				admin.DELETE("/worksites/:id", worksiteHandler.Delete)
 				admin.POST("/worksites/assign", worksiteHandler.AssignEmployee)
 				admin.GET("/worksites/employees", worksiteHandler.GetAvailableEmployees)

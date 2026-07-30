@@ -2,7 +2,7 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal card">
       <div class="modal-header">
-        <h3>📍 {{ t('new_worksite') }}</h3>
+        <h3>📍 {{ isEditMode ? t('edit_worksite') : t('new_worksite') }}</h3>
         <button class="modal-close" @click="$emit('close')">✕</button>
       </div>
 
@@ -106,12 +106,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import api from '../services/api'
 import { useI18n } from '../services/i18n'
 
 const { t, currentLang } = useI18n()
-const emit = defineEmits(['close', 'worksite-added'])
+const props = defineProps({
+  worksite: {
+    type: Object,
+    default: null
+  }
+})
+const emit = defineEmits(['close', 'worksite-added', 'worksite-updated'])
 
 const searchQuery = ref('')
 const searchResults = ref([])
@@ -129,6 +135,48 @@ const form = ref({
 const error = ref('')
 const success = ref('')
 const isSubmitting = ref(false)
+
+const isEditMode = computed(() => !!props.worksite)
+
+// تهيئة النموذج عند التعديل
+function initializeForm() {
+  if (props.worksite) {
+    form.value = {
+      name: props.worksite.name || '',
+      radius_meters: props.worksite.radius_meters || 100,
+      latitude: props.worksite.latitude || '',
+      longitude: props.worksite.longitude || ''
+    }
+    if (props.worksite.latitude && props.worksite.longitude) {
+      selectedResult.value = {
+        latitude: props.worksite.latitude,
+        longitude: props.worksite.longitude,
+        label: props.worksite.name,
+        address: props.worksite.address
+      }
+      searchQuery.value = props.worksite.address || props.worksite.name
+    }
+  } else {
+    // إعادة تعيين النموذج عند الإضافة
+    form.value = {
+      name: '',
+      radius_meters: 100,
+      latitude: '',
+      longitude: ''
+    }
+    selectedResult.value = null
+    searchQuery.value = ''
+  }
+}
+
+// مراقبة تغيرات props.worksite
+watch(() => props.worksite, () => {
+  initializeForm()
+}, { immediate: true })
+
+onMounted(() => {
+  initializeForm()
+})
 
 let searchTimeout = null
 
@@ -246,7 +294,7 @@ function closeResults(e) {
 document.addEventListener('click', closeResults)
 
 async function handleSubmit() {
-  if (!selectedResult.value) {
+  if (!selectedResult.value && !isEditMode.value) {
     error.value = t('select_address_required')
     return
   }
@@ -257,23 +305,35 @@ async function handleSubmit() {
 
   try {
     const payload = {
-      name: form.value.name || getLocalizedLabel(selectedResult.value),
-      address: getLocalizedLabel(selectedResult.value),
-      latitude: parseFloat(form.value.latitude || selectedResult.value.latitude),
-      longitude: parseFloat(form.value.longitude || selectedResult.value.longitude),
+      name: form.value.name || (selectedResult.value ? getLocalizedLabel(selectedResult.value) : ''),
+      address: selectedResult.value ? getLocalizedLabel(selectedResult.value) : (props.worksite?.address || ''),
+      latitude: parseFloat(form.value.latitude || (selectedResult.value ? selectedResult.value.latitude : props.worksite?.latitude)),
+      longitude: parseFloat(form.value.longitude || (selectedResult.value ? selectedResult.value.longitude : props.worksite?.longitude)),
       radius_meters: form.value.radius_meters,
-      city: getLocalizedCity(selectedResult.value),
-      street: getLocalizedStreet(selectedResult.value),
-      street_number: selectedResult.value.house_number || ''
+      city: selectedResult.value ? getLocalizedCity(selectedResult.value) : '',
+      street: selectedResult.value ? getLocalizedStreet(selectedResult.value) : '',
+      street_number: selectedResult.value ? (selectedResult.value.house_number || '') : ''
     }
 
-    await api.post('/worksites', payload)
-    success.value = '✅ ' + t('worksite_added_successfully')
-    
-    setTimeout(() => {
-      emit('worksite-added')
-      emit('close')
-    }, 1500)
+    if (isEditMode.value) {
+      // وضع التعديل
+      await api.put(`/worksites/${props.worksite.id}`, payload)
+      success.value = '✅ تم تعديل نقطة العمل بنجاح'
+      
+      setTimeout(() => {
+        emit('worksite-updated')
+        emit('close')
+      }, 1500)
+    } else {
+      // وضع الإضافة
+      await api.post('/worksites', payload)
+      success.value = '✅ ' + t('worksite_added_successfully')
+      
+      setTimeout(() => {
+        emit('worksite-added')
+        emit('close')
+      }, 1500)
+    }
   } catch (err) {
     error.value = err.response?.data?.error || '❌ ' + t('save_failed')
     console.error('خطأ:', err)

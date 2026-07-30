@@ -5,7 +5,7 @@
         <h2>{{ t('worksites_title') }}</h2>
         <p>{{ t('worksites_description') }}</p>
       </div>
-      <button class="btn btn--primary" @click="showModal = true">+ {{ t('new_worksite') }}</button>
+      <button class="btn btn--primary" @click="openAddModal">+ {{ t('new_worksite') }}</button>
     </div>
 
     <div v-if="loading" class="empty-state"><p>{{ t('loading_worksites') }}</p></div>
@@ -22,6 +22,9 @@
           <div class="site-card__actions" v-if="!site.is_unassigned">
             <button class="btn btn--primary btn--sm" @click="openAssignModal(site)">
               👤 {{ t('assign_employee') }}
+            </button>
+            <button class="btn btn--secondary btn--sm" @click="openEditModal(site)">
+              ✏️
             </button>
             <button class="btn btn--danger btn--sm" @click="confirmDelete(site)">
               🗑️
@@ -71,7 +74,13 @@
       </div>
     </div>
 
-    <WorksiteFormModal v-if="showModal" @close="showModal = false" @worksite-added="fetchWorksites" />
+    <WorksiteFormModal 
+      v-if="showModal" 
+      :worksite="worksiteToEdit" 
+      @close="showModal = false" 
+      @worksite-added="fetchWorksites" 
+      @worksite-updated="fetchWorksites" 
+    />
 
     <!-- مودال تأكيد الحذف -->
     <div v-if="showDeleteModal" class="modal-backdrop" @click.self="showDeleteModal = false">
@@ -176,6 +185,7 @@ const showForceCheckoutModal = ref(false)
 const siteToDelete = ref(null)
 const worksiteToAssign = ref(null)
 const employeeToForceCheckout = ref(null)
+const worksiteToEdit = ref(null)
 
 async function fetchWorksites() {
   loading.value = true
@@ -214,6 +224,16 @@ function openAssignModal(site) {
   worksiteToAssign.value = site
   showAssignModal.value = true
   fetchEmployees()
+}
+
+function openEditModal(site) {
+  worksiteToEdit.value = site
+  showModal.value = true
+}
+
+function openAddModal() {
+  worksiteToEdit.value = null
+  showModal.value = true
 }
 
 async function fetchEmployees() {
@@ -431,6 +451,16 @@ onMounted(fetchWorksites)
 
 .btn--warning:hover {
   background: #d97706;
+}
+
+.btn--secondary {
+  background: var(--brand);
+  color: white;
+  border: none;
+}
+
+.btn--secondary:hover {
+  background: var(--brand-dark);
 }
 
 .modal-footer {

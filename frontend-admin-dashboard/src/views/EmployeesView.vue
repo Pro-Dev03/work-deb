@@ -72,6 +72,13 @@
                     📊 {{ t('attendance_history') }}
                   </button>
                   <button 
+                    v-if="emp.is_registered"
+                    class="btn btn--warning btn--sm" 
+                    @click="confirmResetDevice(emp)"
+                  >
+                    🔄 {{ t('reset_device') }}
+                  </button>
+                  <button 
                     class="btn btn--danger btn--sm" 
                     @click="confirmDelete(emp)"
                     :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
@@ -130,6 +137,14 @@
               <span class="btn-text">{{ t('attendance_history') }}</span>
             </button>
             <button 
+              v-if="emp.is_registered"
+              class="btn btn--warning btn--sm btn--compact" 
+              @click="confirmResetDevice(emp)"
+            >
+              <span class="btn-icon">🔄</span>
+              <span class="btn-text">{{ t('reset_device') }}</span>
+            </button>
+            <button 
               class="btn btn--danger btn--sm btn--compact" 
               @click="confirmDelete(emp)"
               :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
@@ -163,6 +178,27 @@
           <button class="btn btn--ghost" @click="showDeleteModal = false">{{ t('cancel') }}</button>
           <button class="btn btn--danger" @click="deleteEmployee" :disabled="deleting">
             {{ deleting ? t('deleting') : t('delete_final') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- مودال تأكيد إعادة تعيين الجهاز -->
+    <div v-if="showResetDeviceModal" class="modal-backdrop" @click.self="showResetDeviceModal = false">
+      <div class="modal card">
+        <div class="modal-header">
+          <h3>🔄 {{ t('reset_device_confirm_title') }}</h3>
+          <button class="modal-close" @click="showResetDeviceModal = false">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>{{ t('reset_device_confirm_message') }} <strong>{{ employeeToResetDevice?.full_name }}</strong>؟</p>
+          <p class="text-warning">{{ t('reset_device_warning') }}</p>
+          <p class="text-info">{{ t('reset_device_info') }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn--ghost" @click="showResetDeviceModal = false">{{ t('cancel') }}</button>
+          <button class="btn btn--warning" @click="resetDevice" :disabled="resetting">
+            {{ resetting ? t('processing') : t('confirm_reset_device') }}
           </button>
         </div>
       </div>
@@ -290,6 +326,9 @@ const showDeleteModal = ref(false)
 const employeeToDelete = ref(null)
 const deleting = ref(false)
 const cleaning = ref(false)
+const showResetDeviceModal = ref(false)
+const employeeToResetDevice = ref(null)
+const resetting = ref(false)
 
 // سجل الحضور
 const showAttendanceModal = ref(false)
@@ -357,6 +396,30 @@ async function deleteEmployee() {
     alert(error.response?.data?.error || t('failed_to_delete_employee'))
   } finally {
     deleting.value = false
+  }
+}
+
+function confirmResetDevice(emp) {
+  employeeToResetDevice.value = emp
+  showResetDeviceModal.value = true
+}
+
+async function resetDevice() {
+  if (!employeeToResetDevice.value) return
+  
+  resetting.value = true
+  try {
+    await api.post('/admin/reset-device', {
+      user_id: employeeToResetDevice.value.id
+    })
+    showResetDeviceModal.value = false
+    alert('✅ ' + t('reset_device_success'))
+    await fetchEmployees()
+  } catch (error) {
+    console.error('❌ ' + t('reset_device_failed'), error)
+    alert(error.response?.data?.error || t('reset_device_failed'))
+  } finally {
+    resetting.value = false
   }
 }
 
@@ -749,6 +812,8 @@ onMounted(fetchEmployees)
 }
 .modal-body p { margin-bottom: 8px; }
 .text-danger { color: var(--signal-out); font-weight: 600; }
+.text-warning { color: #f59e0b; font-weight: 600; }
+.text-info { color: var(--brand); font-weight: 600; }
 
 .modal-footer {
   display: flex; gap: 10px;

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"worktrack/backend/internal/models"
 
@@ -258,6 +259,83 @@ func (h *WorksiteHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id, "message": "تم الإضافة"})
 }
 
+// Update - تعديل نقطة العمل
+func (h *WorksiteHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	
+	var req struct {
+		Name         string  `json:"name" binding:"required"`
+		Address      string  `json:"address"`
+		Latitude     float64 `json:"latitude" binding:"required"`
+		Longitude    float64 `json:"longitude" binding:"required"`
+		RadiusMeters int     `json:"radius_meters" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
+		return
+	}
+
+	// التحقق من وجود نقطة العمل
+	var exists bool
+	err := h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM worksites 
+			WHERE id = $1 AND is_deleted = FALSE
+		)
+	`, id).Scan(&exists)
+	
+	if err != nil {
+		log.Printf("❌ فشل التحقق من نقطة العمل: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من نقطة العمل"})
+		return
+	}
+	
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "نقطة العمل غير موجودة"})
+		return
+	}
+
+	// التحقق من وجود الاسم في نقاط العمل الأخرى (تجاهل المحذوفة ونفس النقطة)
+	var nameExists bool
+	errCheck := h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM worksites 
+			WHERE name = $1 AND id != $2 AND is_deleted = FALSE
+		)
+	`, req.Name, id).Scan(&nameExists)
+	
+	if errCheck != nil {
+		log.Printf("❌ فشل التحقق من الاسم: %v", errCheck)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من الاسم"})
+		return
+	}
+	
+	if nameExists {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "اسم نقطة العمل موجود بالفعل",
+			"suggestion": "يمكنك استخدام اسم مختلف",
+		})
+		return
+	}
+
+	// تحديث نقطة العمل
+	_, err = h.DB.Exec(`
+		UPDATE worksites 
+		SET name = $1, address = $2, latitude = $3, longitude = $4, 
+		    radius_meters = $5, updated_at = now()
+		WHERE id = $6
+	`, req.Name, req.Address, req.Latitude, req.Longitude, req.RadiusMeters, id)
+	
+	if err != nil {
+		log.Printf("❌ فشل التعديل: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التعديل"})
+		return
+	}
+
+	log.Printf("✅ تم تعديل نقطة العمل: %s", id)
+	c.JSON(http.StatusOK, gin.H{"message": "تم التعديل بنجاح"})
+}
+
 // Delete - حذف نقطة العمل (Soft Delete)
 func (h *WorksiteHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
@@ -316,7 +394,7 @@ func (h *WorksiteHandler) Delete(c *gin.Context) {
 	})
 }
 
-// AssignEmployee - تعيين موظف لنقطة عمل
+// AssignEmployee - تعيين موظف لنقطة عمل وتسجيل دخوله تلقائياً
 func (h *WorksiteHandler) AssignEmployee(c *gin.Context) {
 	var req struct {
 		EmployeeID string `json:"employee_id" binding:"required"`
@@ -326,7 +404,124 @@ func (h *WorksiteHandler) AssignEmployee(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "تم التعيين"})
+
+	// التحقق من وجود الموظف وأنه موظف (employee)
+	var employeeExists bool
+	err := h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM users 
+			WHERE id = $1 AND role = 'employee' AND is_active = TRUE
+		)
+	`, req.EmployeeID).Scan(&employeeExists)
+	
+	if err != nil {
+		log.Printf("❌ فشل التحقق من الموظف: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من الموظف"})
+		return
+	}
+	
+	if !employeeExists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "الموظف غير موجود أو غير نشط"})
+		return
+	}
+
+	// التحقق من وجود نقطة العمل
+	var worksiteExists bool
+	var worksiteLat, worksiteLng float64
+	var worksiteRadius int
+	
+	err = h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM worksites 
+			WHERE id = $1 AND is_deleted = FALSE
+		), latitude, longitude, radius_meters
+	`, req.WorksiteID).Scan(&worksiteExists, &worksiteLat, &worksiteLng, &worksiteRadius)
+	
+	if err != nil {
+		log.Printf("❌ فشل التحقق من نقطة العمل: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من نقطة العمل"})
+		return
+	}
+	
+	if !worksiteExists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "نقطة العمل غير موجودة"})
+		return
+	}
+
+	// التحقق من أن الموظف ليس لديه وردية نشطة حالياً
+	var hasActiveShift bool
+	err = h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM attendance 
+			WHERE user_id = $1 AND status = 'in_progress'
+		)
+	`, req.EmployeeID).Scan(&hasActiveShift)
+	
+	if err != nil {
+		log.Printf("❌ فشل التحقق من الوردية النشطة: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل التحقق من الوردية النشطة"})
+		return
+	}
+	
+	if hasActiveShift {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "الموظف لديه وردية نشطة حالياً"})
+		return
+	}
+
+	// بدء معاملة
+	tx, err := h.DB.Begin()
+	if err != nil {
+		log.Printf("❌ فشل بدء المعاملة: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل بدء عملية التعيين"})
+		return
+	}
+	defer tx.Rollback()
+
+	// 1. تحديث assigned_employee_id في جدول worksites
+	_, err = tx.Exec(`
+		UPDATE worksites 
+		SET assigned_employee_id = $1, updated_at = now() 
+		WHERE id = $2
+	`, req.EmployeeID, req.WorksiteID)
+	
+	if err != nil {
+		log.Printf("❌ فشل تعيين الموظف: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تعيين الموظف"})
+		return
+	}
+
+	// 2. إنشاء سجل حضور جديد (تسجيل دخول تلقائي)
+	attendanceID := uuid.NewString()
+	now := time.Now()
+	
+	// استخدام إحداثيات نقطة العمل كموقع للموظف (بما أنه تم تعيينه من قبل المدير)
+	distance := 0.0 // المسافة 0 لأنه في موقع نقطة العمل
+	
+	_, err = tx.Exec(`
+		INSERT INTO attendance (id, user_id, worksite_id, check_in_time, 
+			check_in_lat, check_in_lng, check_in_distance_meters, status)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, 'in_progress')
+	`, attendanceID, req.EmployeeID, req.WorksiteID, now, worksiteLat, worksiteLng, distance)
+	
+	if err != nil {
+		log.Printf("❌ فشل تسجيل الدخول التلقائي: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تسجيل الدخول التلقائي"})
+		return
+	}
+
+	// إنهاء المعاملة
+	if err := tx.Commit(); err != nil {
+		log.Printf("❌ فشل إنهاء المعاملة: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل إنهاء عملية التعيين"})
+		return
+	}
+
+	log.Printf("✅ تم تعيين الموظف %s لنقطة العمل %s وتسجيل دخوله تلقائياً", req.EmployeeID, req.WorksiteID)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "تم التعيين وتسجيل الدخول بنجاح",
+		"attendance_id": attendanceID,
+		"check_in_time": now,
+	})
 }
 
 // GetAvailableEmployees - جلب الموظفين المتاحين
