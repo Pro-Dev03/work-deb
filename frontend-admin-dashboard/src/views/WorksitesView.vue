@@ -543,5 +543,53 @@ onMounted(fetchWorksites)
 
 @media (max-width: 600px) {
   .sites-grid { grid-template-columns: 1fr; }
+  
+  /* تصغير الأيقونات في الأزرار للهاتف */
+  .site-card__actions .btn {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  
+  .site-card__actions .btn--sm {
+    min-width: 32px;
+    padding: 6px 8px;
+  }
+  
+  /* تصغير أيقونات emoji في البطاقات */
+  .site-card__details {
+    font-size: 11px;
+  }
+  
+  .site-card__radius {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+  
+  /* تصغير الأيقونات في badges */
+  .badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .badge--compact {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  /* تصغير أزرار الموظفين العاملين */
+  .btn--xs {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  /* تحسين عرض عناصر الموظفين العاملين */
+  .working-employee-item {
+    flex-wrap: wrap;
+  }
+  
+  .working-employee-item .badge {
+    flex: 1;
+    min-width: 0;
+  }
 }
 </style>
