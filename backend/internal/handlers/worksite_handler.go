@@ -432,15 +432,12 @@ func (h *WorksiteHandler) AssignEmployee(c *gin.Context) {
 
 	// التحقق من وجود نقطة العمل
 	var worksiteExists bool
-	var worksiteLat, worksiteLng float64
-	var worksiteRadius int
-	
 	err = h.DB.QueryRow(`
 		SELECT EXISTS (
 			SELECT 1 FROM worksites 
 			WHERE id = $1 AND is_deleted = FALSE
-		), latitude, longitude, radius_meters
-	`, req.WorksiteID).Scan(&worksiteExists, &worksiteLat, &worksiteLng, &worksiteRadius)
+		)
+	`, req.WorksiteID).Scan(&worksiteExists)
 	
 	if err != nil {
 		log.Printf("❌ فشل التحقق من نقطة العمل: %v", err)
@@ -450,6 +447,22 @@ func (h *WorksiteHandler) AssignEmployee(c *gin.Context) {
 	
 	if !worksiteExists {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "نقطة العمل غير موجودة"})
+		return
+	}
+
+	// جلب إحداثيات نقطة العمل
+	var worksiteLat, worksiteLng float64
+	var worksiteRadius int
+	
+	err = h.DB.QueryRow(`
+		SELECT latitude, longitude, radius_meters
+		FROM worksites 
+		WHERE id = $1 AND is_deleted = FALSE
+	`, req.WorksiteID).Scan(&worksiteLat, &worksiteLng, &worksiteRadius)
+	
+	if err != nil {
+		log.Printf("❌ فشل جلب إحداثيات نقطة العمل: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب إحداثيات نقطة العمل"})
 		return
 	}
 
