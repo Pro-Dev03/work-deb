@@ -139,19 +139,14 @@
           <p>{{ t('no_waiting_employees') }}</p>
         </div>
         <div v-else class="employees-table">
-          <div class="table-header">
+          <div class="table-header table-header--pending">
             <span>{{ t('employee_name') }}</span>
-            <span>{{ t('email') }}</span>
             <span>{{ t('phone') }}</span>
           </div>
-          <div v-for="emp in pendingEmployees" :key="emp.id" class="table-row">
+          <div v-for="emp in pendingEmployees" :key="emp.id" class="table-row table-row--pending">
             <div class="table-cell">
               <span class="cell-label">{{ t('employee_name') }}</span>
               <span class="cell-value employee-name">{{ emp.full_name }}</span>
-            </div>
-            <div class="table-cell">
-              <span class="cell-label">{{ t('email') }}</span>
-              <span class="cell-value email">{{ emp.email || '—' }}</span>
             </div>
             <div class="table-cell">
               <span class="cell-label">{{ t('phone') }}</span>
@@ -347,6 +342,10 @@ onMounted(() => {
   color: var(--brand-dark);
 }
 
+.table-header--pending {
+  grid-template-columns: 2fr 1fr;
+}
+
 .table-row {
   display: grid;
   grid-template-columns: 2fr 1.5fr 1fr 1fr;
@@ -357,6 +356,10 @@ onMounted(() => {
   border-radius: var(--radius-sm);
   font-size: 13px;
   transition: all 0.2s ease;
+}
+
+.table-row--pending {
+  grid-template-columns: 2fr 1fr;
 }
 
 .table-cell {
@@ -386,7 +389,7 @@ onMounted(() => {
   color: var(--ink);
 }
 
-.worksite, .email, .phone {
+.worksite, .phone, .email {
   color: var(--ink-soft);
   font-size: 12px;
 }
@@ -474,7 +477,7 @@ onMounted(() => {
     font-size: 14px;
   }
 
-  .table-header, .table-row {
+  .table-header, .table-row, .table-header--pending, .table-row--pending {
     grid-template-columns: 1fr;
     gap: 8px;
   }
@@ -515,7 +518,7 @@ onMounted(() => {
     font-size: 14px;
   }
 
-  .worksite, .email, .phone {
+  .worksite, .phone {
     font-size: 12px;
   }
 
