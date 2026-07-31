@@ -24,12 +24,17 @@ func NewWorksiteHandler(db *sql.DB) *WorksiteHandler {
 func (h *WorksiteHandler) List(c *gin.Context) {
 	// التحقق من وجود عمود assigned_employee_id للتوافق مع الإصدارات القديمة
 	var columnExists bool
-	h.DB.QueryRow(`
+	checkErr := h.DB.QueryRow(`
 		SELECT EXISTS (
 			SELECT 1 FROM information_schema.columns 
 			WHERE table_name = 'worksites' AND column_name = 'assigned_employee_id'
 		)
 	`).Scan(&columnExists)
+	
+	if checkErr != nil {
+		log.Printf("⚠️ فشل التحقق من العمود: %v", checkErr)
+		columnExists = false // استخدام الاستعلام البسيط في حالة الخطأ
+	}
 
 	var rows *sql.Rows
 	var err error
@@ -477,17 +482,33 @@ func (h *WorksiteHandler) AssignEmployee(c *gin.Context) {
 	}
 	defer tx.Rollback()
 
-	// 1. تحديث assigned_employee_id في جدول worksites
-	_, err = tx.Exec(`
-		UPDATE worksites 
-		SET assigned_employee_id = $1, updated_at = now() 
-		WHERE id = $2
-	`, req.EmployeeID, req.WorksiteID)
+	// التحقق من وجود عمود assigned_employee_id
+	var columnExists bool
+	checkErr := h.DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT 1 FROM information_schema.columns 
+			WHERE table_name = 'worksites' AND column_name = 'assigned_employee_id'
+		)
+	`).Scan(&columnExists)
 	
-	if err != nil {
-		log.Printf("❌ فشل تعيين الموظف: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تعيين الموظف"})
-		return
+	if checkErr != nil {
+		log.Printf("⚠️ فشل التحقق من العمود: %v", checkErr)
+		columnExists = false // استخدام الاستعلام البسيط في حالة الخطأ
+	}
+
+	// 1. تحديث assigned_employee_id في جدول worksites (إذا كان العمود موجوداً)
+	if columnExists {
+		_, err = tx.Exec(`
+			UPDATE worksites 
+			SET assigned_employee_id = $1, updated_at = now() 
+			WHERE id = $2
+		`, req.EmployeeID, req.WorksiteID)
+		
+		if err != nil {
+			log.Printf("❌ فشل تعيين الموظف: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تعيين الموظف"})
+			return
+		}
 	}
 
 	// 2. إنشاء سجل حضور جديد (تسجيل دخول تلقائي)
