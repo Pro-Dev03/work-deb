@@ -53,6 +53,8 @@
   "select_employees": "Select Employees",
   "select_all_employees": "All Employees",
   "no_employee_selected": "No employee selected",
+  "selected_employees_count": "{count} employee(s) selected",
+  "clear": "Clear",
   "note_text": "Note text",
   "write_note_here": "Write your note here...",
   "worksite_optional": "Worksite (optional)",

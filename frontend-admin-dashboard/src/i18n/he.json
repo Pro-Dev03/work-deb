@@ -53,6 +53,8 @@
   "select_employees": "בחר עובדים",
   "select_all_employees": "כל העובדים",
   "no_employee_selected": "לא נבחר עובד",
+  "selected_employees_count": "{count} עובדים נבחרו",
+  "clear": "נקה",
   "note_text": "טקסט ההערה",
   "write_note_here": "כתוב את ההערה שלך כאן...",
   "worksite_optional": "אתר עבודה (אופציונלי)",

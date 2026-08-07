@@ -53,6 +53,8 @@
   "select_employees": "اختر الموظفين",
   "select_all_employees": "جميع الموظفين",
   "no_employee_selected": "لم يتم اختيار أي موظف",
+  "selected_employees_count": "تم اختيار {count} موظف",
+  "clear": "مسح",
   "note_text": "نص الملاحظة",
   "write_note_here": "اكتب ملاحظتك هنا...",
   "worksite_optional": "نقطة العمل (اختياري)",

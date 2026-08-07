@@ -92,6 +92,8 @@ const ar = {
   "ok": "موافق",
   "employee_assigned_successfully": "تم تعيين الموظف بنجاح",
   "no_employee_selected": "لم يتم اختيار أي موظف",
+  "selected_employees_count": "تم اختيار {count} موظف",
+  "clear": "مسح",
   "note_text": "نص الملاحظة",
   "write_note_here": "اكتب ملاحظتك هنا...",
   "worksite_optional": "نقطة العمل (اختياري)",
@@ -510,6 +512,8 @@ const he = {
   "ok": "אישור",
   "employee_assigned_successfully": "העובד הוקצה בהצלחה",
   "no_employee_selected": "לא נבחר עובד",
+  "selected_employees_count": "{count} עובדים נבחרו",
+  "clear": "נקה",
   "note_text": "טקסט ההערה",
   "write_note_here": "כתוב את ההערה שלך כאן...",
   "worksite_optional": "אתר עבודה (אופציונלי)",
@@ -928,6 +932,8 @@ const en = {
   "ok": "OK",
   "employee_assigned_successfully": "Employee assigned successfully",
   "no_employee_selected": "No employee selected",
+  "selected_employees_count": "{count} employee(s) selected",
+  "clear": "Clear",
   "note_text": "Note text",
   "write_note_here": "Write your note here...",
   "worksite_optional": "Worksite (optional)",
@@ -1302,7 +1308,7 @@ const i18nState = reactive({
     }
   },
   
-  t(key) {
+  t(key, params = {}) {
     const keys = key.split('.')
     let translation = messages[i18nState.currentLang]
     
@@ -1320,9 +1326,17 @@ const i18nState = reactive({
             return key
           }
         }
-        return fallbackTranslation
+        translation = fallbackTranslation
       }
     }
+    
+    // استبدال المتغيرات في النص
+    if (typeof translation === 'string' && Object.keys(params).length > 0) {
+      Object.keys(params).forEach(param => {
+        translation = translation.replace(`{${param}}`, params[param])
+      })
+    }
+    
     return translation
   }
 })
@@ -1331,7 +1345,7 @@ const i18nState = reactive({
 // تصدير الدوال
 // =============================================
 export function useI18n() {
-  const t = (key) => i18nState.t(key)
+  const t = (key, params) => i18nState.t(key, params)
   const setLang = (lang) => i18nState.setLang(lang)
   const currentLang = computed(() => i18nState.currentLang)
   return { t, setLang, currentLang }
@@ -1339,7 +1353,7 @@ export function useI18n() {
 
 export default {
   install(app) {
-    app.config.globalProperties.$t = (key) => i18nState.t(key)
+    app.config.globalProperties.$t = (key, params) => i18nState.t(key, params)
     app.config.globalProperties.$lang = computed(() => i18nState.currentLang)
     app.provide('i18n', i18nState)
     // Make i18nStore available globally for components that need it

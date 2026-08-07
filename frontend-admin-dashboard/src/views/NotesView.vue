@@ -138,8 +138,8 @@
                     <line x1="20" y1="8" x2="20" y2="14"/>
                     <line x1="23" y1="11" x2="17" y2="11"/>
                   </svg>
-                  <span>تم اختيار <strong>{{ selectedEmployees.length }}</strong> موظف</span>
-                  <button class="clear-btn" @click="clearSelection">مسح</button>
+                  <span>{{ t('selected_employees_count', { count: selectedEmployees.length }) }}</span>
+                  <button class="clear-btn" @click="clearSelection">{{ t('clear') }}</button>
                 </div>
                 <div v-else class="no-selection">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
