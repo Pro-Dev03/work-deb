@@ -93,6 +93,25 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		totalEmployees = 0
 	}
 
+	// تسجيل التصحيح
+	fmt.Printf("Task Statistics Debug: completed=%d, in_progress=%d, pending=%d, late=%d, period=%s, query=%s\n", 
+		completed, inProgress, pending, late, period, dateCondition)
+
+	// فحص إضافي: استعلام جميع الحالات الموجودة في جدول المهام
+	var totalTasks int
+	var taskStatuses []string
+	statusRows, err := h.DB.Query(`SELECT status, COUNT(*) FROM tasks GROUP BY status`)
+	if err == nil {
+		defer statusRows.Close()
+		for statusRows.Next() {
+			var status string
+			var count int
+			statusRows.Scan(&status, &count)
+			taskStatuses = append(taskStatuses, fmt.Sprintf("%s:%d", status, count))
+			totalTasks += count
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"completed_today":     completed,
 		"in_progress":         inProgress,
@@ -102,6 +121,16 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		"waiting_employees":   waitingEmployees,
 		"completed_employees": completedToday,
 		"period":              period,
+		"_debug": gin.H{
+			"tasks_completed": completed,
+			"tasks_in_progress": inProgress,
+			"tasks_pending": pending,
+			"tasks_late": late,
+			"date_condition": dateCondition,
+			"period": period,
+			"total_tasks": totalTasks,
+			"task_statuses": taskStatuses,
+		},
 	})
 }
 
@@ -147,6 +176,63 @@ func (h *ReportHandler) GetPendingEmployees(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, employees)
+}
+
+// DiagnosticTasks - فحص تشخيصي لجدول المهام
+func (h *ReportHandler) DiagnosticTasks(c *gin.Context) {
+	type TaskStatus struct {
+		Status string
+		Count  int
+	}
+	
+	var taskStatuses []TaskStatus
+	var totalTasks int
+	
+	// فحص جميع الحالات في جدول المهام
+	rows, err := h.DB.Query(`SELECT status, COUNT(*) FROM tasks GROUP BY status`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل الاستعلام", "details": err.Error()})
+		return
+	}
+	defer rows.Close()
+	
+	for rows.Next() {
+		var status string
+		var count int
+		if err := rows.Scan(&status, &count); err != nil {
+			continue
+		}
+		taskStatuses = append(taskStatuses, TaskStatus{Status: status, Count: count})
+		totalTasks += count
+	}
+	
+	// فحص إجمالي المهام
+	var allTasksCount int
+	h.DB.QueryRow(`SELECT COUNT(*) FROM tasks`).Scan(&allTasksCount)
+	
+	// فحص عينة من المهام
+	var sampleTasks []gin.H
+	sampleRows, _ := h.DB.Query(`SELECT id, title, status, created_at FROM tasks LIMIT 5`)
+	if sampleRows != nil {
+		defer sampleRows.Close()
+		for sampleRows.Next() {
+			var id, title, status, createdAt string
+			sampleRows.Scan(&id, &title, &status, &createdAt)
+			sampleTasks = append(sampleTasks, gin.H{
+				"id": id,
+				"title": title,
+				"status": status,
+				"created_at": createdAt,
+			})
+		}
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"total_tasks": allTasksCount,
+		"status_breakdown": taskStatuses,
+		"sample_tasks": sampleTasks,
+		"table_exists": len(taskStatuses) > 0 || allTasksCount > 0,
+	})
 }
 
 // GetCompletedEmployees - جلب الموظفين المكتملين اليوم

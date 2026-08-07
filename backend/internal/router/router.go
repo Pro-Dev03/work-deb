@@ -119,6 +119,7 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 				admin.GET("/reports/daily-summary", reportHandler.DailySummary)
 				admin.GET("/reports/pending-employees", reportHandler.GetPendingEmployees)
 				admin.GET("/reports/completed-employees", reportHandler.GetCompletedEmployees)
+				admin.GET("/reports/diagnostic-tasks", reportHandler.DiagnosticTasks)
 
 				// سجل الحضور للموظفين
 				admin.GET("/attendance/employee/:id/history", attendanceHandler.GetEmployeeAttendanceHistory)
