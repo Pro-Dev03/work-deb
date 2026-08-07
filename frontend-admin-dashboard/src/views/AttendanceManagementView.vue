@@ -7,7 +7,8 @@
       </div>
       <div class="page-head-actions">
         <button class="btn btn--primary" @click="exportToExcel" :disabled="attendanceRecords.length === 0">
-          📥 {{ t('export') }}
+          <FileSpreadsheet :size="18" />
+          {{ t('export') }}
         </button>
         <button class="btn btn--ghost" @click="fetchAttendanceRecords">🔄 {{ t('refresh') }}</button>
       </div>
@@ -220,7 +221,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import api from '../services/api'
 import EditAttendanceTimesModal from '../components/EditAttendanceTimesModal.vue'
 import { useI18n } from '../services/i18n'
-import { Users, Clock, CheckCircle, AlertCircle, Search, User } from '@lucide/vue'
+import { Users, Clock, CheckCircle, AlertCircle, Search, User, FileSpreadsheet } from '@lucide/vue'
 import * as XLSX from 'xlsx'
 
 const { t, currentLang } = useI18n()

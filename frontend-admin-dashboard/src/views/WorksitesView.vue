@@ -970,7 +970,7 @@ onUnmounted(() => {
 
 .completion-header {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  padding: 32px 24px;
+  padding: 24px 20px;
   text-align: center;
   color: white;
 }
@@ -979,9 +979,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 16px;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
@@ -995,38 +995,38 @@ onUnmounted(() => {
 }
 
 .completion-title {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   color: white;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   letter-spacing: -0.5px;
 }
 
 .completion-subtitle {
-  font-size: 15px;
+  font-size: 14px;
   margin: 0;
   color: rgba(255, 255, 255, 0.95);
   font-weight: 400;
 }
 
 .completion-body {
-  padding: 28px 24px;
+  padding: 20px 20px;
   background: var(--surface);
 }
 
 .completion-info-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .completion-info-item {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 12px;
   transition: all 0.2s ease;
 }
 
@@ -1036,16 +1036,16 @@ onUnmounted(() => {
 }
 
 .completion-info-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-soft);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .completion-info-value {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--ink);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -1054,30 +1054,30 @@ onUnmounted(() => {
 
 .completion-info-value.mono {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .completion-hours-section {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border: 2px solid #10b981;
   border-radius: var(--radius-md);
-  padding: 24px;
+  padding: 18px;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 16px;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
 }
 
 .completion-hours-label {
-  font-size: 13px;
+  font-size: 12px;
   color: #065f46;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .completion-hours-value {
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 800;
   color: #059669;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -1085,15 +1085,15 @@ onUnmounted(() => {
 }
 
 .completion-footer {
-  padding: 20px 24px;
+  padding: 16px 20px;
   border-top: 1px solid var(--line);
   background: var(--surface);
 }
 
 .completion-confirm-btn {
   width: 100%;
-  padding: 14px;
-  font-size: 16px;
+  padding: 12px;
+  font-size: 15px;
   font-weight: 600;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -1176,6 +1176,7 @@ onUnmounted(() => {
 @media (max-width: 600px) {
   .completion-info-row {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
   
   .completion-card {
@@ -1183,19 +1184,65 @@ onUnmounted(() => {
   }
   
   .completion-header {
-    padding: 24px 16px;
+    padding: 18px 14px;
   }
   
-  .completion-body {
-    padding: 16px;
+  .completion-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 10px;
   }
   
   .completion-title {
-    font-size: 20px;
+    font-size: 18px;
+  }
+  
+  .completion-subtitle {
+    font-size: 12px;
+  }
+  
+  .completion-body {
+    padding: 14px;
+  }
+  
+  .completion-info-item {
+    padding: 10px;
+  }
+  
+  .completion-info-label {
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+  
+  .completion-info-value {
+    font-size: 12px;
+  }
+  
+  .completion-info-value.mono {
+    font-size: 11px;
+  }
+  
+  .completion-hours-section {
+    padding: 14px;
+    margin-top: 12px;
+  }
+  
+  .completion-hours-label {
+    font-size: 10px;
+    margin-bottom: 4px;
   }
   
   .completion-hours-value {
-    font-size: 28px;
+    font-size: 22px;
+  }
+  
+  .completion-footer {
+    padding: 12px 14px;
+  }
+  
+  .completion-confirm-btn {
+    padding: 10px;
+    font-size: 13px;
   }
 }
 </style>
