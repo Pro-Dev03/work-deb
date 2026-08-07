@@ -189,8 +189,10 @@ function formatTime(timeString) {
 async function loadReports() {
   loading.value = true
   try {
-    // تحميل الملخص اليومي
-    const { data: summaryData } = await api.get('/reports/daily-summary')
+    // تحميل الملخص اليومي مع معامل الفترة
+    const { data: summaryData } = await api.get('/reports/daily-summary', {
+      params: { period: selectedPeriod.value }
+    })
     summary.value = summaryData
 
     // تحميل الموظفين المكتملين

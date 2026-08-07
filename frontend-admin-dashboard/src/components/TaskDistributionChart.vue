@@ -30,7 +30,7 @@ const segments = computed(() => {
     { key: 'pending', label: 'قيد الانتظار', value: props.pending, color: 'var(--line-strong)' },
     { key: 'late', label: 'متأخرة', value: props.late, color: 'var(--signal-out)' },
   ]
-  return defs.map((d) => ({ ...d, pct: (d.value / total) * 100 }))
+  return defs.map((d) => ({ ...d, pct: total > 0 ? (d.value / total) * 100 : 0 }))
 })
 </script>
 

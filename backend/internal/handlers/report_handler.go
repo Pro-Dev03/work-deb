@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -19,8 +20,22 @@ func NewReportHandler(db *sql.DB) *ReportHandler {
 func (h *ReportHandler) DailySummary(c *gin.Context) {
 	var completed, inProgress, pending, late, totalEmployees, waitingEmployees, completedToday int
 
+	// الحصول على معامل الفترة من الاستعلام
+	period := c.DefaultQuery("period", "today")
+
+	// تحديد فترة التاريخ حسب المعامل
+	var dateCondition string
+	switch period {
+	case "week":
+		dateCondition = "created_at >= CURRENT_DATE - INTERVAL '7 days'"
+	case "month":
+		dateCondition = "created_at >= CURRENT_DATE - INTERVAL '30 days'"
+	default: // today
+		dateCondition = "created_at::date = CURRENT_DATE"
+	}
+
 	// الموظفين الذين لم يبدؤوا العمل اليوم (قيد الانتظار)
-	_ = h.DB.QueryRow(`
+	err := h.DB.QueryRow(`
 		SELECT COUNT(DISTINCT u.id)
 		FROM users u
 		WHERE u.role = 'employee' 
@@ -31,9 +46,12 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 			AND DATE(a.check_in_time) = CURRENT_DATE
 		)
 	`).Scan(&waitingEmployees)
+	if err != nil {
+		waitingEmployees = 0
+	}
 
 	// الموظفين الذين أكملوا عملهم اليوم (مكتمل)
-	_ = h.DB.QueryRow(`
+	err = h.DB.QueryRow(`
 		SELECT COUNT(DISTINCT u.id)
 		FROM users u
 		JOIN attendance a ON a.user_id = u.id
@@ -43,13 +61,37 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		AND a.status = 'completed'
 		AND a.check_out_time IS NOT NULL
 	`).Scan(&completedToday)
+	if err != nil {
+		completedToday = 0
+	}
 
-	// إحصائيات المهام - جلب جميع المهام النشطة
-	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'completed'`).Scan(&completed)
-	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'in_progress'`).Scan(&inProgress)
-	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'pending'`).Scan(&pending)
-	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'late'`).Scan(&late)
-	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'employee' AND is_active = TRUE`).Scan(&totalEmployees)
+	// إحصائيات المهام - جلب المهام حسب الفترة المحددة
+	taskQuery := fmt.Sprintf(`SELECT COUNT(*) FROM tasks WHERE status = $1 AND %s`, dateCondition)
+	
+	err = h.DB.QueryRow(taskQuery, "completed").Scan(&completed)
+	if err != nil {
+		completed = 0
+	}
+	
+	err = h.DB.QueryRow(taskQuery, "in_progress").Scan(&inProgress)
+	if err != nil {
+		inProgress = 0
+	}
+	
+	err = h.DB.QueryRow(taskQuery, "pending").Scan(&pending)
+	if err != nil {
+		pending = 0
+	}
+	
+	err = h.DB.QueryRow(taskQuery, "late").Scan(&late)
+	if err != nil {
+		late = 0
+	}
+	
+	err = h.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'employee' AND is_active = TRUE`).Scan(&totalEmployees)
+	if err != nil {
+		totalEmployees = 0
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"completed_today":     completed,
@@ -59,6 +101,7 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		"total_employees":     totalEmployees,
 		"waiting_employees":   waitingEmployees,
 		"completed_employees": completedToday,
+		"period":              period,
 	})
 }
 
