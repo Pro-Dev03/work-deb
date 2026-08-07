@@ -36,6 +36,12 @@ func (c *Config) ShouldUseSecureCookies() bool {
 	return c.IsProduction()
 }
 
+// EnforceHTTPS returns true if HTTPS should be enforced
+// In production, HTTPS is mandatory for security
+func (c *Config) EnforceHTTPS() bool {
+	return c.IsProduction()
+}
+
 func Load() *Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("ℹ️  لم يتم العثور على ملف .env")

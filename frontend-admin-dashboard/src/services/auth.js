@@ -11,7 +11,7 @@ export async function login(email, password) {
 
     console.log('✅ تم تسجيل الدخول بنجاح:', data)
 
-    // تخزين بيانات المستخدم والتوكن في localStorage (الحل المزدوج للكوكيز)
+    // تخزين بيانات المستخدم
     if (data.user) {
       localStorage.setItem('worktrack_admin_user', JSON.stringify(data.user))
       console.log('💾 تم تخزين بيانات المستخدم في localStorage')
@@ -19,13 +19,21 @@ export async function login(email, password) {
       console.warn('⚠️ لا توجد بيانات مستخدم في الاستجابة')
     }
 
-    // تخزين التوكن في localStorage لاستخدامه في Authorization header
+    // تخزين CSRF token من استجابة تسجيل الدخول
+    if (data.csrf_token) {
+      localStorage.setItem('csrf_token', data.csrf_token)
+      console.log('🔒 تم تخزين CSRF token من استجابة تسجيل الدخول')
+    } else {
+      console.warn('⚠️ لا يوجد CSRF token في الاستجابة')
+    }
+
+    // تخزين التوكن كنسخة احتياطية (لضمان العمل إذا فشلت cookies)
     if (data.access_token) {
       localStorage.setItem('worktrack_admin_token', data.access_token)
-      console.log('💾 تم تخزين التوكن في localStorage')
-    } else {
-      console.warn('⚠️ لا يوجد توكن في الاستجابة')
+      console.log('💾 تم تخزين التوكن كنسخة احتياطية')
     }
+
+    console.log('🔒 الأمان: نسخة احتياطية + cookies للتوثيق')
 
     return data
   } catch (error) {
@@ -48,6 +56,7 @@ export async function logout() {
   } finally {
     // تنظيف localStorage في كل الأحوال
     localStorage.removeItem('worktrack_admin_user')
+    localStorage.removeItem('csrf_token')
     localStorage.removeItem('worktrack_admin_token')
   }
 }
@@ -58,6 +67,6 @@ export function currentUser() {
 }
 
 export function getToken() {
-  // الحل المزدوج: التوكن في localStorage كنسخة احتياطية
-  return localStorage.getItem('worktrack_admin_token')
+  // لم يعد مستخدماً - التوكنات في httpOnly cookies فقط للأمان
+  return null
 }

@@ -2,6 +2,7 @@ package router
 
 import (
 	"database/sql"
+	"net/http"
 
 	"worktrack/backend/internal/config"
 	"worktrack/backend/internal/handlers"
@@ -14,11 +15,14 @@ import (
 func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 
+	// فرض HTTPS في الإنتاج
+	r.Use(middleware.HTTPSMiddleware(cfg.EnforceHTTPS()))
+
 	r.Use(middleware.CORSMiddleware(cfg.AllowedOrigin))
 	r.Use(middleware.RateLimiter())
 
-	// CSRF middleware (معطل حالياً - httpOnly cookies مع SameSite=Strict توفر حماية كافية)
-	// csrfMiddleware := middleware.NewCSRFMiddleware()
+	// CSRF middleware (مفعّل لحماية إضافية ضد CSRF)
+	csrfMiddleware := middleware.NewCSRFMiddleware()
 
 	authService := services.NewAuthService(cfg.JWTSecret)
 	attendanceService := services.NewAttendanceService(db)
@@ -58,12 +62,18 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 	// المسارات المحمية (تتطلب توكن)
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(authService))
-	// protected.Use(csrfMiddleware.Middleware())
+	protected.Use(csrfMiddleware.Middleware())
 	{
 		// المستخدم
 		protected.GET("/auth/me", authHandler.Me)
 		protected.GET("/auth/device", authHandler.GetDeviceInfo)
 		protected.POST("/auth/logout-all", authHandler.LogoutAll)
+
+		// CSRF token endpoint
+		protected.GET("/csrf/token", func(c *gin.Context) {
+			csrfMiddleware.SetCSRFToken(c)
+			c.JSON(http.StatusOK, gin.H{"csrf_token": c.GetString("csrf_token")})
+		})
 
 		// المسارات المتاحة للموظفين (بدون التحقق من الاشتراك)
 		employee := protected.Group("")

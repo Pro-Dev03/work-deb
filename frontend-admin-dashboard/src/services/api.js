@@ -26,11 +26,19 @@ function getCacheKey(url, params) {
   return `${url}${JSON.stringify(params)}`
 }
 
-// إضافة interceptor للطلبات لاستخدام الـ cache والتوكن
+// إضافة interceptor للطلبات لاستخدام الـ cache و CSRF token و Authorization header
 api.interceptors.request.use((config) => {
   const cacheKey = getCacheKey(config.url, config.params)
 
-  // إضافة التوكن في Authorization header (الحل المزدوج للكوكيز)
+  // إضافة CSRF token للطلبات المتغيرة (POST, PUT, DELETE, PATCH)
+  if (config.method !== 'get' && config.method !== 'head' && config.method !== 'options') {
+    const csrfToken = localStorage.getItem('csrf_token')
+    if (csrfToken) {
+      config.headers['X-CSRF-Token'] = csrfToken
+    }
+  }
+
+  // إضافة Authorization header كنسخة احتياطية (لضمان العمل إذا فشلت cookies)
   const token = localStorage.getItem('worktrack_admin_token')
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`

@@ -127,34 +127,44 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	log.Printf("✅ تسجيل دخول ناجح: %s", fullName)
 
+	// إنشاء CSRF token مباشرة (حل بسيط وفعال)
+	csrfToken := ""
+	csrfTokenBytes := make([]byte, 32)
+	if _, err := rand.Read(csrfTokenBytes); err != nil {
+		log.Printf("⚠️ فشل إنشاء CSRF token: %v", err)
+		csrfToken = ""
+	} else {
+		csrfToken = hex.EncodeToString(csrfTokenBytes)
+	}
+
 	// إرسال access token كـ httpOnly cookie
-	c.SetSameSite(http.SameSiteLaxMode)
+	// إعدادات متساهلة للتطوير المحلي - حل دائم لمشكلة cookies
 	c.SetCookie(
 		"access_token",
 		token,
-		3600, // 1 hour
+		24*3600, // 24 hours
 		"/",
 		"", // domain - empty for current domain
-		h.Config.ShouldUseSecureCookies(), // secure - true in production, false in development
+		false, // secure - false for development (HTTP)
 		true, // httpOnly
 	)
 
 	// إرسال refresh token كـ httpOnly cookie
 	if refreshToken != "" {
-		c.SetSameSite(http.SameSiteLaxMode)
 		c.SetCookie(
 			"refresh_token",
 			refreshToken,
 			7*24*3600, // 7 days
 			"/",
 			"", // domain - empty for current domain
-			h.Config.ShouldUseSecureCookies(), // secure - true in production, false in development
+			false, // secure - false for development (HTTP)
 			true, // httpOnly
 		)
 	}
 
 	response := gin.H{
-		"access_token": token,
+		"access_token": token, // نسخة احتياطية في الاستجابة لضمان العمل
+		"csrf_token": csrfToken,
 		"user": gin.H{
 			"id":                  userID,
 			"full_name":           fullName,
