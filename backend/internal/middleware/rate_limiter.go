@@ -33,17 +33,17 @@ func RateLimiter() gin.HandlerFunc {
 		ip := c.ClientIP()
 
 		// تحديد الحد حسب نوع الطلب
-		limit := 300 // default: 300 requests/minute
+		limit := 1000 // default: 1000 requests/minute (زيادة للإنتاج)
 		window := time.Minute
 
 		// حدود أعلى للطلبات المتغيرة (POST, PUT, DELETE)
 		if c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "DELETE" {
-			limit = 100 // 100 requests/minute for write operations
+			limit = 500 // 500 requests/minute for write operations (زيادة للإنتاج)
 		}
 
 		// حدود أعلى لتسجيل الدخول
 		if c.Request.URL.Path == "/api/v1/auth/login" || c.Request.URL.Path == "/api/v1/auth/phone-login" {
-			limit = 10 // 10 requests/minute for login
+			limit = 50 // 50 requests/minute for login (زيادة للإنتاج)
 			window = time.Minute
 		}
 
