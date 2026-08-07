@@ -17,7 +17,7 @@ func NewReportHandler(db *sql.DB) *ReportHandler {
 
 // DailySummary - إحصائيات عامة
 func (h *ReportHandler) DailySummary(c *gin.Context) {
-	var completed, inProgress, pending, totalEmployees, waitingEmployees, completedToday int
+	var completed, inProgress, pending, late, totalEmployees, waitingEmployees, completedToday int
 
 	// الموظفين الذين لم يبدؤوا العمل اليوم (قيد الانتظار)
 	_ = h.DB.QueryRow(`
@@ -48,12 +48,14 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'completed' AND created_at::date = CURRENT_DATE`).Scan(&completed)
 	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'in_progress'`).Scan(&inProgress)
 	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'pending'`).Scan(&pending)
+	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'late'`).Scan(&late)
 	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'employee' AND is_active = TRUE`).Scan(&totalEmployees)
 
 	c.JSON(http.StatusOK, gin.H{
 		"completed_today":     completed,
 		"in_progress":         inProgress,
 		"pending":             pending,
+		"late":                late,
 		"total_employees":     totalEmployees,
 		"waiting_employees":   waitingEmployees,
 		"completed_employees": completedToday,

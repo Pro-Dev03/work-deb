@@ -110,7 +110,10 @@
                         class="custom-checkbox"
                       />
                       <div class="employee-avatar">
-                        <User :size="16" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                          <circle cx="12" cy="7" r="4"/>
+                        </svg>
                       </div>
                       <div class="employee-info">
                         <span class="employee-name">{{ emp.full_name }}</span>
@@ -254,7 +257,10 @@
           <div class="note-card-header">
             <div class="note-recipient">
               <div class="note-avatar">
-                <User :size="16" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
               </div>
               <div class="note-recipient-info">
                 <span class="note-recipient-name">{{ note.employee_name }}</span>
@@ -426,7 +432,6 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import api from '../services/api'
 import { useI18n } from '../services/i18n'
-import { User } from '@lucide/vue'
 const { t, currentLang } = useI18n()
 
 const loading = ref(false)
@@ -904,8 +909,8 @@ onMounted(async () => {
 }
 
 .employee-avatar {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -914,7 +919,9 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.employee-avatar :deep(svg) {
+.employee-avatar svg {
+  width: 16px;
+  height: 16px;
   color: white;
   stroke: white;
 }
@@ -1129,8 +1136,8 @@ onMounted(async () => {
 }
 
 .note-avatar {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -1139,7 +1146,9 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.note-avatar :deep(svg) {
+.note-avatar svg {
+  width: 18px;
+  height: 18px;
   color: white;
   stroke: white;
 }
