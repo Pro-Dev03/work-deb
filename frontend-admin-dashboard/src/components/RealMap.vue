@@ -33,63 +33,65 @@
       />
       
       <!-- نقاط العمل -->
-      <l-marker
-        v-if="visibleLayers.worksites"
-        v-for="site in worksites"
-        :key="site.id"
-        :lat-lng="[site.latitude, site.longitude]"
-      >
-        <l-icon>
-          <div class="worksite-marker">
-            <div class="worksite-dot"></div>
-            <div class="worksite-ring"></div>
-          </div>
-        </l-icon>
-        <l-popup>
-          <div class="popup-content">
-            <h4>🏢 {{ site.name }}</h4>
-            <p>{{ site.address || 'لا يوجد عنوان' }}</p>
-            <p>⭕ النطاق: {{ site.radius_meters }} متر</p>
-            <p>👥 عدد الموظفين: {{ getEmployeeCount(site.id) }}</p>
-          </div>
-        </l-popup>
-      </l-marker>
+      <template v-if="visibleLayers.worksites">
+        <l-marker
+          v-for="site in worksites.filter(s => s.latitude && s.longitude)"
+          :key="site.id"
+          :lat-lng="[site.latitude, site.longitude]"
+        >
+          <l-icon>
+            <div class="worksite-marker">
+              <div class="worksite-dot"></div>
+              <div class="worksite-ring"></div>
+            </div>
+          </l-icon>
+          <l-popup>
+            <div class="popup-content">
+              <h4>🏢 {{ site.name }}</h4>
+              <p>{{ site.address || 'لا يوجد عنوان' }}</p>
+              <p>⭕ النطاق: {{ site.radius_meters }} متر</p>
+              <p>👥 عدد الموظفين: {{ getEmployeeCount(site.id) }}</p>
+            </div>
+          </l-popup>
+        </l-marker>
+      </template>
 
       <!-- الموظفين -->
-      <l-marker
-        v-if="visibleLayers.employees"
-        v-for="emp in employees"
-        :key="emp.id"
-        :lat-lng="[emp.latitude, emp.longitude]"
-      >
-        <l-icon>
-          <div class="employee-marker" :class="emp.status">
-            <div class="employee-pulse" :class="emp.status"></div>
-            <div class="employee-dot" :class="emp.status">
-              <User :size="12" />
+      <template v-if="visibleLayers.employees">
+        <l-marker
+          v-for="emp in employees.filter(e => e.latitude && e.longitude)"
+          :key="emp.id"
+          :lat-lng="[emp.latitude, emp.longitude]"
+        >
+          <l-icon>
+            <div class="employee-marker" :class="emp.status">
+              <div class="employee-pulse" :class="emp.status"></div>
+              <div class="employee-dot" :class="emp.status">
+                <User :size="12" />
+              </div>
             </div>
-          </div>
-        </l-icon>
-        <l-popup>
-          <div class="popup-content employee-popup">
-            <h4>👤 {{ emp.full_name }}</h4>
-            <p>📍 {{ emp.worksite.name }}</p>
-            <p>📏 المسافة: {{ formatDistance(emp.worksite.distance) }}</p>
-            <p>⏱️ {{ emp.hours_worked ? emp.hours_worked.toFixed(1) + ' ' + t('hours') : '—' }}</p>
-            <p>
-              <span class="badge" :class="emp.status === 'inside' ? 'badge--in' : 'badge--out'">
-                {{ emp.status_text }}
-              </span>
-            </p>
-            <button
-              class="btn btn--sm btn--primary"
-              @click="handleShowDetails(emp)"
-            >
-              📋 عرض التفاصيل
-            </button>
-          </div>
-        </l-popup>
-      </l-marker>
+          </l-icon>
+          <l-popup>
+            <div class="popup-content employee-popup">
+              <h4>👤 {{ emp.full_name }}</h4>
+              <p>📍 {{ emp.worksite.name }}</p>
+              <p>📏 المسافة: {{ formatDistance(emp.worksite.distance) }}</p>
+              <p>⏱️ {{ emp.hours_worked ? emp.hours_worked.toFixed(1) + ' ' + t('hours') : '—' }}</p>
+              <p>
+                <span class="badge" :class="emp.status === 'inside' ? 'badge--in' : 'badge--out'">
+                  {{ emp.status_text }}
+                </span>
+              </p>
+              <button
+                class="btn btn--sm btn--primary"
+                @click="handleShowDetails(emp)"
+              >
+                📋 عرض التفاصيل
+              </button>
+            </div>
+          </l-popup>
+        </l-marker>
+      </template>
     </l-map>
 
     <div v-if="!employees || employees.length === 0" class="map-overlay">

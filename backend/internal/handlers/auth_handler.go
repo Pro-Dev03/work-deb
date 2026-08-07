@@ -7,9 +7,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"worktrack/backend/internal/config"
 	"worktrack/backend/internal/i18n"
 	"worktrack/backend/internal/services"
 
@@ -18,12 +20,14 @@ import (
 )
 
 type AuthHandler struct {
-	DB          *sql.DB
-	AuthService *services.AuthService
+	DB                   *sql.DB
+	AuthService          *services.AuthService
+	RefreshTokenService  *services.RefreshTokenService
+	Config               *config.Config
 }
 
-func NewAuthHandler(db *sql.DB, authService *services.AuthService) *AuthHandler {
-	return &AuthHandler{DB: db, AuthService: authService}
+func NewAuthHandler(db *sql.DB, authService *services.AuthService, refreshTokenService *services.RefreshTokenService, cfg *config.Config) *AuthHandler {
+	return &AuthHandler{DB: db, AuthService: authService, RefreshTokenService: refreshTokenService, Config: cfg}
 }
 
 func (h *AuthHandler) checkSubscriptionStatus(userID string, status string, expiresAt sql.NullTime) error {
@@ -112,10 +116,44 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// إنشاء refresh token
+	userAgent := c.GetHeader("User-Agent")
+	ipAddress := c.ClientIP()
+	refreshToken, err := h.RefreshTokenService.GenerateRefreshToken(userID, userAgent, ipAddress)
+	if err != nil {
+		log.Printf("⚠️ فشل إنشاء refresh token: %v", err)
+		// ليس خطأ قاتل، نستمر بدون refresh token
+	}
+
 	log.Printf("✅ تسجيل دخول ناجح: %s", fullName)
 
-	c.JSON(http.StatusOK, gin.H{
-		"token": token,
+	// إرسال access token كـ httpOnly cookie
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(
+		"access_token",
+		token,
+		3600, // 1 hour
+		"/",
+		"", // domain - empty for current domain
+		h.Config.ShouldUseSecureCookies(), // secure - true in production, false in development
+		true, // httpOnly
+	)
+
+	// إرسال refresh token كـ httpOnly cookie
+	if refreshToken != "" {
+		c.SetSameSite(http.SameSiteLaxMode)
+		c.SetCookie(
+			"refresh_token",
+			refreshToken,
+			7*24*3600, // 7 days
+			"/",
+			"", // domain - empty for current domain
+			h.Config.ShouldUseSecureCookies(), // secure - true in production, false in development
+			true, // httpOnly
+		)
+	}
+
+	response := gin.H{
 		"user": gin.H{
 			"id":                  userID,
 			"full_name":           fullName,
@@ -128,15 +166,45 @@ func (h *AuthHandler) Login(c *gin.Context) {
 				return nil
 			}(),
 		},
-	})
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // =============================================
-// 2. جلب جميع الموظفين
+// 2. جلب جميع الموظفين مع pagination
 // =============================================
 func (h *AuthHandler) ListEmployees(c *gin.Context) {
 	log.Println("📋 جلب قائمة الموظفين...")
 
+	// الحصول على معاملات pagination
+	page := 1
+	limit := 20
+
+	if p := c.Query("page"); p != "" {
+		if val, err := strconv.Atoi(p); err == nil && val > 0 {
+			page = val
+		}
+	}
+
+	if l := c.Query("limit"); l != "" {
+		if val, err := strconv.Atoi(l); err == nil && val > 0 && val <= 100 {
+			limit = val
+		}
+	}
+
+	offset := (page - 1) * limit
+
+	// الحصول على العدد الكلي
+	var total int64
+	err := h.DB.QueryRow(`SELECT COUNT(*) FROM users`).Scan(&total)
+	if err != nil {
+		log.Printf("❌ خطأ في جلب العدد الكلي: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب الموظفين"})
+		return
+	}
+
+	// جلب البيانات مع pagination
 	rows, err := h.DB.Query(`
 		SELECT
 			u.id, u.full_name, u.email, u.phone, u.role, u.is_active, u.created_at,
@@ -147,7 +215,8 @@ func (h *AuthHandler) ListEmployees(c *gin.Context) {
 		LEFT JOIN attendance a ON u.id = a.user_id AND a.status = 'in_progress'
 		LEFT JOIN worksites ws ON a.worksite_id = ws.id
 		ORDER BY u.created_at DESC
-	`)
+		LIMIT $1 OFFSET $2
+	`, limit, offset)
 
 	if err != nil {
 		log.Printf("❌ خطأ في جلب الموظفين: %v", err)
@@ -184,8 +253,21 @@ func (h *AuthHandler) ListEmployees(c *gin.Context) {
 		employees = append(employees, employee)
 	}
 
-	log.Printf("✅ تم جلب %d موظف", len(employees))
-	c.JSON(http.StatusOK, employees)
+	totalPages := int(total) / limit
+	if int(total)%limit != 0 {
+		totalPages++
+	}
+
+	log.Printf("✅ تم جلب %d موظف (صفحة %d من %d)", len(employees), page, totalPages)
+	c.JSON(http.StatusOK, gin.H{
+		"data":       employees,
+		"pagination": gin.H{
+			"page":       page,
+			"limit":      limit,
+			"total":      total,
+			"total_pages": totalPages,
+		},
+	})
 }
 
 // =============================================

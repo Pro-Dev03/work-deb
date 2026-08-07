@@ -1,0 +1,23 @@
+{
+  "name": "worktrack",
+  "version": "1.0.0",
+  "description": "منصة لإدارة الموظفين الميدانيين، الحضور، نقاط العمل، وطلبات الخدمة.",
+  "main": "test-app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ERROR404zero/worktrack.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ERROR404zero/worktrack/issues"
+  },
+  "homepage": "https://github.com/ERROR404zero/worktrack#readme",
+  "dependencies": {
+    "puppeteer": "^25.5.0"
+  }
+}

@@ -6,6 +6,16 @@
         <p>{{ t('employees_description') }}</p>
       </div>
       <div class="page-head-actions">
+        <div class="search-box">
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            @keyup.enter="handleSearch"
+            :placeholder="t('search_placeholder')"
+            class="form-input"
+          />
+          <button class="btn btn--sm btn--ghost" @click="handleSearch">🔍</button>
+        </div>
         <button class="btn btn--primary" @click="showModal = true">+ {{ t('add_employee') }}</button>
         <button class="btn btn--danger" @click="cleanupOldRecords" :disabled="cleaning">
           {{ cleaning ? '⏳' : '🗑️' }} {{ t('cleanup_old_records') }}
@@ -200,6 +210,28 @@
       </div>
     </div>
 
+    <!-- Pagination Controls -->
+    <div v-if="pagination && pagination.totalPages > 1" class="pagination">
+      <button 
+        class="btn btn--sm btn--ghost" 
+        @click="prevPage" 
+        :disabled="currentPage === 1"
+      >
+        ← {{ t('previous') }}
+      </button>
+      <span class="pagination-info">
+        {{ t('page') }} {{ currentPage }} {{ t('of') }} {{ pagination.totalPages }}
+        ({{ pagination.total }} {{ t('total') }})
+      </span>
+      <button 
+        class="btn btn--sm btn--ghost" 
+        @click="nextPage" 
+        :disabled="currentPage === pagination.totalPages"
+      >
+        {{ t('next') }} →
+      </button>
+    </div>
+
     <EmployeeFormModal
       v-if="showModal"
       @close="showModal = false"
@@ -251,6 +283,24 @@
             {{ resetting ? t('processing') : t('confirm_reset_device') }}
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div v-if="showSuccessModal" class="modal-backdrop" @click.self="showSuccessModal = false">
+      <div class="success-modal-card">
+        <div class="success-animation">
+          <div class="success-circle">
+            <svg class="success-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="success-title">تم بنجاح!</h3>
+        <p class="success-message">{{ successMessage }}</p>
+        <button class="btn btn--primary success-btn" @click="showSuccessModal = false">
+          حسناً
+        </button>
       </div>
     </div>
 
@@ -363,7 +413,7 @@
 
 <script setup>
 import { ref, onMounted, watch, onUnmounted } from 'vue'
-import api from '../services/api'
+import api, { clearCacheForEndpoint } from '../services/api'
 import EmployeeFormModal from '../components/EmployeeFormModal.vue'
 import EditEmployeeModal from '../components/EditEmployeeModal.vue'
 import { useI18n } from '../services/i18n'
@@ -381,9 +431,15 @@ const cleaning = ref(false)
 const showResetDeviceModal = ref(false)
 const employeeToResetDevice = ref(null)
 const resetting = ref(false)
+const showSuccessModal = ref(false)
+const successMessage = ref('')
 const showEditModal = ref(false)
 const employeeToEdit = ref(null)
 const activeDropdown = ref(null)
+const pagination = ref(null)
+const currentPage = ref(1)
+const pageSize = ref(20)
+const searchQuery = ref('')
 
 // سجل الحضور
 const showAttendanceModal = ref(false)
@@ -423,11 +479,23 @@ watch(currentLang, () => {
 async function fetchEmployees() {
   loading.value = true
   try {
-    const { data } = await api.get('/admin/employees')
-    employees.value = data || []
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value
+    }
+    
+    if (searchQuery.value) {
+      params.search = searchQuery.value
+    }
+    
+    const { data } = await api.get('/admin/employees', { params })
+    // التعامل مع response format الجديد مع pagination
+    employees.value = data.data || data || []
+    pagination.value = data.pagination || null
   } catch (error) {
     console.error('❌ ' + t('failed_to_fetch_employees'), error)
     employees.value = []
+    pagination.value = null
   } finally {
     loading.value = false
   }
@@ -438,6 +506,30 @@ function confirmDelete(emp) {
   showDeleteModal.value = true
 }
 
+function goToPage(page) {
+  currentPage.value = page
+  fetchEmployees()
+}
+
+function nextPage() {
+  if (pagination.value && currentPage.value < pagination.value.totalPages) {
+    currentPage.value++
+    fetchEmployees()
+  }
+}
+
+function prevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    fetchEmployees()
+  }
+}
+
+function handleSearch() {
+  currentPage.value = 1
+  fetchEmployees()
+}
+
 async function deleteEmployee() {
   if (!employeeToDelete.value) return
   
@@ -445,6 +537,8 @@ async function deleteEmployee() {
   try {
     await api.delete(`/admin/employees/${employeeToDelete.value.id}`)
     showDeleteModal.value = false
+    // مسح الـ cache عند حذف موظف
+    clearCacheForEndpoint('/admin/employees')
     await fetchEmployees()
   } catch (error) {
     console.error('❌ ' + t('failed_to_delete_employee'), error)
@@ -496,14 +590,15 @@ onUnmounted(() => {
 
 async function resetDevice() {
   if (!employeeToResetDevice.value) return
-  
+
   resetting.value = true
   try {
     await api.post('/admin/reset-device', {
       user_id: employeeToResetDevice.value.id
     })
     showResetDeviceModal.value = false
-    alert('✅ ' + t('reset_device_success'))
+    successMessage.value = t('reset_device_success')
+    showSuccessModal.value = true
     await fetchEmployees()
   } catch (error) {
     console.error('❌ ' + t('reset_device_failed'), error)
@@ -1531,6 +1626,179 @@ onMounted(fetchEmployees)
   
   .attendance-card {
     margin: 0 4px 8px 4px;
+  }
+}
+
+/* Search Box Styles */
+.search-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-box input {
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-tint);
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/* Success Modal */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.success-modal-card {
+  background: var(--surface);
+  border-radius: 20px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  padding: 40px 32px;
+  box-shadow: var(--shadow-xl);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.success-animation {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.success-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: successPulse 0.5s ease-out;
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.success-check {
+  width: 40px;
+  height: 40px;
+  color: white;
+  animation: checkDraw 0.3s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+@keyframes checkDraw {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.success-title {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.success-message {
+  margin: 0 0 24px;
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.success-btn {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.success-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.success-btn:active {
+  transform: translateY(0);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .search-box {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box input {
+    min-width: 0;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .pagination-info {
+    font-size: 12px;
   }
 }
 </style>

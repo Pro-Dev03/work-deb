@@ -69,12 +69,6 @@
           <h3>{{ t('task_distribution') }}</h3>
           <div class="header-actions">
             <span class="badge badge--info">{{ selectedPeriodText }}</span>
-            <button class="btn btn--sm btn--ghost" @click="showDebug = !showDebug" title="معلومات التصحيح">
-              🔍 تصحيح
-            </button>
-            <button class="btn btn--sm btn--ghost" @click="loadDiagnostic" title="فحص قاعدة البيانات">
-              📊 فحص
-            </button>
           </div>
         </div>
         <TaskDistributionChart 
@@ -83,41 +77,6 @@
           :pending="summary.pending || 0"
           :late="summary.late || 0"
         />
-        
-        <!-- معلومات التصحيح -->
-        <div v-if="showDebug && summary._debug" class="debug-info">
-          <h4>معلومات التصحيح:</h4>
-          <div class="debug-grid">
-            <div class="debug-item">
-              <span class="debug-label">المكتملة:</span>
-              <span class="debug-value">{{ summary._debug.tasks_completed }}</span>
-            </div>
-            <div class="debug-item">
-              <span class="debug-label">الجارية:</span>
-              <span class="debug-value">{{ summary._debug.tasks_in_progress }}</span>
-            </div>
-            <div class="debug-item">
-              <span class="debug-label">المعلقة:</span>
-              <span class="debug-value">{{ summary._debug.tasks_pending }}</span>
-            </div>
-            <div class="debug-item">
-              <span class="debug-label">المتأخرة:</span>
-              <span class="debug-value">{{ summary._debug.tasks_late }}</span>
-            </div>
-            <div class="debug-item">
-              <span class="debug-label">إجمالي:</span>
-              <span class="debug-value">{{ summary._debug.total_tasks }}</span>
-            </div>
-            <div class="debug-item full-width" v-if="summary._debug.note">
-              <span class="debug-label">ملاحظة:</span>
-              <span class="debug-value">{{ summary._debug.note }}</span>
-            </div>
-            <div class="debug-item full-width" v-if="summary._debug.task_statuses && summary._debug.task_statuses.length > 0">
-              <span class="debug-label">الحالات الموجودة:</span>
-              <span class="debug-value">{{ summary._debug.task_statuses.join(', ') }}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- الموظفين المكتملين -->
@@ -198,7 +157,6 @@ const { t } = useI18n()
 
 const loading = ref(false)
 const selectedPeriod = ref('today')
-const showDebug = ref(false)
 const summary = ref({
   total_employees: 0,
   completed_employees: 0,
@@ -250,17 +208,6 @@ async function loadReports() {
     console.error('فشل تحميل التقارير:', error)
   } finally {
     loading.value = false
-  }
-}
-
-async function loadDiagnostic() {
-  try {
-    const { data } = await api.get('/reports/diagnostic-tasks')
-    console.log('🔍 معلومات تشخيصية:', data)
-    alert(`معلومات التشخيص:\n\nإجمالي المهام: ${data.total_tasks}\nتوزيع الحالات: ${JSON.stringify(data.status_breakdown)}`)
-  } catch (error) {
-    console.error('فشل تحميل المعلومات التشخيصية:', error)
-    alert('فشل تحميل المعلومات التشخيصية')
   }
 }
 
@@ -376,81 +323,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.debug-info {
-  margin-top: 16px;
-  padding: 16px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-
-.debug-info h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: #333;
-}
-
-.debug-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.debug-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 0;
-}
-
-.debug-item.full-width {
-  grid-column: 1 / -1;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.debug-label {
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
-}
-
-.debug-value {
-  font-size: 12px;
-  color: #333;
-  font-weight: 600;
-  font-family: monospace;
-}
-
-.debug-tasks {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.debug-task {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 8px;
-  background: #e8e8e8;
-  border-radius: 4px;
-  font-size: 11px;
-}
-
-.debug-task-title {
-  color: #333;
-  font-weight: 500;
-}
-
-.debug-task-status {
-  color: #666;
-  font-family: monospace;
-  font-size: 10px;
 }
 
 .employees-table {

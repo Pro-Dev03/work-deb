@@ -457,7 +457,7 @@ const editingNote = reactive({
 async function fetchEmployees() {
   try {
     const { data } = await api.get('/admin/employees')
-    employees.value = data || []
+    employees.value = data.data || data || []
   } catch (error) {
     console.error('❌ فشل جلب الموظفين:', error)
   }
@@ -466,7 +466,7 @@ async function fetchEmployees() {
 async function fetchWorksites() {
   try {
     const { data } = await api.get('/worksites')
-    worksites.value = data || []
+    worksites.value = data.data || data || []
   } catch (error) {
     console.error('❌ فشل جلب نقاط العمل:', error)
   }

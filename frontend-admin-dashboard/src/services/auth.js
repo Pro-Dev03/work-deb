@@ -9,10 +9,18 @@ export async function login(email, password) {
       password: password.trim() 
     })
     
-    console.log('✅ تم تسجيل الدخول بنجاح')
+    console.log('✅ تم تسجيل الدخول بنجاح:', data)
     
-    localStorage.setItem('worktrack_admin_token', data.token)
-    localStorage.setItem('worktrack_admin_user', JSON.stringify(data.user))
+    // تخزين بيانات المستخدم فقط (التوكنات في httpOnly cookies)
+    if (data.user) {
+      localStorage.setItem('worktrack_admin_user', JSON.stringify(data.user))
+      console.log('💾 تم تخزين بيانات المستخدم في localStorage')
+    } else {
+      console.warn('⚠️ لا توجد بيانات مستخدم في الاستجابة')
+    }
+    
+    // التحقق من أن الكوكيز تم تعيينها بشكل صحيح
+    console.log('🍪 التحقق من الكوكيز بعد تسجيل الدخول')
     
     return data
   } catch (error) {
@@ -26,9 +34,16 @@ export async function getCurrentUser() {
   return data
 }
 
-export function logout() {
-  localStorage.removeItem('worktrack_admin_token')
-  localStorage.removeItem('worktrack_admin_user')
+export async function logout() {
+  try {
+    // استدعاء endpoint تسجيل الخروج لحذف cookies
+    await api.post('/auth/logout')
+  } catch (error) {
+    console.error('⚠️ خطأ في تسجيل الخروج:', error)
+  } finally {
+    // تنظيف localStorage في كل الأحوال
+    localStorage.removeItem('worktrack_admin_user')
+  }
 }
 
 export function currentUser() {
@@ -37,5 +52,6 @@ export function currentUser() {
 }
 
 export function getToken() {
-  return localStorage.getItem('worktrack_admin_token')
+  // لم يعد مستخدماً - التوكنات في httpOnly cookies
+  return null
 }

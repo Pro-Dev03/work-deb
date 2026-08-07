@@ -32,7 +32,21 @@ const router = createRouter({
 
 // حماية المسارات
 router.beforeEach((to, from, next) => {
-  const isAuthed = !!localStorage.getItem('worktrack_admin_token')
+  // التحقق من المستخدم بدلاً من التوكن (نستخدم httpOnly cookies)
+  const userStr = localStorage.getItem('worktrack_admin_user')
+  let isAuthed = false
+  
+  try {
+    // التحقق من صحة البيانات في localStorage
+    if (userStr) {
+      const user = JSON.parse(userStr)
+      isAuthed = !!user && (user.id || user.email)
+    }
+  } catch (e) {
+    console.error('❌ خطأ في قراءة بيانات المستخدم:', e)
+    localStorage.removeItem('worktrack_admin_user')
+    isAuthed = false
+  }
   
   // إذا كان المسار يتطلب مصادقة والمستخدم غير مسجل
   if (to.meta.requiresAuth && !isAuthed) {

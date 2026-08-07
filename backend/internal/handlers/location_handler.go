@@ -50,16 +50,33 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 	}
 
 	// التحقق من الخروج عن النطاق
-	go h.checkGeofenceViolation(userID.(string), req.Latitude, req.Longitude)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("⚠️ Recovered from panic in geofence check: %v", r)
+			}
+		}()
+		h.checkGeofenceViolation(userID.(string), req.Latitude, req.Longitude)
+	}()
 
 	// إرسال تحديث فوري عبر WebSocket
 	if h.WS != nil {
 		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("⚠️ Recovered from panic in WebSocket broadcast: %v", r)
+				}
+			}()
+
 			// جلب معلومات الموظف
 			var fullName, email string
-			h.DB.QueryRow(`
+			err := h.DB.QueryRow(`
 				SELECT full_name, email FROM users WHERE id = $1
 			`, userID).Scan(&fullName, &email)
+			if err != nil {
+				log.Printf("⚠️ Failed to fetch user info for WebSocket broadcast: %v", err)
+				return
+			}
 
 			// إرسال التحديث
 			h.WS.BroadcastLocationUpdate(map[string]interface{}{

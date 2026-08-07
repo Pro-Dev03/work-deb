@@ -364,6 +364,7 @@ const securityNotes = ref([])
 const updateCount = ref(0)
 const activeTab = ref('active')
 let refreshInterval = null
+const isRefreshing = ref(false)
 
 // ==========================================
 // العمليات الحسابية
@@ -401,30 +402,54 @@ function formatDistance(meters) {
 // جلب البيانات
 // ==========================================
 async function fetchData() {
+  // تجنب الطلبات المتكررة إذا كان هناك تحديث جاري
+  if (isRefreshing.value) {
+    return
+  }
+
   try {
-    const [employeesRes, worksitesRes, statsRes, waitingRes, completedRes] = await Promise.all([
-      api.get('/location/active'),
-      api.get('/worksites'),
-      api.get('/reports/daily-summary'),
-      api.get('/reports/pending-employees'),
-      api.get('/reports/completed-employees')
-    ])
+    isRefreshing.value = true
     
-    activeEmployees.value = employeesRes.data || []
-    worksites.value = worksitesRes.data || []
-    stats.value = statsRes.data || {}
-    waitingEmployees.value = waitingRes.data || []
-    completedEmployees.value = completedRes.data || []
+    // تحميل البيانات الأساسية فقط في المرة الأولى
+    if (loading.value) {
+      const [employeesRes, worksitesRes, statsRes, waitingRes, completedRes] = await Promise.all([
+        api.get('/location/active'),
+        api.get('/worksites'),
+        api.get('/reports/daily-summary'),
+        api.get('/reports/pending-employees'),
+        api.get('/reports/completed-employees')
+      ])
+      
+      activeEmployees.value = employeesRes.data || []
+      worksites.value = worksitesRes.data?.data || worksitesRes.data || []
+      stats.value = statsRes.data || {}
+      waitingEmployees.value = waitingRes.data || []
+      completedEmployees.value = completedRes.data || []
+    } else {
+      // في التحديثات اللاحقة، حمل فقط البيانات المتغيرة
+      const [employeesRes, waitingRes, completedRes] = await Promise.all([
+        api.get('/location/active'),
+        api.get('/reports/pending-employees'),
+        api.get('/reports/completed-employees')
+      ])
+      
+      activeEmployees.value = employeesRes.data || []
+      waitingEmployees.value = waitingRes.data || []
+      completedEmployees.value = completedRes.data || []
+    }
+    
     updateCount.value++
     
   } catch (error) {
     console.error('❌ ' + t('failed_to_fetch_data'), error)
   } finally {
     loading.value = false
+    isRefreshing.value = false
   }
 }
 
 async function refreshData() {
+  if (isRefreshing.value) return
   loading.value = true
   await fetchData()
   loading.value = false
@@ -450,10 +475,17 @@ async function showEmployeeDetails(employee) {
 // دورة الحياة
 // ==========================================
 onMounted(async () => {
+  // التحقق من وجود المستخدم قبل تحميل البيانات
+  const userStr = localStorage.getItem('worktrack_admin_user')
+  if (!userStr) {
+    window.location.href = '/login'
+    return
+  }
+  
   await fetchData()
   
-  // تحديث كل 3 ثوانٍ للتتبع اللحظي
-  refreshInterval = setInterval(fetchData, 3000)
+  // تحديث كل 10 ثوانٍ بدلاً من 3 ثوانٍ لتقليل الطلبات
+  refreshInterval = setInterval(fetchData, 10000)
   
   // الاتصال بـ WebSocket للتحديثات الفورية
   connectWebSocket()
@@ -476,20 +508,13 @@ function connectWebSocket() {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
   const apiHost = apiBaseUrl.replace('/api/v1', '')
   const wsUrl = apiHost.replace('http://', 'ws://').replace('https://', 'wss://') + '/ws'
-  console.log('🔌 Attempting to connect to WebSocket:', wsUrl)
   wsService.connect(wsUrl)
   
   wsService.onMessage((data) => {
     if (data.type === 'location_update') {
-      console.log('📍 تحديث موقع فوري:', data.data)
       handleImmediateLocationUpdate(data.data)
     } else if (data.type === 'employee_status') {
-      console.log('👤 تحديث حالة موظف:', data.data)
       handleEmployeeStatusUpdate(data.data)
-    } else if (data.type === 'connected') {
-      console.log('✅ تم الاتصال بـ WebSocket')
-    } else if (data.type === 'disconnected') {
-      console.log('❌ انقطع الاتصال بـ WebSocket')
     }
   })
 }

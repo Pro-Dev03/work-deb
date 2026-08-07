@@ -90,6 +90,7 @@ const isNotesPage = computed(() => route.path === '/notes')
 const unreadCount = ref(0)
 const hasNotifications = computed(() => unreadCount.value > 0 && !isNotesPage.value)
 const previousUnreadCount = ref(0)
+const authExpired = ref(false)
 let currentAudioContext = null
 let currentOscillator = null
 
@@ -135,21 +136,34 @@ function stopNotificationSound() {
 }
 
 async function fetchNotifications() {
+  // Skip if authentication already expired
+  if (authExpired.value) return
+
   try {
     const { data } = await api.get('/notes')
     const notes = Array.isArray(data) ? data : []
     const newUnreadCount = notes.filter(n => !n.is_read).length
-    
+
+    // Reset auth expired flag on successful request
+    authExpired.value = false
+
     // Play sound immediately if new notifications arrived
     if (newUnreadCount > previousUnreadCount.value && previousUnreadCount.value >= 0) {
       playNotificationSound()
     }
-    
+
     unreadCount.value = newUnreadCount
     previousUnreadCount.value = newUnreadCount
   } catch (error) {
-    console.error('Failed to fetch notifications:', error)
-    unreadCount.value = 0
+    // Handle 401 Unauthorized error - user might need to re-login
+    if (error.response?.status === 401) {
+      authExpired.value = true
+      console.warn('Authentication expired, stopping notifications fetch')
+      unreadCount.value = 0
+    } else {
+      console.error('Failed to fetch notifications:', error)
+      unreadCount.value = 0
+    }
   }
 }
 
@@ -182,6 +196,13 @@ onUnmounted(() => {
 watch(isNotesPage, (newValue) => {
   if (newValue) {
     stopNotificationSound()
+  }
+})
+
+// Reset auth expired flag when navigating away from login page
+watch(isLoginPage, (newValue) => {
+  if (!newValue) {
+    authExpired.value = false
   }
 })
 </script>

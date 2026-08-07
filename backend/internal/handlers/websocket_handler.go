@@ -2,24 +2,74 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"worktrack/backend/internal/i18n"
+	"worktrack/backend/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true // السماح بجميع المصادر في وضع التطوير
-	},
-	HandshakeTimeout: 10 * time.Second,
-	ReadBufferSize:   1024,
-	WriteBufferSize:  1024,
+// GetWebSocketUpgrader يُرجع upgrader مع إعدادات CheckOrigin ديناميكية
+func GetWebSocketUpgrader(allowedOrigins string) websocket.Upgrader {
+	origins := strings.Split(allowedOrigins, ",")
+
+	return websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			if origin == "" {
+				// السماح بطلبات بدون Origin (مثل curl) - مع تحذير
+				utils.LogWarning("WebSocket request without Origin header - allowing for tools like curl", map[string]interface{}{
+					"origin": origin,
+				})
+				return true
+			}
+
+			// التحقق من الدومينات المسموح بها
+			for _, allowed := range origins {
+				allowed = strings.TrimSpace(allowed)
+				
+				// رفض صريح لـ '*' في أي حالة
+				if allowed == "*" {
+					utils.LogError("Security error: Rejecting '*' in WebSocket CheckOrigin - use specific domains", map[string]interface{}{
+						"allowed_origin": allowed,
+					})
+					continue // تجاهل هذا الإدخال والانتقال للقادم
+				}
+				
+				// السماح بـ localhost و 127.0.0.1 في التطوير
+				if strings.Contains(allowed, "localhost") || strings.Contains(allowed, "127.0.0.1") {
+					if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") {
+						utils.LogInfo("WebSocket connection allowed from localhost", map[string]interface{}{
+							"origin": origin,
+						})
+						return true
+					}
+				}
+				
+				// التحقق من تطابق الدومين
+				if strings.HasPrefix(origin, allowed) {
+					utils.LogInfo("WebSocket connection allowed", map[string]interface{}{
+						"origin": origin,
+						"allowed": allowed,
+					})
+					return true
+				}
+			}
+
+			utils.LogWarning("WebSocket connection rejected from unauthorized origin", map[string]interface{}{
+				"origin": origin,
+			})
+			return false
+		},
+		HandshakeTimeout: 10 * time.Second,
+		ReadBufferSize:   1024,
+		WriteBufferSize:  1024,
+	}
 }
 
 // WebSocketHub - مركز إدارة اتصالات WebSocket
@@ -34,11 +84,13 @@ type WebSocketHub struct {
 
 // WSHandler - معالج WebSocket
 type WSHandler struct {
-	hub *WebSocketHub
+	hub            *WebSocketHub
+	upgrader       websocket.Upgrader
+	allowedOrigins string
 }
 
 // NewWSHandler - إنشاء معالج WebSocket جديد
-func NewWSHandler() *WSHandler {
+func NewWSHandler(allowedOrigins string) *WSHandler {
 	hub := &WebSocketHub{
 		clients:    make(map[*websocket.Conn]bool),
 		broadcast:  make(chan []byte, 256), // Buffered channel to prevent blocking
@@ -47,7 +99,11 @@ func NewWSHandler() *WSHandler {
 		maxClients: 100, // Limit concurrent WebSocket connections
 	}
 
-	handler := &WSHandler{hub: hub}
+	handler := &WSHandler{
+		hub:            hub,
+		upgrader:       GetWebSocketUpgrader(allowedOrigins),
+		allowedOrigins: allowedOrigins,
+	}
 	go hub.run()
 
 	return handler
@@ -60,11 +116,16 @@ func (h *WebSocketHub) run() {
 		case client := <-h.register:
 			h.mu.Lock()
 			if len(h.clients) >= h.maxClients {
-				log.Printf("⚠️ تم رفض اتصال WebSocket جديد - الحد الأقصى %d", h.maxClients)
+				utils.LogWarning("WebSocket connection rejected - max clients reached", map[string]interface{}{
+					"max_clients": h.maxClients,
+					"current_clients": len(h.clients),
+				})
 				client.Close()
 			} else {
 				h.clients[client] = true
-				log.Println("✅ تم تسجيل عميل WebSocket جديد")
+				utils.LogInfo("WebSocket client registered", map[string]interface{}{
+					"total_clients": len(h.clients),
+				})
 			}
 			h.mu.Unlock()
 
@@ -75,14 +136,18 @@ func (h *WebSocketHub) run() {
 				client.Close()
 			}
 			h.mu.Unlock()
-			log.Println("❌ تم إلغاء تسجيل عميل WebSocket")
+			utils.LogInfo("WebSocket client unregistered", map[string]interface{}{
+				"total_clients": len(h.clients),
+			})
 
 		case message := <-h.broadcast:
 			h.mu.Lock()
 			for client := range h.clients {
 				err := client.WriteMessage(websocket.TextMessage, message)
 				if err != nil {
-					log.Printf("❌ خطأ في إرسال WebSocket: %v", err)
+					utils.LogError("WebSocket send error", map[string]interface{}{
+						"error": err,
+					})
 					client.Close()
 					delete(h.clients, client)
 				}
@@ -95,10 +160,12 @@ func (h *WebSocketHub) run() {
 // HandleWebSocket - معالجة اتصال WebSocket
 func (h *WSHandler) HandleWebSocket(c *gin.Context) {
 	lang := i18n.Detect(c)
-	
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+
+	conn, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("❌ فشل ترقية الاتصال إلى WebSocket: %v", err)
+		utils.LogError("Failed to upgrade connection to WebSocket", map[string]interface{}{
+			"error": err,
+		})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T(lang, "err_operation_failed")})
 		return
 	}
@@ -117,12 +184,20 @@ func (h *WSHandler) HandleWebSocket(c *gin.Context) {
 	// الاستماع للرسائل من العميل
 	go func() {
 		defer func() {
+			if r := recover(); r != nil {
+				utils.LogError("Recovered from panic in WebSocket handler", map[string]interface{}{
+					"panic": r,
+				})
+			}
 			h.hub.unregister <- conn
 		}()
 
 		for {
 			_, _, err := conn.ReadMessage()
 			if err != nil {
+				utils.LogWarning("WebSocket read error", map[string]interface{}{
+					"error": err,
+				})
 				break
 			}
 		}
@@ -139,7 +214,9 @@ func (h *WSHandler) BroadcastLocationUpdate(update map[string]interface{}) {
 
 	msgBytes, err := json.Marshal(message)
 	if err != nil {
-		log.Printf("❌ خطأ في ترميز تحديث الموقع: %v", err)
+		utils.LogError("Failed to encode location update", map[string]interface{}{
+			"error": err,
+		})
 		return
 	}
 
@@ -163,7 +240,9 @@ func (h *WSHandler) BroadcastEmployeeStatus(update map[string]interface{}) {
 
 	msgBytes, err := json.Marshal(message)
 	if err != nil {
-		log.Printf("❌ خطأ في ترميز تحديث الحالة: %v", err)
+		utils.LogError("Failed to encode employee status update", map[string]interface{}{
+			"error": err,
+		})
 		return
 	}
 

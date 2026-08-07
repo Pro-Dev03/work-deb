@@ -22,7 +22,7 @@
           <div class="step">
             <span class="step-number">1</span>
             <div class="step-content">
-              <p v-html="step1Text"></p>
+              <p>{{ step1Text }}</p>
               <div class="step-visual">
                 <div class="phone-frame">
                   <div class="phone-screen">
@@ -35,7 +35,7 @@
           <div class="step">
             <span class="step-number">2</span>
             <div class="step-content">
-              <p v-html="step2Text"></p>
+              <p>{{ step2Text }}</p>
               <div class="step-visual">
                 <div class="menu-item">➕ Add to Home Screen</div>
               </div>
@@ -44,7 +44,7 @@
           <div class="step">
             <span class="step-number">3</span>
             <div class="step-content">
-              <p v-html="step3Text"></p>
+              <p>{{ step3Text }}</p>
               <div class="step-visual">
                 <div class="add-btn">Add</div>
               </div>

@@ -32,6 +32,9 @@ uploads/
 *.bak
 *.bak.*
 
+# Legacy SQL files (moved to legacy_sql directory)
+backend/legacy_sql/
+
 # Destructive local database utilities; never publish their sample credentials
 database_setup.sql
 reset_password.sql

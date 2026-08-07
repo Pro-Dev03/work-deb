@@ -89,15 +89,18 @@
           <span class="topbar__name">{{ displayName }}</span>
         </div>
       </header>
-      <main class="content"><router-view /></main>
+      <main class="content">
+        <router-view />
+      </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { authStore } from './store/auth'
+import { logout } from './services/auth'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import { useI18n } from './services/i18n'
 import {
@@ -125,6 +128,33 @@ const initials = computed(() => {
 })
 
 const isDark = ref(false)
+
+// مراقب لتغييرات authStore.user
+let stopWatcher = null
+
+onMounted(() => {
+  const savedTheme = localStorage.getItem('worktrack_theme')
+  if (savedTheme === 'dark') {
+    isDark.value = true
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }
+
+  // إضافة مراقب لتغييرات authStore.user
+  stopWatcher = watch(
+    () => authStore.user,
+    (newUser, oldUser) => {
+      // يمكن إضافة منطق إضافي هنا عند تغيير المستخدم
+    },
+    { deep: true }
+  )
+})
+
+onUnmounted(() => {
+  // إزالة المراقب عند إتلاف المكون
+  if (stopWatcher) {
+    stopWatcher()
+  }
+})
 
 const displayName = computed(() => {
   const fullName = user.value?.full_name?.trim()
@@ -163,20 +193,16 @@ function toggleTheme() {
   localStorage.setItem('worktrack_theme', isDark.value ? 'dark' : 'light')
 }
 
-function handleLogout() {
-  localStorage.removeItem('worktrack_admin_token')
-  localStorage.removeItem('worktrack_admin_user')
-  authStore.clear()
-  router.push('/login')
-}
-
-onMounted(() => {
-  const savedTheme = localStorage.getItem('worktrack_theme')
-  if (savedTheme === 'dark') {
-    isDark.value = true
-    document.documentElement.setAttribute('data-theme', 'dark')
+async function handleLogout() {
+  try {
+    await logout()
+  } catch (error) {
+    console.error('خطأ في تسجيل الخروج:', error)
+  } finally {
+    authStore.clear()
+    router.push('/login')
   }
-})
+}
 </script>
 
 <style scoped>

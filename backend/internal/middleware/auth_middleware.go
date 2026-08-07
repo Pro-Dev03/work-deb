@@ -10,19 +10,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AuthMiddleware يتحقق من وجود JWT صالح في هيدر Authorization
+// AuthMiddleware يتحقق من وجود JWT صالح في هيدر Authorization أو cookie
 // ويضع user_id و role في السياق (Context) لاستخدامها في الـ Handlers
 func AuthMiddleware(authService *services.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		lang := i18n.Detect(c)
 
-		header := c.GetHeader("Authorization")
-		if header == "" || !strings.HasPrefix(header, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": i18n.T(lang, "err_please_login")})
-			return
+		var tokenString string
+
+		// محاولة الحصول على التوكن من cookie أولاً
+		if cookieToken, err := c.Cookie("access_token"); err == nil && cookieToken != "" {
+			tokenString = cookieToken
+		} else {
+			// إذا لم يوجد في cookie، حاول من Authorization header
+			header := c.GetHeader("Authorization")
+			if header == "" || !strings.HasPrefix(header, "Bearer ") {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": i18n.T(lang, "err_please_login")})
+				return
+			}
+			tokenString = strings.TrimPrefix(header, "Bearer ")
 		}
 
-		tokenString := strings.TrimPrefix(header, "Bearer ")
 		claims, err := authService.ValidateToken(tokenString)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": i18n.T(lang, "err_invalid_session")})

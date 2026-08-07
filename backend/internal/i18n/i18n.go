@@ -72,6 +72,36 @@ var messages = map[string]map[Lang]string{
 		Hebrew:  "ההתחברות אינה תקפה, נא להתחבר מחדש",
 		English: "Invalid session, please log in again",
 	},
+	"err_missing_refresh_token": {
+		Arabic:  "الرجاء إرسال refresh token",
+		Hebrew:  "נא לשלוח refresh token",
+		English: "Please provide refresh token",
+	},
+	"err_invalid_refresh_token": {
+		Arabic:  "refresh token غير صالح",
+		Hebrew:  "refresh token לא תקין",
+		English: "Invalid refresh token",
+	},
+	"err_token_rotation_failed": {
+		Arabic:  "فشل تجديد التوكن",
+		Hebrew:  "נכשל חידוש ה-token",
+		English: "Failed to rotate token",
+	},
+	"msg_logged_out": {
+		Arabic:  "تم تسجيل الخروج بنجاح",
+		Hebrew:  "התנתקת בהצלחה",
+		English: "Logged out successfully",
+	},
+	"msg_logged_out_all_devices": {
+		Arabic:  "تم تسجيل الخروج من جميع الأجهزة",
+		Hebrew:  "התנתקת מכל המכשירים",
+		English: "Logged out from all devices",
+	},
+	"msg_session_renewed": {
+		Arabic:  "تم تجديد الجلسة بنجاح",
+		Hebrew:  "הסשן חודש בהצלחה",
+		English: "Session renewed successfully",
+	},
 	"err_subscription_expired": {
 		Arabic:  "اشتراكك انتهى أو تم إيقافه، الرجاء التواصل مع الدعم",
 		Hebrew:  "המנוי שלך פג או בוטל, נא ליצור קשר עם התמיכה",

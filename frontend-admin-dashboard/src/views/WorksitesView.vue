@@ -253,7 +253,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import api from '../services/api'
+import api, { clearCacheForEndpoint } from '../services/api'
 import WorksiteFormModal from '../components/WorksiteFormModal.vue'
 import { useI18n } from '../services/i18n'
 import { User, CheckCircle, Edit, Trash2 } from '@lucide/vue'
@@ -279,14 +279,17 @@ const worksiteToAssign = ref(null)
 const employeeToForceCheckout = ref(null)
 const worksiteToEdit = ref(null)
 const activeDropdown = ref(null)
+const employeesCache = ref(null) // تخزين مؤقت للموظفين
 
 async function fetchWorksites() {
   loading.value = true
   try {
     const { data } = await api.get('/worksites')
-    worksites.value = data || []
+    // التعامل مع response format الجديد مع pagination
+    worksites.value = data.data || data || []
   } catch (error) {
     console.error('❌ ' + t('failed_to_fetch_worksites'), error)
+    worksites.value = []
   } finally {
     loading.value = false
   }
@@ -304,6 +307,8 @@ async function deleteWorksite() {
   try {
     await api.delete(`/worksites/${siteToDelete.value.id}`)
     showDeleteModal.value = false
+    // مسح الـ cache عند حذف نقطة عمل
+    clearCacheForEndpoint('/worksites')
     await fetchWorksites()
   } catch (error) {
     console.error('❌ ' + t('failed_to_delete_worksite'), error)
@@ -330,10 +335,17 @@ function openAddModal() {
 }
 
 async function fetchEmployees() {
+  // استخدام الـ cache إذا كان موجوداً
+  if (employeesCache.value && !loadingEmployees.value) {
+    employees.value = employeesCache.value
+    return
+  }
+
   loadingEmployees.value = true
   try {
     const { data } = await api.get('/worksites/employees')
     employees.value = data || []
+    employeesCache.value = data || [] // تخزين في الـ cache
   } catch (error) {
     console.error('❌ ' + t('failed_to_fetch_employees'), error)
     employees.value = []
@@ -356,7 +368,9 @@ async function assignEmployee(employeeId) {
     showSuccessModal.value = true
     successMessage.value = response.data.message || t('employee_assigned_successfully')
     
-    // تحديث قوائم الموظفين ونقاط العمل
+    // مسح الـ cache وتحديث البيانات
+    clearCacheForEndpoint('/worksites')
+    employeesCache.value = null // مسح الـ cache المحلي للموظفين
     await fetchWorksites()
     await fetchEmployees()
   } catch (error) {
@@ -438,6 +452,8 @@ function handleClickOutside(event) {
 
 onMounted(() => {
   fetchWorksites()
+  // تحميل الموظفين مسبقاً لتحسين الأداء عند فتح مودال التعيين
+  fetchEmployees()
   document.addEventListener('click', handleClickOutside)
 })
 

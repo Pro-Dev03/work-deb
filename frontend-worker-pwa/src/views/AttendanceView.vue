@@ -86,10 +86,8 @@
         <button class="refresh-btn" @click="fetchWorksites" :disabled="loadingWorksites">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M23 4v6h-6"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12 9 9 0 0 1-2.12-2.12M20.49 9a9 9 0 0 1-2.12-2.12"/>
-            <path d="M13.05 13.05a9 9 0 0 1-2.12-2.12"/>
-            <path d="M13.05 6.05a9 9 0 0 1 2.12-2.12"/>
-            <path d="M16 16l4 4m0-4l-4 4"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
         </button>
       </div>

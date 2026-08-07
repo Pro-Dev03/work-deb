@@ -20,6 +20,20 @@ type Config struct {
 	R2AccessKey   string
 	R2SecretKey   string
 	R2BucketName  string
+	LogLevel      string
+	AppEnv        string
+}
+
+// IsProduction returns true if the app is running in production mode
+func (c *Config) IsProduction() bool {
+	return strings.EqualFold(c.AppEnv, "production")
+}
+
+// ShouldUseSecureCookies returns true if cookies should use the secure flag
+// In production, this should be true (HTTPS required)
+// In development, this should be false (HTTP is acceptable)
+func (c *Config) ShouldUseSecureCookies() bool {
+	return c.IsProduction()
 }
 
 func Load() *Config {
@@ -38,13 +52,15 @@ func Load() *Config {
 		R2AccessKey:   getEnv("R2_ACCESS_KEY", ""),
 		R2SecretKey:   getEnv("R2_SECRET_KEY", ""),
 		R2BucketName:  getEnv("R2_BUCKET_NAME", "worktrack-uploads"),
+		LogLevel:      getEnv("LOG_LEVEL", "info"),
+		AppEnv:        getEnv("APP_ENV", "development"),
 	}
 }
 
 // ValidateProduction prevents the API from starting with unsafe placeholder
 // values when deployed. Local development keeps convenient defaults.
 func (c *Config) ValidateProduction() error {
-	if strings.EqualFold(getEnv("APP_ENV", "development"), "production") {
+	if strings.EqualFold(c.AppEnv, "production") {
 		if c.DatabaseURL == "" {
 			return fmt.Errorf("DATABASE_URL must be configured in production")
 		}
@@ -53,6 +69,9 @@ func (c *Config) ValidateProduction() error {
 		}
 		if c.AllowedOrigin == "" || strings.Contains(c.AllowedOrigin, "*") {
 			return fmt.Errorf("ALLOWED_ORIGINS must list explicit HTTPS frontend origins in production")
+		}
+		if c.LogLevel == "" {
+			c.LogLevel = "info" // default to info in production
 		}
 	}
 	return nil

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"worktrack/backend/internal/services"
@@ -451,7 +452,7 @@ func (h *AttendanceHandler) GetEmployeeMonthlySummary(c *gin.Context) {
 	})
 }
 
-// GetMyAttendanceHistory جلب سجل الحضور للمستخدم الحالي
+// GetMyAttendanceHistory جلب سجل الحضور للمستخدم الحالي مع pagination
 func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
@@ -459,8 +460,31 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 	year := c.DefaultQuery("year", "")
 	month := c.DefaultQuery("month", "")
 
+	// الحصول على معاملات pagination
+	page := 1
+	limit := 30
+
+	if p := c.Query("page"); p != "" {
+		if val, err := strconv.Atoi(p); err == nil && val > 0 {
+			page = val
+		}
+	}
+
+	if l := c.Query("limit"); l != "" {
+		if val, err := strconv.Atoi(l); err == nil && val > 0 && val <= 100 {
+			limit = val
+		}
+	}
+
+	offset := (page - 1) * limit
+
 	// بناء الاستعلام حسب الفلتر
-	query := `
+	countQuery := `
+		SELECT COUNT(*)
+		FROM attendance a
+		WHERE a.user_id = $1
+	`
+	dataQuery := `
 		SELECT
 			a.id,
 			a.worksite_id,
@@ -493,19 +517,35 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 	// إضافة الفلتر فقط إذا تم تحديد السنة والشهر معاً
 	if year != "" && month != "" {
 		argCount++
-		query += fmt.Sprintf(" AND EXTRACT(YEAR FROM check_in_time) = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND EXTRACT(YEAR FROM check_in_time) = $%d", argCount)
+		dataQuery += fmt.Sprintf(" AND EXTRACT(YEAR FROM check_in_time) = $%d", argCount)
 		args = append(args, year)
 
 		argCount++
-		query += fmt.Sprintf(" AND EXTRACT(MONTH FROM check_in_time) = $%d", argCount)
+		dataQuery += fmt.Sprintf(" AND EXTRACT(MONTH FROM check_in_time) = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND EXTRACT(MONTH FROM check_in_time) = $%d", argCount)
 		args = append(args, month)
 	}
 
-	query += " ORDER BY check_in_time DESC"
+	dataQuery += " ORDER BY check_in_time DESC"
 
-	log.Printf("📝 جلب سجل الحضور للمستخدم: user_id=%s, year=%s, month=%s", userID.(string), year, month)
+	// الحصول على العدد الكلي
+	var total int64
+	err := h.Service.DB.QueryRow(countQuery, args...).Scan(&total)
+	if err != nil {
+		log.Printf("❌ خطأ في جلب العدد الكلي: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب سجل الحضور"})
+		return
+	}
 
-	rows, err := h.Service.DB.Query(query, args...)
+	// إضافة pagination
+	argCount++
+	dataQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argCount, argCount+1)
+	args = append(args, limit, offset)
+
+	log.Printf("📝 جلب سجل الحضور للمستخدم: user_id=%s, year=%s, month=%s, page=%d, limit=%d", userID.(string), year, month, page, limit)
+
+	rows, err := h.Service.DB.Query(dataQuery, args...)
 	if err != nil {
 		log.Printf("❌ فشل جلب سجل الحضور: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب سجل الحضور"})
@@ -570,8 +610,21 @@ func (h *AttendanceHandler) GetMyAttendanceHistory(c *gin.Context) {
 		history = append(history, record)
 	}
 
-	log.Printf("✅ تم جلب %d سجل حضور", len(history))
-	c.JSON(http.StatusOK, history)
+	totalPages := int(total) / limit
+	if int(total)%limit != 0 {
+		totalPages++
+	}
+
+	log.Printf("✅ تم جلب %d سجل حضور (صفحة %d من %d)", len(history), page, totalPages)
+	c.JSON(http.StatusOK, gin.H{
+		"data":       history,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": totalPages,
+		},
+	})
 }
 
 // GetMyMonthlySummary جلب الملخص الشهري للمستخدم الحالي

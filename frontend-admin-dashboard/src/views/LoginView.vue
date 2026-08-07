@@ -60,7 +60,6 @@
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
-        <div v-if="debugInfo" class="debug">{{ debugInfo }}</div>
 
         <button type="submit" class="btn btn--primary btn--block" :disabled="loading">
           <svg v-if="loading" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin">
@@ -100,15 +99,8 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
-const debugInfo = ref('')
 const emailInput = ref(null)
 const isDarkMode = ref(false)
-
-const languages = [
-  { code: 'ar', name: 'العربية', dir: 'rtl', label: 'AR' },
-  { code: 'he', name: 'עברית', dir: 'rtl', label: 'HE' },
-  { code: 'en', name: 'English', dir: 'ltr', label: 'EN' }
-]
 
 onMounted(() => {
   // Load saved theme preference
@@ -118,6 +110,12 @@ onMounted(() => {
     document.documentElement.setAttribute('data-theme', 'dark')
   }
 })
+
+const languages = [
+  { code: 'ar', name: 'العربية', dir: 'rtl', label: 'AR' },
+  { code: 'he', name: 'עברית', dir: 'rtl', label: 'HE' },
+  { code: 'en', name: 'English', dir: 'ltr', label: 'EN' }
+]
 
 function removeReadonly() {
   if (emailInput.value) {
@@ -159,39 +157,21 @@ async function handleRefresh() {
 async function handleSubmit() {
   loading.value = true
   error.value = ''
-  debugInfo.value = ''
 
   try {
-    debugInfo.value = t('login_connecting')
-    
     const data = await login(email.value, password.value)
-    
-    debugInfo.value = t('login_success')
     authStore.setUser(data.user)
     
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 500)
+    // التوجيه فوراً بدون timeout
+    await router.push('/dashboard')
     
   } catch (e) {
-    debugInfo.value = t('login_failed')
-    
     if (e.response) {
       const status = e.response.status
       const msg = e.response.data?.error || t('login_error_unknown')
       error.value = msg
-      debugInfo.value += `\n${t('login_error_code_prefix')} ${status}`
-      debugInfo.value += `\n${t('login_error_message_prefix')} ${msg}`
-      
-      if (status === 401) {
-        debugInfo.value += '\n\n' + t('login_check')
-        debugInfo.value += '\n1. ' + t('login_check_user_exists')
-        debugInfo.value += '\n2. ' + t('login_check_password_correct')
-        debugInfo.value += '\n3. ' + t('login_check_account_active')
-      }
     } else {
       error.value = t('login_server_unreachable')
-      debugInfo.value += '\n' + t('login_server_not_responding')
     }
   } finally {
     loading.value = false

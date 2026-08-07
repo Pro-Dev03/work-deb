@@ -13,7 +13,6 @@
           <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
         </div>
         <h1>WorkTrack</h1>
-        <p>بوابة الموظف</p>
       </div>
 
       <!-- Theme & Language Toolbar (Above Phone Input) -->
@@ -83,7 +82,7 @@
         </button>
       </form>
       
-      <p class="form-hint">بتسجيل الدخول أنت توافق على شروط الاستخدام</p>
+      <p class="form-hint">{{ t('terms_agreement') }}</p>
     </div>
     </div>
   </PullToRefresh>

@@ -119,7 +119,10 @@ async function fetchMyAttendanceHistory() {
         month: selectedMonth.value
       }
     })
-    myAttendanceHistory.value = response.data || []
+    const data = response.data
+    // الباك-أند يُرجع { data: [...], pagination: {...} }
+    const records = Array.isArray(data) ? data : (data?.data || data?.records || [])
+    myAttendanceHistory.value = records.filter(record => record !== null)
   } catch (error) {
     console.error('Failed to fetch attendance history:', error)
     myAttendanceHistory.value = []

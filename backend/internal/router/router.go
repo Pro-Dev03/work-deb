@@ -5,7 +5,6 @@ import (
 
 	"worktrack/backend/internal/config"
 	"worktrack/backend/internal/handlers"
-	"worktrack/backend/internal/i18n"
 	"worktrack/backend/internal/middleware"
 	"worktrack/backend/internal/services"
 
@@ -18,26 +17,31 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 	r.Use(middleware.CORSMiddleware(cfg.AllowedOrigin))
 	r.Use(middleware.RateLimiter())
 
+	// CSRF middleware (معطل حالياً - httpOnly cookies مع SameSite=Strict توفر حماية كافية)
+	// csrfMiddleware := middleware.NewCSRFMiddleware()
+
 	authService := services.NewAuthService(cfg.JWTSecret)
 	attendanceService := services.NewAttendanceService(db)
 	notificationService := services.NewNotificationService(db)
 	geocodingService := services.NewGeocodingService(cfg.GeoapifyKey)
+	refreshTokenService := services.NewRefreshTokenService(db)
 
-	authHandler := handlers.NewAuthHandler(db, authService)
+	authHandler := handlers.NewAuthHandler(db, authService, refreshTokenService, cfg)
 	attendanceHandler := handlers.NewAttendanceHandler(attendanceService, notificationService)
 	worksiteHandler := handlers.NewWorksiteHandler(db)
 	reportHandler := handlers.NewReportHandler(db)
 	notificationHandler := handlers.NewNotificationHandler(db)
 	serviceHandler := handlers.NewServiceHandler(db)
-	wsHandler := handlers.NewWSHandler()
+	wsHandler := handlers.NewWSHandler(cfg.AllowedOrigin)
 	locationHandler := handlers.NewLocationHandler(db, wsHandler)
 	geocodingHandler := handlers.NewGeocodingHandler(geocodingService)
 	notesHandler := handlers.NewNotesHandler(db)
+	healthHandler := handlers.NewHealthHandler(db)
 
-	r.GET("/health", func(c *gin.Context) {
-		lang := i18n.Detect(c)
-		c.JSON(200, gin.H{"status": "ok", "message": i18n.T(lang, "msg_health_ok")})
-	})
+	// Health check endpoints
+	r.GET("/health", healthHandler.Health)
+	r.GET("/health/ready", healthHandler.Ready)
+	r.GET("/health/live", healthHandler.Live)
 
 	// WebSocket endpoint للتتبع اللحظي
 	r.GET("/ws", wsHandler.HandleWebSocket)
@@ -47,15 +51,19 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 	// مسارات المصادقة (بدون توكن)
 	api.POST("/auth/login", authHandler.Login)
 	api.POST("/auth/phone-login", authHandler.PhoneLogin)
+	api.POST("/auth/refresh", authHandler.RefreshToken)
+	api.POST("/auth/logout", authHandler.Logout)
 	api.GET("/geocode/autocomplete", geocodingHandler.Autocomplete)
 
 	// المسارات المحمية (تتطلب توكن)
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(authService))
+	// protected.Use(csrfMiddleware.Middleware())
 	{
 		// المستخدم
 		protected.GET("/auth/me", authHandler.Me)
 		protected.GET("/auth/device", authHandler.GetDeviceInfo)
+		protected.POST("/auth/logout-all", authHandler.LogoutAll)
 
 		// المسارات المتاحة للموظفين (بدون التحقق من الاشتراك)
 		employee := protected.Group("")
