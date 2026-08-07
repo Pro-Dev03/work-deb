@@ -154,6 +154,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	response := gin.H{
+		"access_token": token,
 		"user": gin.H{
 			"id":                  userID,
 			"full_name":           fullName,

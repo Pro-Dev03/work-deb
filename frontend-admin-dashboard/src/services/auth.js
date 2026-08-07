@@ -3,25 +3,30 @@ import api from './api'
 export async function login(email, password) {
   try {
     console.log('📤 محاولة تسجيل الدخول:', { email })
-    
-    const { data } = await api.post('/auth/login', { 
-      email: email.trim(), 
-      password: password.trim() 
+
+    const { data } = await api.post('/auth/login', {
+      email: email.trim(),
+      password: password.trim()
     })
-    
+
     console.log('✅ تم تسجيل الدخول بنجاح:', data)
-    
-    // تخزين بيانات المستخدم فقط (التوكنات في httpOnly cookies)
+
+    // تخزين بيانات المستخدم والتوكن في localStorage (الحل المزدوج للكوكيز)
     if (data.user) {
       localStorage.setItem('worktrack_admin_user', JSON.stringify(data.user))
       console.log('💾 تم تخزين بيانات المستخدم في localStorage')
     } else {
       console.warn('⚠️ لا توجد بيانات مستخدم في الاستجابة')
     }
-    
-    // التحقق من أن الكوكيز تم تعيينها بشكل صحيح
-    console.log('🍪 التحقق من الكوكيز بعد تسجيل الدخول')
-    
+
+    // تخزين التوكن في localStorage لاستخدامه في Authorization header
+    if (data.access_token) {
+      localStorage.setItem('worktrack_admin_token', data.access_token)
+      console.log('💾 تم تخزين التوكن في localStorage')
+    } else {
+      console.warn('⚠️ لا يوجد توكن في الاستجابة')
+    }
+
     return data
   } catch (error) {
     console.error('❌ فشل تسجيل الدخول:', error.response?.data || error.message)
@@ -43,6 +48,7 @@ export async function logout() {
   } finally {
     // تنظيف localStorage في كل الأحوال
     localStorage.removeItem('worktrack_admin_user')
+    localStorage.removeItem('worktrack_admin_token')
   }
 }
 
@@ -52,6 +58,6 @@ export function currentUser() {
 }
 
 export function getToken() {
-  // لم يعد مستخدماً - التوكنات في httpOnly cookies
-  return null
+  // الحل المزدوج: التوكن في localStorage كنسخة احتياطية
+  return localStorage.getItem('worktrack_admin_token')
 }
