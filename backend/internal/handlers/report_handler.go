@@ -44,8 +44,8 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		AND a.check_out_time IS NOT NULL
 	`).Scan(&completedToday)
 
-	// إحصائيات المهام
-	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'completed' AND created_at::date = CURRENT_DATE`).Scan(&completed)
+	// إحصائيات المهام - جلب جميع المهام النشطة
+	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'completed'`).Scan(&completed)
 	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'in_progress'`).Scan(&inProgress)
 	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'pending'`).Scan(&pending)
 	_ = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = 'late'`).Scan(&late)
