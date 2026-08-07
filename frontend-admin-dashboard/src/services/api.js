@@ -70,29 +70,67 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => {
     const cacheKey = getCacheKey(response.config.url, response.config.params)
-    
+
     // عدم تخزين نقاط النهاية الحساسة في الـ cache
     if (NON_CACHEABLE_ENDPOINTS.some(endpoint => response.config.url.includes(endpoint))) {
       return response
     }
-    
+
     // تخزين الاستجابة في الـ cache للطلبات GET القابلة للتخزين
     if (response.config.method === 'get' && CACHEABLE_ENDPOINTS.some(endpoint => response.config.url.includes(endpoint))) {
       cacheService.set(cacheKey, response.data)
     }
-    
+
     return response
   },
   async (error) => {
     const originalRequest = error.config
 
-    // إذا كان الخطأ 401 - تنظيف البيانات والتوجيه لتسجيل الدخول مباشرة
+    // إذا كان الخطأ 401 - محاولة تجديد التوكن تلقائياً
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('🔄 محاولة تجديد التوكن تلقائياً...')
+
+      try {
+        // محاولة تجديد التوكن
+        const refreshResponse = await api.post('/auth/refresh')
+
+        if (refreshResponse.data.message) {
+          console.log('✅ تم تجديد التوكن بنجاح')
+
+          // تحديث التوكن في localStorage إذا تم إرجاعه
+          if (refreshResponse.data.access_token) {
+            localStorage.setItem('worktrack_admin_token', refreshResponse.data.access_token)
+          }
+
+          // إعادة محاولة الطلب الأصلي
+          originalRequest._retry = true
+          return api(originalRequest)
+        }
+      } catch (refreshError) {
+        console.error('❌ فشل تجديد التوكن:', refreshError)
+
+        // إذا فشل التجديد، تنظيف البيانات والتوجيه لتسجيل الدخول
+        localStorage.removeItem('worktrack_admin_user')
+        localStorage.removeItem('worktrack_admin_token')
+        localStorage.removeItem('csrf_token')
+
+        // إعادة توجيه لصفحة تسجيل الدخول إذا لم نكن فيها
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
+
+        return Promise.reject(refreshError)
+      }
+    }
+
+    // إذا كان الخطأ 401 ولم ينجح التجديد، أو خطأ آخر
     if (error.response?.status === 401) {
-      console.error('❌ خطأ 401 - الجلسة منتهية أو غير صالحة')
+      console.error('❌ خطأ 401 - الجلسة منتهية نهائياً')
 
       // تنظيف localStorage
       localStorage.removeItem('worktrack_admin_user')
       localStorage.removeItem('worktrack_admin_token')
+      localStorage.removeItem('csrf_token')
 
       // إعادة توجيه لصفحة تسجيل الدخول إذا لم نكن فيها
       if (window.location.pathname !== '/login') {

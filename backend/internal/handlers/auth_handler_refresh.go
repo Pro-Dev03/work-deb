@@ -51,30 +51,32 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	// إرسال access token جديد كـ httpOnly cookie
-	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(
 		"access_token",
 		newToken,
-		3600, // 1 hour
+		24*3600, // 24 hours
 		"/",
 		"",
-		h.Config.ShouldUseSecureCookies(), // secure - true in production, false in development
+		false, // secure - false for development (HTTP)
 		true, // httpOnly
 	)
 
 	// إرسال refresh token جديد كـ httpOnly cookie
-	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(
 		"refresh_token",
 		newRefreshToken,
 		7*24*3600, // 7 days
 		"/",
 		"",
-		h.Config.ShouldUseSecureCookies(), // secure - true in production, false in development
+		false, // secure - false for development (HTTP)
 		true, // httpOnly
 	)
 
-	c.JSON(http.StatusOK, gin.H{"message": i18n.T(lang, "msg_session_renewed")})
+	// إرجاع access_token في الاستجابة للواجهة الأمامية (نسخة احتياطية)
+	c.JSON(http.StatusOK, gin.H{
+		"message": i18n.T(lang, "msg_session_renewed"),
+		"access_token": newToken,
+	})
 }
 
 // Logout يخرج المستخدم ويلغي refresh token
