@@ -30,7 +30,8 @@ const segments = computed(() => {
     { key: 'pending', label: 'قيد الانتظار', value: props.pending, color: 'var(--line-strong)' },
     { key: 'late', label: 'متأخرة', value: props.late, color: 'var(--signal-out)' },
   ]
-  return defs.map((d) => ({ ...d, pct: total > 0 ? (d.value / total) * 100 : 0 }))
+  // فقط إظهار الفئات التي لها قيم
+  return defs.filter(d => d.value > 0).map((d) => ({ ...d, pct: total > 0 ? (d.value / total) * 100 : 0 }))
 })
 </script>
 

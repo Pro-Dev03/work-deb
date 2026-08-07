@@ -89,37 +89,32 @@
           <h4>معلومات التصحيح:</h4>
           <div class="debug-grid">
             <div class="debug-item">
-              <span class="debug-label">المهام المكتملة:</span>
+              <span class="debug-label">المكتملة:</span>
               <span class="debug-value">{{ summary._debug.tasks_completed }}</span>
             </div>
             <div class="debug-item">
-              <span class="debug-label">المهام الجارية:</span>
+              <span class="debug-label">الجارية:</span>
               <span class="debug-value">{{ summary._debug.tasks_in_progress }}</span>
             </div>
             <div class="debug-item">
-              <span class="debug-label">المهام المعلقة:</span>
+              <span class="debug-label">المعلقة:</span>
               <span class="debug-value">{{ summary._debug.tasks_pending }}</span>
             </div>
             <div class="debug-item">
-              <span class="debug-label">المهام المتأخرة:</span>
+              <span class="debug-label">المتأخرة:</span>
               <span class="debug-value">{{ summary._debug.tasks_late }}</span>
             </div>
             <div class="debug-item">
-              <span class="debug-label">إجمالي المهام:</span>
+              <span class="debug-label">إجمالي:</span>
               <span class="debug-value">{{ summary._debug.total_tasks }}</span>
+            </div>
+            <div class="debug-item full-width" v-if="summary._debug.note">
+              <span class="debug-label">ملاحظة:</span>
+              <span class="debug-value">{{ summary._debug.note }}</span>
             </div>
             <div class="debug-item full-width" v-if="summary._debug.task_statuses && summary._debug.task_statuses.length > 0">
               <span class="debug-label">الحالات الموجودة:</span>
               <span class="debug-value">{{ summary._debug.task_statuses.join(', ') }}</span>
-            </div>
-            <div class="debug-item full-width" v-if="summary._debug.sample_tasks && summary._debug.sample_tasks.length > 0">
-              <span class="debug-label">عينة المهام:</span>
-              <div class="debug-tasks">
-                <div v-for="task in summary._debug.sample_tasks" :key="task.id" class="debug-task">
-                  <span class="debug-task-title">{{ task.title }}</span>
-                  <span class="debug-task-status">{{ task.status }}</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>

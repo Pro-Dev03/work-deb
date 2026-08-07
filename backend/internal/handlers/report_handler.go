@@ -53,30 +53,23 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		completedToday = 0
 	}
 
-	// إحصائيات المهام - جلب جميع المهام النشطة بدون فلتر تاريخ
-	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "completed").Scan(&completed)
+	// إحصائيات المهام - استخدام جدول attendance بدلاً من tasks
+	// النظام يستخدم attendance لتتبع العمل الحالي
+	err = h.DB.QueryRow(`SELECT COUNT(*) FROM attendance WHERE status = $1`, "completed").Scan(&completed)
 	if err != nil {
-		fmt.Printf("❌ Error fetching completed tasks: %v\n", err)
+		fmt.Printf("❌ Error fetching completed attendance: %v\n", err)
 		completed = 0
 	}
 	
-	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "in_progress").Scan(&inProgress)
+	err = h.DB.QueryRow(`SELECT COUNT(*) FROM attendance WHERE status = $1`, "in_progress").Scan(&inProgress)
 	if err != nil {
-		fmt.Printf("❌ Error fetching in_progress tasks: %v\n", err)
+		fmt.Printf("❌ Error fetching in_progress attendance: %v\n", err)
 		inProgress = 0
 	}
 	
-	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "pending").Scan(&pending)
-	if err != nil {
-		fmt.Printf("❌ Error fetching pending tasks: %v\n", err)
-		pending = 0
-	}
-	
-	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "late").Scan(&late)
-	if err != nil {
-		fmt.Printf("❌ Error fetching late tasks: %v\n", err)
-		late = 0
-	}
+	// pending و late ليس لديهم معادل في attendance، نستخدم 0
+	pending = 0
+	late = 0
 	
 	err = h.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'employee' AND is_active = TRUE`).Scan(&totalEmployees)
 	if err != nil {
@@ -84,42 +77,42 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		totalEmployees = 0
 	}
 
-	// فحص إضافي: استعلام جميع الحالات الموجودة في جدول المهام
-	var totalTasks int
-	var taskStatuses []string
-	statusRows, err := h.DB.Query(`SELECT status, COUNT(*) FROM tasks GROUP BY status`)
+	// فحص إضافي: استعلام جميع الحالات الموجودة في جدول attendance
+	var totalAttendance int
+	var attendanceStatuses []string
+	statusRows, err := h.DB.Query(`SELECT status, COUNT(*) FROM attendance GROUP BY status`)
 	if err != nil {
-		fmt.Printf("❌ Error fetching task status breakdown: %v\n", err)
+		fmt.Printf("❌ Error fetching attendance status breakdown: %v\n", err)
 	} else {
 		defer statusRows.Close()
 		for statusRows.Next() {
 			var status string
 			var count int
 			statusRows.Scan(&status, &count)
-			taskStatuses = append(taskStatuses, fmt.Sprintf("%s:%d", status, count))
-			totalTasks += count
+			attendanceStatuses = append(attendanceStatuses, fmt.Sprintf("%s:%d", status, count))
+			totalAttendance += count
 		}
 	}
 
-	// فحص عينة من المهام
-	var sampleTasks []gin.H
-	sampleRows, err := h.DB.Query(`SELECT id, title, status, created_at FROM tasks LIMIT 3`)
+	// فحص عينة من attendance
+	var sampleAttendance []gin.H
+	sampleRows, err := h.DB.Query(`SELECT id, user_id, status, check_in_time FROM attendance LIMIT 3`)
 	if err == nil {
 		defer sampleRows.Close()
 		for sampleRows.Next() {
-			var id, title, status, createdAt string
-			sampleRows.Scan(&id, &title, &status, &createdAt)
-			sampleTasks = append(sampleTasks, gin.H{
+			var id, userId, status, checkInTime string
+			sampleRows.Scan(&id, &userId, &status, &checkInTime)
+			sampleAttendance = append(sampleAttendance, gin.H{
 				"id": id,
-				"title": title,
+				"user_id": userId,
 				"status": status,
-				"created_at": createdAt,
+				"check_in_time": checkInTime,
 			})
 		}
 	}
 
-	fmt.Printf("📊 Task Statistics: completed=%d, in_progress=%d, pending=%d, late=%d, total=%d\n", 
-		completed, inProgress, pending, late, totalTasks)
+	fmt.Printf("📊 Attendance Statistics: completed=%d, in_progress=%d, total=%d\n", 
+		completed, inProgress, totalAttendance)
 
 	c.JSON(http.StatusOK, gin.H{
 		"completed_today":     completed,
@@ -134,9 +127,10 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 			"tasks_in_progress": inProgress,
 			"tasks_pending": pending,
 			"tasks_late": late,
-			"total_tasks": totalTasks,
-			"task_statuses": taskStatuses,
-			"sample_tasks": sampleTasks,
+			"total_tasks": totalAttendance,
+			"task_statuses": attendanceStatuses,
+			"sample_tasks": sampleAttendance,
+			"note": "Using attendance table instead of tasks table",
 		},
 	})
 }
