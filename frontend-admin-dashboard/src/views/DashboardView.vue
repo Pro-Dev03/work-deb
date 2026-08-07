@@ -22,12 +22,7 @@
       <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-card__icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="8" r="4" fill="#3b82f6" fill-opacity="0.2"/>
-              <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8"/>
-              <circle cx="18" cy="6" r="2" fill="#3b82f6" fill-opacity="0.15"/>
-              <path d="M16 14c1.5-1.5 3-2 4-2" stroke-opacity="0.6"/>
-            </svg>
+            <Users :size="28" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ stats.total_employees || 0 }}</span>
@@ -36,11 +31,7 @@
         </div>
         <div class="stat-card stat-card--waiting">
           <span class="stat-card__icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9"/>
-              <path d="M12 6v6l4 2"/>
-              <circle cx="12" cy="12" r="2" fill="#f59e0b" fill-opacity="0.2"/>
-            </svg>
+            <Clock :size="28" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ stats.waiting_employees || 0 }}</span>
@@ -49,11 +40,7 @@
         </div>
         <div class="stat-card stat-card--active">
           <span class="stat-card__icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9"/>
-              <path d="M12 2v4m0 12v4m8-8h-4M6 12H2m15.07-7.07l-2.83 2.83M9.76 14.24l-2.83 2.83m0-10.66l2.83 2.83m4.48 4.48l2.83 2.83"/>
-              <circle cx="12" cy="12" r="3" fill="#10b981" fill-opacity="0.2"/>
-            </svg>
+            <Activity :size="28" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ activeEmployees.length }}</span>
@@ -62,11 +49,7 @@
         </div>
         <div class="stat-card stat-card--completed">
           <span class="stat-card__icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="4"/>
-              <path d="M8 12l3 3 7-7" stroke-width="2.5"/>
-              <circle cx="12" cy="12" r="8" stroke-width="1" stroke-opacity="0.3"/>
-            </svg>
+            <CheckCircle :size="28" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ stats.completed_employees || 0 }}</span>
@@ -99,10 +82,7 @@
           :class="{ active: activeTab === 'active' }"
           @click="activeTab = 'active'"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
+          <Activity :size="16" />
           {{ t('tab_active') }} ({{ activeEmployees.length }})
         </button>
         <button 
@@ -110,10 +90,7 @@
           :class="{ active: activeTab === 'waiting' }"
           @click="activeTab = 'waiting'"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
+          <Clock :size="16" />
           {{ t('tab_waiting') }} ({{ waitingEmployees.length }})
         </button>
         <button 
@@ -121,10 +98,7 @@
           :class="{ active: activeTab === 'completed' }"
           @click="activeTab = 'completed'"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+          <CheckCircle :size="16" />
           {{ t('tab_completed') }} ({{ completedEmployees.length }})
         </button>
         <button 
@@ -132,11 +106,7 @@
           :class="{ active: activeTab === 'alerts' }"
           @click="activeTab = 'alerts'"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
+          <AlertTriangle :size="16" />
           {{ t('tab_alerts') }} ({{ outsideCount }})
         </button>
       </div>
@@ -165,7 +135,7 @@
               }"
             >
               <div class="employee-item__avatar">
-                {{ emp.full_name.slice(0, 1) }}
+                <User :size="16" />
                 <span class="status-dot" :class="emp.status"></span>
               </div>
               <div class="employee-item__info">
@@ -213,7 +183,7 @@
               class="employee-item status-waiting"
             >
               <div class="employee-item__avatar" style="background: var(--signal-warning-tint); color: var(--signal-warning);">
-                {{ emp.full_name.slice(0, 1) }}
+                <User :size="16" />
                 <span class="status-dot waiting"></span>
               </div>
               <div class="employee-item__info">
@@ -245,7 +215,7 @@
               class="employee-item status-completed"
             >
               <div class="employee-item__avatar" style="background: var(--signal-in-tint); color: var(--signal-in);">
-                {{ emp.full_name.slice(0, 1) }}
+                <User :size="16" />
                 <span class="status-dot completed"></span>
               </div>
               <div class="employee-item__info">
@@ -310,7 +280,9 @@
         <div class="modal-body">
           <div class="employee-detail">
             <div class="employee-detail__header">
-              <span class="employee-detail__avatar">{{ selectedEmployee.full_name.slice(0, 1) }}</span>
+              <span class="employee-detail__avatar">
+                <User :size="20" />
+              </span>
               <div>
                 <h4>{{ selectedEmployee.full_name }}</h4>
                 <p>{{ selectedEmployee.phone }}</p>
@@ -374,6 +346,7 @@ import api from '../services/api'
 import RealMap from '../components/RealMap.vue'
 import { useI18n } from '../services/i18n'
 import wsService from '../services/websocket'
+import { Users, Clock, Activity, CheckCircle, AlertTriangle, User } from '@lucide/vue'
 
 const { t } = useI18n()
 
@@ -653,8 +626,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 .stat-card--waiting { border-left: 4px solid var(--signal-warning); }
+.stat-card--waiting .stat-card__icon { background: var(--signal-warning-tint); color: var(--signal-warning); }
 .stat-card--active { border-left: 4px solid var(--signal-in); }
+.stat-card--active .stat-card__icon { background: var(--signal-in-tint); color: var(--signal-in); }
 .stat-card--completed { border-left: 4px solid #22C55E; }
+.stat-card--completed .stat-card__icon { background: #22C55E20; color: #22C55E; }
 
 .stat-card__icon { 
   width: 40px;
@@ -666,6 +642,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   border-radius: var(--radius-md);
   color: var(--brand);
   transition: all var(--transition-base);
+}
+
+.stat-card__icon :deep(svg) {
+  color: inherit;
+  stroke: currentColor;
 }
 
 .stat-card:hover .stat-card__icon {
@@ -725,6 +706,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   gap: 8px;
   position: relative;
   overflow: hidden;
+}
+
+.tab-btn :deep(svg) {
+  color: inherit;
 }
 
 .tab-btn::before {
@@ -833,9 +818,12 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
   flex-shrink: 0;
+}
+
+.employee-item__avatar :deep(svg) {
+  color: var(--brand);
+  stroke: var(--brand);
 }
 
 .status-dot {
@@ -892,7 +880,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   .employee-item__avatar {
     width: 36px;
     height: 36px;
-    font-size: 14px;
   }
 
   .status-dot {
@@ -1042,7 +1029,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   background: var(--brand-tint);
   color: var(--brand);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 20px;
+}
+
+.employee-detail__avatar :deep(svg) {
+  color: var(--brand);
+  stroke: var(--brand);
 }
 
 .employee-detail__info {

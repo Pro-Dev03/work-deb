@@ -202,20 +202,26 @@ func (s *AttendanceService) CheckOut(userID, attendanceID string, lat, lng float
 }
 
 // ForceCheckOut إنهاء دوام الموظف من قبل المدير (بدون التحقق من الموقع)
-func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (float64, error) {
+func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (map[string]interface{}, error) {
 	log.Printf("📌 ForceCheckOut - الـ ID: %s, المدير: %s", attendanceID, adminID)
 
 	var checkInTime time.Time
 	var userID string
+	var worksiteID string
+	var worksiteName string
+	var employeeName string
 
 	// جلب معلومات الوردية
 	err := s.DB.QueryRow(`
-		SELECT user_id, check_in_time FROM attendance 
-		WHERE id = $1 AND status = 'in_progress'
-	`, attendanceID).Scan(&userID, &checkInTime)
+		SELECT a.user_id, a.check_in_time, a.worksite_id, u.full_name, w.name
+		FROM attendance a
+		JOIN users u ON a.user_id = u.id
+		LEFT JOIN worksites w ON a.worksite_id = w.id
+		WHERE a.id = $1 AND a.status = 'in_progress'
+	`, attendanceID).Scan(&userID, &checkInTime, &worksiteID, &employeeName, &worksiteName)
 	if err != nil {
 		log.Printf("❌ لا يوجد وردية نشطة: %v", err)
-		return 0, errors.New("لا يوجد وردية نشطة")
+		return nil, errors.New("لا يوجد وردية نشطة")
 	}
 
 	now := utils.NowInJerusalem()
@@ -236,13 +242,23 @@ func (s *AttendanceService) ForceCheckOut(attendanceID string, adminID string) (
 			WHERE id = $2
 		`, now, attendanceID)
 		if err != nil {
-			log.Printf("❌ فشل تحديث سجل الحضور: %v", err)
-			return 0, fmt.Errorf("فشل تحديث سجل الحضور: %w", err)
+			log.Printf("❌ فشل إنهاء الدوام: %v", err)
+			return nil, fmt.Errorf("فشل إنهاء الدوام: %w", err)
 		}
 	}
 
 	workedHours := now.Sub(checkInTime).Hours()
-	log.Printf("✅ تم إنهاء الدوام من قبل المدير: %.2f ساعة", workedHours)
+	log.Printf("✅ تم إنهاء الدوام: %.2f ساعة", workedHours)
 
-	return workedHours, nil
+	// إرجاع جميع المعلومات المطلوبة
+	result := map[string]interface{}{
+		"employee_name": employeeName,
+		"worksite_name": worksiteName,
+		"check_in_time": checkInTime,
+		"check_out_time": now,
+		"worked_hours": workedHours,
+		"message": "تم إنهاء الدوام بنجاح",
+	}
+
+	return result, nil
 }

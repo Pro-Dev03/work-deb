@@ -65,6 +65,7 @@
   "actions": "إجراءات",
   "created_at": "تاريخ الإنشاء",
   "phone_hint": "أدخل رقم هاتفك كما هو مسجل في النظام",
+  "auto_checkin_detected": "تم تسجيل دخولك تلقائياً بواسطة المدير",
   "created_by_admin": "تم إنشاء حسابك بواسطة مدير النظام",
   "device_verify": "🔒 يتم التحقق من الجهاز الخاص بك",
   "my_attendance_history": "سجل الحضور الخاص بي",
@@ -121,7 +122,7 @@
   "checkin_failed": "❌ فشل بدء الدوام",
   "no_active_shift": "⚠️ لا توجد وردية نشطة",
   "shift_restored": "🔄 تم استعادة الوردية النشطة",
-  "click_select_location_before_checkout": "📍 يجب الضغط على \"تحديد موقعك\" أولاً قبل إنهاء الدوام!",
+  "click_select_location_before_checkout": "يجب الضغط على \"تحديد موقعك\" أولاً قبل إنهاء الدوام",
   "click_select_location_again": "⚠️ اضغط على \"تحديد موقعك\" ثم حاول مرة أخرى",
   "location_determine_failed_retry": "📍 فشل تحديد الموقع. حاول مرة أخرى",
   "click_select_location_retry": "⚠️ اضغط على \"تحديد موقعك\" مرة أخرى",
@@ -175,5 +176,8 @@
   "day_hours": "ساعات العمل النهاري",
   "is_night_shift": "وردية ليلية",
   "shift_details": "تفاصيل الوردية",
-  "shift_analysis": "تحليل الوردية"
+  "shift_analysis": "تحليل الوردية",
+  "click_select_location_before_checkout": "يجب الضغط على تحديد موقعك أولاً قبل إنهاء الدوام",
+  "note": "ملاحظة",
+  "notes_subtitle": "الملاحظات والتنبيهات"
 }

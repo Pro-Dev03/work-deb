@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import './styles/tokens.css'
+import './styles/base.css'
 import i18n from './services/i18n'
 
 // PWA Installation Logic

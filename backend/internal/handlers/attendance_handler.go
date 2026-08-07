@@ -731,15 +731,182 @@ func (h *AttendanceHandler) ForceCheckOut(c *gin.Context) {
 
 	log.Printf("📝 طلب ForceCheckOut: attendance_id=%s, admin_id=%s", req.AttendanceID, adminIDStr)
 
-	workedHours, err := h.Service.ForceCheckOut(req.AttendanceID, adminIDStr)
+	result, err := h.Service.ForceCheckOut(req.AttendanceID, adminIDStr)
 	if err != nil {
 		log.Printf("❌ فشل ForceCheckOut: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	c.JSON(http.StatusOK, result)
+}
+
+// UpdateAttendanceTimes تعديل أوقات الحضور والانصراف
+func (h *AttendanceHandler) UpdateAttendanceTimes(c *gin.Context) {
+	attendanceID := c.Param("id")
+
+	var req struct {
+		CheckInTime  string `json:"check_in_time" binding:"required"`
+		CheckOutTime string `json:"check_out_time" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("❌ خطأ في البيانات: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
+		return
+	}
+
+	// تحويل الأوقات من string إلى time.Time
+	checkInTime, err := time.Parse(time.RFC3339, req.CheckInTime)
+	if err != nil {
+		log.Printf("❌ خطأ في تحويل وقت البدء: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "صيغة وقت البدء غير صحيحة"})
+		return
+	}
+
+	checkOutTime, err := time.Parse(time.RFC3339, req.CheckOutTime)
+	if err != nil {
+		log.Printf("❌ خطأ في تحويل وقت الانتهاء: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "صيغة وقت الانتهاء غير صحيحة"})
+		return
+	}
+
+	// التحقق من أن وقت الانتهاء بعد وقت البدء
+	if checkOutTime.Before(checkInTime) || checkOutTime.Equal(checkInTime) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "وقت الانتهاء يجب أن يكون بعد وقت البدء"})
+		return
+	}
+
+	// التحقق من وجود السجل
+	var exists bool
+	err = h.Service.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM attendance WHERE id = $1)`, attendanceID).Scan(&exists)
+	if err != nil || !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "سجل الحضور غير موجود"})
+		return
+	}
+
+	// تحديث الأوقات
+	_, err = h.Service.DB.Exec(`
+		UPDATE attendance 
+		SET check_in_time = $1, check_out_time = $2, updated_at = NOW()
+		WHERE id = $3
+	`, checkInTime, checkOutTime, attendanceID)
+
+	if err != nil {
+		log.Printf("❌ فشل تعديل أوقات الحضور: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تعديل أوقات الحضور"})
+		return
+	}
+
+	// حساب الساعات الجديدة
+	workedHours := checkOutTime.Sub(checkInTime).Hours()
+
+	log.Printf("✅ تم تعديل أوقات الحضور: %s, الساعات الجديدة: %.2f", attendanceID, workedHours)
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":      "✅ تم إنهاء الدوام بنجاح",
+		"message":      "تم تعديل أوقات الحضور بنجاح",
 		"worked_hours": workedHours,
 	})
+}
+
+// GetAttendanceManagementRecords جلب سجلات الحضور للإدارة
+func (h *AttendanceHandler) GetAttendanceManagementRecords(c *gin.Context) {
+	// الحصول على معاملات التصفية
+	employeeID := c.DefaultQuery("employee_id", "")
+	worksiteID := c.DefaultQuery("worksite_id", "")
+	dateFrom := c.DefaultQuery("date_from", "")
+	dateTo := c.DefaultQuery("date_to", "")
+
+	// بناء الاستعلام
+	query := `
+		SELECT
+			a.id,
+			a.user_id,
+			u.full_name as employee_name,
+			u.phone as employee_phone,
+			a.worksite_id,
+			COALESCE(w.name, a.worksite_name_for_history) as worksite_name,
+			a.check_in_time,
+			a.check_out_time,
+			a.status,
+			CASE
+				WHEN a.check_out_time IS NOT NULL THEN
+					EXTRACT(EPOCH FROM (a.check_out_time - a.check_in_time)) / 3600
+				ELSE NULL
+			END as worked_hours
+		FROM attendance a
+		LEFT JOIN users u ON a.user_id = u.id
+		LEFT JOIN worksites w ON a.worksite_id = w.id
+		WHERE 1=1
+	`
+	args := []interface{}{}
+	argCount := 0
+
+	if employeeID != "" {
+		argCount++
+		query += fmt.Sprintf(" AND a.user_id = $%d", argCount)
+		args = append(args, employeeID)
+	}
+
+	if worksiteID != "" {
+		argCount++
+		query += fmt.Sprintf(" AND a.worksite_id = $%d", argCount)
+		args = append(args, worksiteID)
+	}
+
+	if dateFrom != "" {
+		argCount++
+		query += fmt.Sprintf(" AND DATE(a.check_in_time) >= $%d", argCount)
+		args = append(args, dateFrom)
+	}
+
+	if dateTo != "" {
+		argCount++
+		query += fmt.Sprintf(" AND DATE(a.check_in_time) <= $%d", argCount)
+		args = append(args, dateTo)
+	}
+
+	query += " ORDER BY a.check_in_time DESC LIMIT 100"
+
+	rows, err := h.Service.DB.Query(query, args...)
+	if err != nil {
+		log.Printf("❌ فشل جلب سجلات الحضور للإدارة: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل جلب سجلات الحضور"})
+		return
+	}
+	defer rows.Close()
+
+	var records []gin.H
+	for rows.Next() {
+		var id, userID, employeeName, employeePhone, worksiteID, worksiteName string
+		var checkInTime, checkOutTime time.Time
+		var status string
+		var workedHours *float64
+
+		err := rows.Scan(
+			&id, &userID, &employeeName, &employeePhone, &worksiteID, &worksiteName,
+			&checkInTime, &checkOutTime, &status, &workedHours,
+		)
+		if err != nil {
+			log.Printf("❌ خطأ في قراءة البيانات: %v", err)
+			continue
+		}
+
+		record := gin.H{
+			"id":              id,
+			"user_id":         userID,
+			"employee_name":   employeeName,
+			"employee_phone":  employeePhone,
+			"worksite_id":     worksiteID,
+			"worksite_name":   worksiteName,
+			"check_in_time":   checkInTime,
+			"check_out_time": checkOutTime,
+			"status":         status,
+			"worked_hours":   workedHours,
+		}
+
+		records = append(records, record)
+	}
+
+	c.JSON(http.StatusOK, records)
 }

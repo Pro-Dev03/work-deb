@@ -15,9 +15,13 @@
     <!-- iOS Instructions Modal -->
     <div v-if="showIOSInstructions" class="ios-instructions-modal" @click.self="showIOSInstructions = false">
       <div class="ios-instructions-content">
-        <button class="close-btn" @click="showIOSInstructions = false">✕</button>
+        <button class="close-btn" @click="showIOSInstructions = false" aria-label="إغلاق">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
         <div class="ios-header">
-          <div class="ios-icon">📱</div>
+          <div class="ios-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          </div>
           <h3>{{ iosModalTitle }}</h3>
           <p class="ios-subtitle">{{ iosModalSubtitle }}</p>
         </div>
@@ -30,7 +34,7 @@
               <div class="step-visual">
                 <div class="phone-frame">
                   <div class="phone-screen">
-                    <div class="share-btn">⎋</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                   </div>
                 </div>
               </div>
@@ -41,7 +45,10 @@
             <div class="step-content">
               <p v-html="step2Text"></p>
               <div class="step-visual">
-                <div class="menu-item">➕ Add to Home Screen</div>
+                <div class="menu-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add to Home Screen
+                </div>
               </div>
             </div>
           </div>
@@ -169,31 +176,31 @@ function remindLater() {
 
 <style scoped>
 .pwa-install-container {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: 1000;
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 10;
 }
 
 .pwa-install-icon {
   width: 44px;
   height: 44px;
   padding: 0;
-  background: linear-gradient(135deg, #1F6F5C 0%, #2d8a6f 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  color: var(--text-inverse);
   border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(31, 111, 92, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pwa-install-icon:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(31, 111, 92, 0.4);
+  transform: scale(1.08);
+  box-shadow: var(--shadow-xl);
 }
 
 .pwa-install-icon:active {
@@ -207,96 +214,98 @@ function remindLater() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(28, 25, 23, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .ios-instructions-content {
-  background: white;
-  border-radius: 20px;
-  padding: 28px;
+  background: var(--surface);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
   max-width: 420px;
   width: 100%;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-xl);
   max-height: 90vh;
   overflow-y: auto;
 }
 
 .close-btn {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  background: none;
+  top: var(--space-4);
+  left: var(--space-4);
+  background: var(--surface-elevated);
   border: none;
-  font-size: 24px;
   cursor: pointer;
-  color: #666;
+  color: var(--text-secondary);
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background 0.2s;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .close-btn:hover {
-  background: #f0f0f0;
+  background: var(--gray-200);
+  color: var(--text-primary);
 }
 
 .ios-header {
   text-align: center;
-  margin-bottom: 24px;
-  padding-top: 8px;
+  margin-bottom: var(--space-6);
+  padding-top: var(--space-2);
 }
 
 .ios-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
+  width: 56px; height: 56px; margin: 0 auto var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--primary-100); color: var(--primary-700);
+  display: flex; align-items: center; justify-content: center;
 }
 
 .ios-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-  color: #1F6F5C;
-  font-weight: 700;
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  font-weight: var(--font-bold);
 }
 
 .ios-subtitle {
   margin: 0;
-  font-size: 14px;
-  color: #666;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
 }
 
 .steps {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-bottom: 24px;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
 }
 
 .step {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .step-number {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #1F6F5C 0%, #2d8a6f 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  color: var(--text-inverse);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: var(--font-bold);
+  font-size: var(--text-sm);
   flex-shrink: 0;
 }
 
@@ -305,31 +314,32 @@ function remindLater() {
 }
 
 .step p {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  color: #333;
-  line-height: 1.5;
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
 }
 
 .step strong {
-  color: #1F6F5C;
+  color: var(--primary-600);
 }
 
 .step-visual {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 8px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
   display: flex;
   justify-content: center;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
 }
 
 .phone-frame {
   width: 60px;
   height: 100px;
-  background: white;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   position: relative;
   display: flex;
   align-items: center;
@@ -339,111 +349,111 @@ function remindLater() {
 .phone-screen {
   width: 90%;
   height: 90%;
-  background: #f8f9fa;
-  border-radius: 4px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.share-btn {
-  font-size: 20px;
-  color: #007AFF;
+  color: var(--primary-500);
 }
 
 .menu-item {
-  background: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #333;
-  border: 1px solid #dee2e6;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
 }
 
 .add-btn {
-  background: #007AFF;
-  color: white;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
+  background: var(--primary-500);
+  color: var(--text-inverse);
+  padding: 6px var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
 }
 
 .benefits {
   display: flex;
   justify-content: space-around;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-lg);
 }
 
 .benefit {
-  font-size: 12px;
-  color: #495057;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
   text-align: center;
-  font-weight: 500;
+  font-weight: var(--font-medium);
 }
 
 .actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .got-it-btn {
   flex: 2;
   padding: 14px;
-  background: linear-gradient(135deg, #1F6F5C 0%, #2d8a6f 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  color: var(--text-inverse);
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: transform 0.2s;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .got-it-btn:hover {
-  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
 }
 
 .remind-btn {
   flex: 1;
   padding: 14px;
-  background: #f8f9fa;
-  color: #666;
-  border: 1px solid #dee2e6;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .remind-btn:hover {
-  background: #e9ecef;
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
 }
 
 /* RTL support */
 [dir="rtl"] .pwa-install-container {
   right: auto;
-  left: 16px;
+  left: 8px;
 }
 
 [dir="rtl"] .close-btn {
   left: auto;
-  right: 16px;
+  right: var(--space-4);
 }
 
 @media (max-width: 768px) {
   .pwa-install-container {
-    bottom: 12px;
-    right: 12px;
+    bottom: 6px;
+    right: 6px;
   }
   
   [dir="rtl"] .pwa-install-container {
     right: auto;
-    left: 12px;
+    left: 6px;
   }
   
   .pwa-install-icon {
@@ -452,11 +462,11 @@ function remindLater() {
   }
 
   .ios-instructions-content {
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   .ios-instructions-content h3 {
-    font-size: 16px;
+    font-size: var(--text-lg);
   }
 
   .step p {

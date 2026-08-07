@@ -1,23 +1,40 @@
 <template>
   <div class="map-container">
+    <MapControls
+      :current-zoom="zoom"
+      :min-zoom="2"
+      :max-zoom="18"
+      @changeMapType="changeMapType"
+      @toggleLayer="toggleLayer"
+      @centerMap="centerMap"
+      @fitBounds="fitBounds"
+      @toggleFullscreen="toggleFullscreen"
+    />
+
+    <MapStats
+      :employees="employees"
+      :worksites="worksites"
+    />
+
     <l-map
       ref="mapRef"
-      :key="isDarkMode.value ? 'dark' : 'light'"
+      :key="mapKey"
       :zoom="zoom"
       @update:zoom="updateZoom"
       :center="center"
-      :options="{ attributionControl: true, zoomControl: true }"
+      :options="{ attributionControl: false, zoomControl: false }"
       :style="{ height: height + 'px', width: '100%' }"
     >
       <l-tile-layer
         :url="mapTileUrl"
         layer-type="base"
-        :name="isDarkMode.value ? 'CartoDB Dark' : 'OpenStreetMap'"
+        :name="currentMapType"
         :attribution="mapAttribution"
       />
       
       <!-- نقاط العمل -->
       <l-marker
+        v-if="visibleLayers.worksites"
         v-for="site in worksites"
         :key="site.id"
         :lat-lng="[site.latitude, site.longitude]"
@@ -40,6 +57,7 @@
 
       <!-- الموظفين -->
       <l-marker
+        v-if="visibleLayers.employees"
         v-for="emp in employees"
         :key="emp.id"
         :lat-lng="[emp.latitude, emp.longitude]"
@@ -48,7 +66,7 @@
           <div class="employee-marker" :class="emp.status">
             <div class="employee-pulse" :class="emp.status"></div>
             <div class="employee-dot" :class="emp.status">
-              {{ emp.full_name.slice(0, 1) }}
+              <User :size="12" />
             </div>
           </div>
         </l-icon>
@@ -89,6 +107,9 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { LMap, LTileLayer, LMarker, LPopup, LIcon } from '@vue-leaflet/vue-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useI18n } from '../services/i18n'
+import MapControls from './MapControls.vue'
+import MapStats from './MapStats.vue'
+import { User } from '@lucide/vue'
 
 const { t } = useI18n()
 
@@ -97,19 +118,41 @@ const props = defineProps({
   worksites: { type: Array, default: () => [] },
   center: { type: Array, default: () => [31.5, 34.8] },
   zoom: { type: Number, default: 7 },
-  height: { type: Number, default: 400 }  // ✅ Number وليس String
+  height: { type: Number, default: 400 }
 })
 
-// ✅ تعريف emit بشكل صحيح
 const emit = defineEmits(['update:zoom', 'showDetails'])
 
 const mapRef = ref(null)
 let observer = null
 
-// ✅ اكتشاف الوضع الداكن مع مراقبة التغييرات
+const currentMapType = ref('glass')
+const mapKey = ref('map-glass')
 const isDarkMode = ref(document.documentElement.getAttribute('data-theme') === 'dark')
 
-// ✅ مراقبة تغييرات data-theme
+const visibleLayers = ref({
+  employees: true,
+  worksites: true,
+  geofences: true,
+  routes: false
+})
+
+const mapUrls = {
+  osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  minimal: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  glass: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+}
+
+const mapAttributions = {
+  osm: '&copy; OpenStreetMap contributors',
+  minimal: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors',
+  glass: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; OpenStreetMap contributors',
+  satellite: '&copy; Esri',
+  dark: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+}
+
 const observeThemeChanges = () => {
   observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -125,34 +168,61 @@ const observeThemeChanges = () => {
   })
 }
 
-// ✅ تحديد URL الخريطة حسب الوضع
 const mapTileUrl = computed(() => {
-  if (isDarkMode.value) {
-    // خريطة داكنة زرقاء فاتحة ومريحة للعين من CartoDB
-    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-  } else {
-    // خريطة عادية من OpenStreetMap
-    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-  }
+  return mapUrls[currentMapType.value] || mapUrls.osm
 })
 
-// ✅ تحديد Attribution حسب الوضع
 const mapAttribution = computed(() => {
-  if (isDarkMode.value) {
-    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-  } else {
-    return '&copy; OpenStreetMap contributors'
-  }
+  return mapAttributions[currentMapType.value] || mapAttributions.osm
 })
 
 function updateZoom(newZoom) {
   emit('update:zoom', newZoom)
 }
 
-// ✅ دالة handleShowDetails لتوصيل الحدث
 function handleShowDetails(employee) {
   console.log('📋 عرض تفاصيل الموظف:', employee.full_name)
   emit('showDetails', employee)
+}
+
+function changeMapType(typeId) {
+  currentMapType.value = typeId
+  mapKey.value = 'map-' + typeId
+}
+
+function toggleLayer(layerId, visible) {
+  visibleLayers.value[layerId] = visible
+}
+
+function centerMap() {
+  if (mapRef.value) {
+    mapRef.value.leafletObject.setView(props.center, props.zoom)
+  }
+}
+
+function fitBounds() {
+  if (mapRef.value && props.employees.length > 0) {
+    const bounds = []
+    props.employees.forEach(emp => {
+      if (emp.latitude && emp.longitude) {
+        bounds.push([emp.latitude, emp.longitude])
+      }
+    })
+    if (bounds.length > 0) {
+      mapRef.value.leafletObject.fitBounds(bounds, { padding: [50, 50] })
+    }
+  }
+}
+
+function toggleFullscreen() {
+  const container = document.querySelector('.map-container')
+  if (container) {
+    if (!document.fullscreenElement) {
+      container.requestFullscreen()
+    } else {
+      document.exitFullscreen()
+    }
+  }
 }
 
 function getEmployeeCount(worksiteId) {
@@ -186,11 +256,13 @@ onUnmounted(() => {
   position: relative;
   min-height: 400px;
   background: #E8EDF2;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="dark"] .map-container {
   background: #0f172a;
   border-color: #334155;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .worksite-marker {
@@ -242,13 +314,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
   color: white;
   border: 2px solid white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   z-index: 2;
   transition: all 0.3s ease;
+}
+
+.employee-dot :deep(svg) {
+  color: white;
+  stroke: white;
 }
 
 .employee-dot.inside {

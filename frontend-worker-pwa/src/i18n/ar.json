@@ -56,6 +56,7 @@
   "distance": "المسافة",
   "meters": "متر",
   "meter": "متر",
+  "auto_checkin_detected": "تم تسجيل دخولك تلقائياً بواسطة المدير",
   "home_icon": "الرئيسية",
   "location_determined_success": "تم تحديد الموقع بنجاح",
   "no_history": "لا يوجد سجل",
@@ -102,5 +103,17 @@
   "pwa_install_title": "تثبيت التطبيق",
   "pwa_install_text": "ثبت التطبيق على جهازك",
   "shift_restored": "تم استعادة الوردية",
-  "checkout_failed": "فشل تسجيل الخروج"
+  "checkout_failed": "فشل تسجيل الخروج",
+  "notes": "الملاحظات",
+  "no_notes": "لا توجد ملاحظات",
+  "admin": "المدير",
+  "updated": "تم التعديل",
+  "mark_as_read": "تحديد كمقروءة",
+  "attendance_subtitle": "تتبع دوامك اليومي",
+  "active": "نشط",
+  "inactive": "غير نشط",
+  "outside_range": "خارج النطاق",
+  "settings": "الإعدادات",
+  "notes_subtitle": "الملاحظات من المدير",
+  "history": "السجل"
 }

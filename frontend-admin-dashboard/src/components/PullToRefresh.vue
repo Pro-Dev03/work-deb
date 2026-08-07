@@ -16,12 +16,7 @@
       }"
     >
       <div class="pull-icon" :class="{ rotating: isRefreshing }">
-        <svg v-if="isRefreshing" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-        </svg>
-        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 4v1M12 20v1M4 12h1M19 12h1M6.34 6.34l.71.71M17.24 17.24l.71.71M6.34 17.65l.71-.71M17.24 6.65l.71-.71"/>
-        </svg>
+        <RefreshCw :size="24" :stroke-width="2" />
       </div>
       <div class="pull-text">{{ refreshText }}</div>
     </div>
@@ -34,6 +29,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { RefreshCw } from '@lucide/vue'
 
 const props = defineProps({
   threshold: {
@@ -158,11 +154,16 @@ async function triggerRefresh() {
 }
 
 .pull-icon {
-  width: 24px;
-  height: 24px;
   color: #1E3A5F;
   margin-bottom: 4px;
   transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pull-icon :deep(svg) {
+  color: inherit;
 }
 
 .pull-icon.rotating {
@@ -195,7 +196,7 @@ async function triggerRefresh() {
     font-size: 11px;
   }
   
-  .pull-icon {
+  .pull-icon :deep(svg) {
     width: 20px;
     height: 20px;
   }

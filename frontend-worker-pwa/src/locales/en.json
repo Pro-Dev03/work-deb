@@ -65,6 +65,7 @@
   "actions": "Actions",
   "created_at": "Created At",
   "phone_hint": "Enter your phone number as registered in the system",
+  "auto_checkin_detected": "Automatically checked in by manager",
   "created_by_admin": "Your account was created by the admin",
   "device_verify": "🔒 Your device is being verified",
   "my_attendance_history": "My Attendance History",
@@ -180,5 +181,8 @@
   "day_hours": "Day work hours",
   "is_night_shift": "Night shift",
   "shift_details": "Shift details",
-  "shift_analysis": "Shift analysis"
+  "shift_analysis": "Shift analysis",
+  "click_select_location_before_checkout": "Click Set your location first before checkout",
+  "note": "Note",
+  "notes_subtitle": "Notes and notifications"
 }

@@ -27,12 +27,7 @@
       <div class="stats-grid">
         <div class="stat-card stat-card--blue">
           <span class="stat-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+            <Users :size="24" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ summary.total_employees || 0 }}</span>
@@ -41,10 +36,7 @@
         </div>
         <div class="stat-card stat-card--green">
           <span class="stat-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="4"/>
-              <path d="M8 12l3 3 7-7" stroke-width="2.5"/>
-            </svg>
+            <CheckSquare :size="24" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ summary.completed_employees || 0 }}</span>
@@ -53,10 +45,7 @@
         </div>
         <div class="stat-card stat-card--yellow">
           <span class="stat-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
+            <Clock :size="24" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ summary.waiting_employees || 0 }}</span>
@@ -65,11 +54,7 @@
         </div>
         <div class="stat-card stat-card--purple">
           <span class="stat-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
+            <BarChart3 :size="24" :stroke-width="2" />
           </span>
           <div>
             <span class="stat-card__value">{{ summary.in_progress || 0 }}</span>
@@ -164,6 +149,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from '../services/i18n'
 import TaskDistributionChart from '../components/TaskDistributionChart.vue'
 import api from '../services/api'
+import { Users, CheckSquare, Clock, BarChart3 } from '@lucide/vue'
 
 const { t } = useI18n()
 
@@ -287,10 +273,15 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.stat-card--blue .stat-card__icon { background: #3b82f620; }
-.stat-card--green .stat-card__icon { background: #10b98120; }
-.stat-card--yellow .stat-card__icon { background: #f59e0b20; }
-.stat-card--purple .stat-card__icon { background: #8b5cf620; }
+.stat-card__icon :deep(svg) {
+  color: inherit;
+  stroke: currentColor;
+}
+
+.stat-card--blue .stat-card__icon { background: #3b82f620; color: #3b82f6; }
+.stat-card--green .stat-card__icon { background: #10b98120; color: #10b981; }
+.stat-card--yellow .stat-card__icon { background: #f59e0b20; color: #f59e0b; }
+.stat-card--purple .stat-card__icon { background: #8b5cf620; color: #8b5cf6; }
 
 .stat-card__value {
   display: block;

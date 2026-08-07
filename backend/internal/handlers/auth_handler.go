@@ -528,3 +528,48 @@ func (h *AuthHandler) GetDeviceInfo(c *gin.Context) {
 		"is_registered": deviceID != "" && deviceModel != "",
 	})
 }
+
+// =============================================
+// 9. تعديل اسم الموظف
+// =============================================
+func (h *AuthHandler) UpdateEmployee(c *gin.Context) {
+	id := c.Param("id")
+
+	var req struct {
+		FullName string `json:"full_name" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "بيانات غير صحيحة"})
+		return
+	}
+
+	var exists bool
+	err := h.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`, id).Scan(&exists)
+	if err != nil || !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "المستخدم غير موجود"})
+		return
+	}
+
+	_, err = h.DB.Exec(`
+		UPDATE users 
+		SET full_name = $1, updated_at = now()
+		WHERE id = $2
+	`, req.FullName, id)
+
+	if err != nil {
+		log.Printf("❌ فشل تعديل الموظف: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "فشل تعديل الموظف"})
+		return
+	}
+
+	log.Printf("✅ تم تعديل اسم الموظف: %s -> %s", id, req.FullName)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "تم تعديل الموظف بنجاح",
+		"user": gin.H{
+			"id":        id,
+			"full_name": req.FullName,
+		},
+	})
+}

@@ -1,0 +1,64 @@
+/**
+ * WorkTrack — Design Tokens
+ * Single source of truth for every component in the app.
+ * Generated from DESIGN_SYSTEM.md — do not fork these values locally
+ * inside a component; import this file once at the app root instead.
+ */
+
+:root{
+  /* ---------- Brand ---------- */
+  --primary-50:#EEF2FF;  --primary-100:#E0E7FF; --primary-200:#C7D2FE; --primary-300:#A5B4FC;
+  --primary-400:#818CF8; --primary-500:#6366F1; --primary-600:#4F46E5; --primary-700:#4338CA;
+  --primary-800:#3730A3; --primary-900:#312E81;
+
+  /* ---------- Semantic ---------- */
+  --success-50:#ECFDF5;  --success-100:#D1FAE5; --success-500:#10B981; --success-600:#059669; --success-700:#047857;
+  --warning-50:#FFFBEB;  --warning-100:#FEF3C7; --warning-500:#F59E0B; --warning-600:#D97706; --warning-700:#B45309;
+  --error-50:#FEF2F2;    --error-100:#FEE2E2;   --error-500:#EF4444;   --error-600:#DC2626;   --error-700:#B91C1C;
+  --info-50:#F0F9FF;     --info-100:#E0F2FE;    --info-500:#0EA5E9;    --info-600:#0284C7;    --info-700:#0369A1;
+
+  /* ---------- Neutral (warm gray) ---------- */
+  --gray-50:#FAFAF9;  --gray-100:#F5F5F4; --gray-200:#E7E5E4; --gray-300:#D6D3D1; --gray-400:#A8A29E;
+  --gray-500:#78716C; --gray-600:#57534E; --gray-700:#44403C; --gray-800:#292524; --gray-900:#1C1917;
+
+  /* ---------- Surfaces ---------- */
+  --background:#FAFAF9; --surface:#FFFFFF; --surface-elevated:#F5F5F4;
+  --border:#E7E5E4;     --border-strong:#D6D3D1;
+
+  /* ---------- Text ---------- */
+  --text-primary:#1C1917; --text-secondary:#57534E; --text-tertiary:#A8A29E; --text-inverse:#FFFFFF;
+
+  /* ---------- Type scale ---------- */
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1rem; --text-lg:1.125rem;
+  --text-xl:1.25rem; --text-2xl:1.5rem; --text-3xl:1.875rem; --text-4xl:2.25rem;
+  --font-normal:400; --font-medium:500; --font-semibold:600; --font-bold:700;
+  --leading-tight:1.25; --leading-normal:1.5; --leading-relaxed:1.75;
+
+  /* ---------- Spacing ---------- */
+  --space-0:0; --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem;
+  --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem;
+
+  /* ---------- Radius ---------- */
+  --radius-sm:.375rem; --radius-md:.5rem; --radius-lg:.75rem; --radius-xl:1rem; --radius-2xl:1.5rem; --radius-full:9999px;
+
+  /* ---------- Shadow ---------- */
+  --shadow-xs:0 1px 2px rgba(0,0,0,.05);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+  --shadow-xl:0 20px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.04);
+
+  /* ---------- Fonts ---------- */
+  --font-ar:'Cairo','Segoe UI',Roboto,sans-serif;
+  --font-latin:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+
+[data-theme="dark"]{
+  --background:#1C1917; --surface:#292524; --surface-elevated:#44403C;
+  --border:#44403C; --border-strong:#57534E;
+  --text-primary:#FAFAF9; --text-secondary:#A8A29E; --text-tertiary:#78716C;
+  --primary-500:#818CF8; --primary-600:#A5B4FC;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);  --shadow-sm:0 1px 3px rgba(0,0,0,.35);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.4); --shadow-lg:0 10px 20px -3px rgba(0,0,0,.45);
+  --shadow-xl:0 20px 30px -5px rgba(0,0,0,.5);
+}

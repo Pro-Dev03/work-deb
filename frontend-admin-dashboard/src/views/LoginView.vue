@@ -9,14 +9,6 @@
       <PWAInstallButton />
       <div class="login-card">
       <div class="login-header">
-        <div class="powered-by">
-          <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="powered-logo" />
-          <span class="powered-text">
-            {{ $t('app_name') }}<br />
-            <strong>DevPro</strong>
-            <span class="powered-slogan">{{ $t('powered_slogan') }}</span>
-          </span>
-        </div>
         <div class="company-logo-container">
           <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="company-logo" />
         </div>
@@ -24,15 +16,35 @@
         <p class="subtitle">{{ $t('login') }}</p>
       </div>
 
-      <div class="lang-section">
-        <button
-          v-for="lang in languages"
+      <!-- Theme & Language Toolbar -->
+      <div class="settings-toolbar" role="group" aria-label="إعدادات العرض">
+        <button 
+          class="settings-btn" 
+          :class="{ active: isDarkMode }"
+          @click="toggleTheme"
+          title="الوضع الليلي" 
+          aria-label="تبديل الوضع الليلي"
+        >
+          <svg v-if="!isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+        
+        <!-- Language Buttons -->
+        <button 
+          v-for="lang in languages" 
           :key="lang.code"
-          class="lang-btn"
+          class="settings-btn settings-btn--lang"
           :class="{ active: currentLang === lang.code }"
           @click="changeLanguage(lang.code)"
+          :title="lang.name"
+          :aria-label="lang.name"
         >
-          {{ lang.flag }} {{ lang.name }}
+          {{ lang.label }}
         </button>
       </div>
 
@@ -50,8 +62,16 @@
         <div v-if="error" class="error">{{ error }}</div>
         <div v-if="debugInfo" class="debug">{{ debugInfo }}</div>
 
-        <button class="btn-login" type="submit" :disabled="loading">
-          {{ loading ? $t('loading') : $t('login') }}
+        <button type="submit" class="btn btn--primary btn--block" :disabled="loading">
+          <svg v-if="loading" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          {{ $t('login') }}
         </button>
       </form>
 
@@ -65,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../services/auth'
 import { authStore } from '../store/auth'
@@ -82,6 +102,22 @@ const loading = ref(false)
 const error = ref('')
 const debugInfo = ref('')
 const emailInput = ref(null)
+const isDarkMode = ref(false)
+
+const languages = [
+  { code: 'ar', name: 'العربية', dir: 'rtl', label: 'AR' },
+  { code: 'he', name: 'עברית', dir: 'rtl', label: 'HE' },
+  { code: 'en', name: 'English', dir: 'ltr', label: 'EN' }
+]
+
+onMounted(() => {
+  // Load saved theme preference
+  const savedTheme = localStorage.getItem('worktrack_theme')
+  if (savedTheme === 'dark') {
+    isDarkMode.value = true
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }
+})
 
 function removeReadonly() {
   if (emailInput.value) {
@@ -89,14 +125,22 @@ function removeReadonly() {
   }
 }
 
-const languages = [
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-  { code: 'he', name: 'עברית', flag: '🇮🇱' },
-  { code: 'en', name: 'English', flag: '🇬🇧' }
-]
+function changeLanguage(code) {
+  setLang(code)
+  
+  // Set direction based on language
+  const lang = languages.find(l => l.code === code)
+  if (lang) {
+    document.documentElement.setAttribute('dir', lang.dir)
+    document.documentElement.setAttribute('data-lang', lang.code)
+  }
+}
 
-function changeLanguage(lang) {
-  setLang(lang)
+function toggleTheme() {
+  isDarkMode.value = !isDarkMode.value
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('worktrack_theme', theme)
 }
 
 async function handleRefresh() {
@@ -156,6 +200,64 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
+/* Settings Toolbar ( Inside Card) - SaaS Style */
+.settings-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.settings-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  background: var(--canvas);
+  transition: all var(--transition-base);
+  font-size: 13px;
+  font-weight: var(--font-medium);
+  padding: 0;
+  border: 1px solid var(--line);
+}
+
+.settings-btn--lang {
+  min-width: 36px;
+  font-size: 11px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+}
+
+.settings-btn:hover {
+  background: var(--line);
+  border-color: var(--line-strong);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.settings-btn.active {
+  background: var(--brand);
+  color: white;
+  border-color: var(--brand);
+  box-shadow: var(--shadow-md), var(--brand-glow);
+}
+
+.settings-btn.active:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
 .login-page {
   position: fixed;
   top: 0;
@@ -165,7 +267,7 @@ async function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f8f0;
+  background-color: var(--canvas);
   background-image: url('../assets/company-logo.jpg');
   background-size: cover;
   background-position: center;
@@ -188,6 +290,10 @@ async function handleSubmit() {
   z-index: 0;
 }
 
+[data-theme="dark"] .login-page::before {
+  background: rgba(0, 0, 0, 0.7);
+}
+
 .login-page > * {
   position: relative;
   z-index: 1;
@@ -201,13 +307,18 @@ async function handleSubmit() {
 .login-card {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(25px);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   padding: 40px 44px;
   max-width: 420px;
   width: 100%;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-xl);
   animation: fadeIn 0.5s ease;
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .login-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @keyframes fadeIn {
@@ -218,47 +329,6 @@ async function handleSubmit() {
 .login-header {
   text-align: center;
   margin-bottom: 28px;
-}
-
-.powered-by {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #1E3A5F08, #1E3A5F12);
-  border-radius: 12px;
-  border: 1px solid #1E3A5F15;
-  margin-bottom: 20px;
-}
-
-.powered-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  object-fit: contain;
-  background: white;
-  padding: 4px;
-}
-
-.powered-text {
-  text-align: right;
-  font-size: 11px;
-  color: #6B7A8A;
-  line-height: 1.4;
-}
-
-.powered-text strong {
-  font-size: 14px;
-  color: #1E3A5F;
-  font-weight: 800;
-}
-
-.powered-slogan {
-  display: block;
-  font-size: 9px;
-  color: #8899AA;
-  font-weight: 400;
 }
 
 .company-logo-container {
@@ -277,69 +347,10 @@ async function handleSubmit() {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-.app-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: transparent;
-}
-
-.title {
-  font-size: 34px;
-  font-weight: 800;
-  color: #1E3A5F;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
 .subtitle {
   font-size: 15px;
-  color: #6B7A8A;
+  color: var(--ink-soft);
   margin: 0;
-}
-
-.lang-section {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 28px;
-  padding: 6px;
-  background: #F0F4FA;
-  border-radius: 14px;
-}
-
-.lang-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 600;
-  color: #6B7A8A;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  flex: 1;
-}
-
-.lang-btn:hover {
-  background: rgba(30, 58, 95, 0.08);
-  color: #1E3A5F;
-}
-
-.lang-btn.active {
-  background: #1E3A5F;
-  color: white;
-  box-shadow: 0 4px 16px rgba(30, 58, 95, 0.3);
 }
 
 .login-form {
@@ -357,22 +368,26 @@ async function handleSubmit() {
 .field label {
   font-size: 14px;
   font-weight: 600;
-  color: #1A2A3A;
+  color: var(--ink);
 }
 
 .field input {
   padding: 14px 16px;
-  border: 2px solid #E2E8F0;
-  border-radius: 12px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
   font-size: 15px;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   font-family: inherit;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   width: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #1A2A3A;
+  color: var(--ink);
+}
+
+[data-theme="dark"] .field input {
+  background: rgba(30, 41, 59, 0.7);
 }
 
 /* Hide Chrome autofill ghost text */
@@ -380,49 +395,86 @@ async function handleSubmit() {
 .field input:-webkit-autofill:hover,
 .field input:-webkit-autofill:focus,
 .field input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #F8FAFC inset !important;
-  -webkit-text-fill-color: #1A2A3A !important;
+  -webkit-box-shadow: 0 0 0 30px var(--canvas) inset !important;
+  -webkit-text-fill-color: var(--ink) !important;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+[data-theme="dark"] .field input:-webkit-autofill,
+[data-theme="dark"] .field input:-webkit-autofill:hover,
+[data-theme="dark"] .field input:-webkit-autofill:focus,
+[data-theme="dark"] .field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--surface) inset !important;
+  -webkit-text-fill-color: var(--ink) !important;
 }
 
 /* Prevent autofill suggestion ghost text */
 .field input[readonly] {
-  background: #F8FAFC;
+  background: var(--canvas);
   cursor: text;
+}
+
+[data-theme="dark"] .field input[readonly] {
+  background: var(--surface);
 }
 
 .field input:focus {
   outline: none;
-  border-color: #1E3A5F;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.1);
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px var(--brand-tint);
 }
 
-.btn-login {
-  padding: 16px;
-  background: rgba(30, 58, 95, 0.9);
+[data-theme="dark"] .field input:focus {
+  background: var(--surface);
+}
+
+/* Button Styles */
+.btn {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn--primary {
+  background: var(--brand);
   backdrop-filter: blur(10px);
   color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 17px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  margin-top: 4px;
+  box-shadow: var(--shadow-md), var(--brand-glow);
 }
 
-.btn-login:hover:not(:disabled) {
-  background: #0D1B3E;
+.btn--primary:hover:not(:disabled) {
+  background: var(--brand-dark);
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(30, 58, 95, 0.3);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
-.btn-login:disabled {
+.btn--primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .error {
@@ -448,18 +500,18 @@ async function handleSubmit() {
   text-align: center;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid var(--line);
 }
 
 .footer p {
   font-size: 12px;
-  color: #8899AA;
+  color: var(--ink-light);
   margin: 4px 0;
 }
 
 .footer-powered {
   font-size: 11px;
-  color: #AABBCC;
+  color: var(--ink-light);
 }
 
 @media (max-width: 480px) {
@@ -482,18 +534,9 @@ async function handleSubmit() {
     font-size: 28px;
   }
   
-  .lang-btn {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-  
-  .powered-logo {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .powered-text strong {
-    font-size: 12px;
+  .settings-btn {
+    width: 28px;
+    height: 28px;
   }
   
   .field input {
@@ -502,4 +545,4 @@ async function handleSubmit() {
     -moz-osx-font-smoothing: grayscale;
   }
 }
-</style> 
+</style>

@@ -56,6 +56,7 @@
   "distance": "מרחק",
   "meters": "מטר",
   "meter": "מטר",
+  "auto_checkin_detected": "נרשמת באופן אוטומטי על ידי המנהל",
   "home_icon": "בית",
   "location_determined_success": "המיקום זוהה בהצלחה",
   "no_history": "אין היסטוריה",
@@ -102,5 +103,17 @@
   "pwa_install_title": "התקנת אפליקציה",
   "pwa_install_text": "התקן את האפליקציה במכשיר שלך",
   "shift_restored": "המשמרת שוחזרה",
-  "checkout_failed": "הרישום ליציאה נכשל"
+  "checkout_failed": "הרישום ליציאה נכשל",
+  "notes": "הערות",
+  "no_notes": "אין הערות",
+  "admin": "מנהל",
+  "updated": "עודכן",
+  "mark_as_read": "סמן כנקרא",
+  "attendance_subtitle": "עקוב אחר המשמרות היומיות שלך",
+  "active": "פעיל",
+  "inactive": "לא פעיל",
+  "outside_range": "מחוץ לטווח",
+  "settings": "הגדרות",
+  "notes_subtitle": "הערות מהמנהל",
+  "history": "היסטוריה"
 }

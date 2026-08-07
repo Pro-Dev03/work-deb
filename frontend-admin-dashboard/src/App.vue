@@ -6,14 +6,6 @@
   <div v-else class="shell">
     <aside class="sidebar">
       <div class="sidebar__brand">
-        <div class="devpro-brand">
-          <img src="/src/assets/devpro-logo.jpg" alt="DevPro" class="devpro-logo" />
-          <div class="devpro-text">
-            <span class="devpro-name">{{ t('devpro_name') }}</span>
-            <span class="devpro-slogan">{{ t('powered_slogan') }}</span>
-          </div>
-        </div>
-        <div class="brand-divider"></div>
         <div class="app-brand">
           <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
           <div class="brand-text">
@@ -26,62 +18,43 @@
       <nav class="sidebar__nav">
         <router-link to="/dashboard" class="nav-item" active-class="nav-item--active">
           <span class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <line x1="9" y1="21" x2="9" y2="9"></line>
-            </svg>
+            <LayoutDashboard :size="20" />
           </span>
           <span class="nav-label">{{ t('dashboard') }}</span>
         </router-link>
-        <router-link to="/service-requests" class="nav-item" active-class="nav-item--active">
-          <span class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-          </span>
-          <span class="nav-label">{{ t('service_requests') }}</span>
-        </router-link>
         <router-link to="/employees" class="nav-item" active-class="nav-item--active">
           <span class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+            <Users :size="20" />
           </span>
           <span class="nav-label">{{ t('employees') }}</span>
         </router-link>
         <router-link to="/worksites" class="nav-item" active-class="nav-item--active">
           <span class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
+            <MapPin :size="20" />
           </span>
           <span class="nav-label">{{ t('worksites') }}</span>
         </router-link>
         <router-link to="/reports" class="nav-item" active-class="nav-item--active">
           <span class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
+            <BarChart3 :size="20" />
           </span>
           <span class="nav-label">{{ t('reports') }}</span>
         </router-link>
+        <router-link to="/attendance-management" class="nav-item" active-class="nav-item--active">
+          <span class="nav-icon">
+            <Clock :size="20" />
+          </span>
+          <span class="nav-label">{{ t('attendance_management') }}</span>
+        </router-link>
+        <router-link to="/notes" class="nav-item" active-class="nav-item--active">
+          <span class="nav-icon">
+            <FileText :size="20" />
+          </span>
+          <span class="nav-label">{{ t('notes') }}</span>
+        </router-link>
         <router-link to="/settings" class="nav-item" active-class="nav-item--active">
           <span class="nav-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
+            <Settings :size="20" />
           </span>
           <span class="nav-label">{{ t('settings') }}</span>
         </router-link>
@@ -91,29 +64,13 @@
         <div class="sidebar__footer-top">
           <LanguageSwitcher />
           <button class="theme-toggle" @click="toggleTheme" :title="isDark ? t('theme_light') : t('theme_dark')">
-            <svg v-if="!isDark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-            </svg>
-            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="5"></circle>
-              <line x1="12" y1="1" x2="12" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="23"></line>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-              <line x1="1" y1="12" x2="3" y2="12"></line>
-              <line x1="21" y1="12" x2="23" y2="12"></line>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
+            <Moon v-if="!isDark" :size="18" />
+            <Sun v-else :size="18" />
           </button>
         </div>
         <button class="btn-logout" @click="handleLogout">
           <span class="logout-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
+            <LogOut :size="16" />
           </span>
           <span class="logout-text">{{ t('logout') }}</span>
         </button>
@@ -143,6 +100,18 @@ import { useRoute, useRouter } from 'vue-router'
 import { authStore } from './store/auth'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import { useI18n } from './services/i18n'
+import {
+  LayoutDashboard,
+  Users,
+  MapPin,
+  BarChart3,
+  Clock,
+  FileText,
+  Settings,
+  Moon,
+  Sun,
+  LogOut
+} from '@lucide/vue'
 
 const { t, currentLang } = useI18n()
 
@@ -179,11 +148,12 @@ const displayName = computed(() => {
 const pageTitle = computed(() => {
   const titles = {
     '/dashboard': t('dashboard'),
-    '/service-requests': t('service_requests'),
     '/employees': t('employees'),
     '/worksites': t('worksites'),
     '/reports': t('reports'),
     '/settings': t('settings'),
+    '/attendance-management': t('attendance_management'),
+    '/notes': t('notes'),
   }
   return titles[route.path] || t('app_name')
 })
@@ -226,7 +196,7 @@ onMounted(() => {
 
 .sidebar {
   width: 220px;
-  background: var(--surface);
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
   border-left: 1px solid var(--line);
   display: flex;
   flex-direction: column;
@@ -248,51 +218,6 @@ onMounted(() => {
   border-bottom: 1px solid var(--line);
 }
 
-.devpro-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  background: linear-gradient(135deg, #1E3A5F08, #1E3A5F12);
-  border-radius: var(--radius-sm);
-  margin-bottom: 12px;
-  border: 1px solid #1E3A5F15;
-}
-
-.devpro-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  object-fit: contain;
-  background: white;
-  padding: 2px;
-}
-
-.devpro-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.devpro-name {
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--brand);
-  letter-spacing: -0.5px;
-}
-
-.devpro-slogan {
-  font-size: 8px;
-  color: var(--ink-soft);
-  font-weight: 400;
-}
-
-.brand-divider {
-  height: 1px;
-  background: var(--line);
-  margin: 8px 0 12px;
-}
-
 .app-brand {
   display: flex;
   align-items: center;
@@ -300,8 +225,8 @@ onMounted(() => {
 }
 
 .brand-mark {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   border-radius: 10px;
   flex-shrink: 0;
@@ -396,11 +321,75 @@ onMounted(() => {
 }
 
 .nav-item--active .nav-icon {
-  color: var(--gold-light);
+  color: #000000;
+}
+
+[data-theme="dark"] .nav-item--active .nav-icon {
+  color: var(--gold);
+}
+
+/* تلوين أيقونات الشريط الجانبي بالأسود */
+.nav-icon :deep(svg) {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.nav-icon :deep(svg *) {
+  stroke: #000000 !important;
+}
+
+.nav-item:hover .nav-icon :deep(svg) {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.nav-item:hover .nav-icon :deep(svg *) {
+  stroke: #000000 !important;
+}
+
+/* إزالة الخلفية الزرقاء في الوضع الليلي */
+[data-theme="dark"] .nav-item:hover {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .nav-item--active {
+  background: transparent !important;
+  color: var(--gold) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .nav-item--active:hover {
+  background: transparent !important;
+  color: var(--gold) !important;
+  box-shadow: none !important;
+}
+
+/* تلوين أيقونات الشريط الجانبي بالأسود في الوضع الليلي */
+[data-theme="dark"] .nav-icon :deep(svg) {
+  color: var(--gold) !important;
+  stroke: var(--gold) !important;
+}
+
+[data-theme="dark"] .nav-icon :deep(svg *) {
+  stroke: var(--gold) !important;
+}
+
+[data-theme="dark"] .nav-item:hover .nav-icon :deep(svg) {
+  color: var(--gold-light) !important;
+  stroke: var(--gold-light) !important;
+}
+
+[data-theme="dark"] .nav-item:hover .nav-icon :deep(svg *) {
+  stroke: var(--gold-light) !important;
 }
 
 .nav-label {
   flex: 1;
+}
+
+/* Dark mode sidebar gradient */
+[data-theme="dark"] .sidebar {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
 }
 
 /* =============================================
@@ -433,22 +422,22 @@ onMounted(() => {
   height: 34px;
   border-radius: 50%;
   border: 1px solid var(--line);
-  background: var(--surface);
+  background: rgba(212, 175, 55, 0.15);
   cursor: pointer;
   transition: all var(--transition-base);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--ink-soft);
+  color: var(--gold);
 }
 
 .theme-toggle:hover {
-  background: var(--brand-tint);
-  border-color: var(--brand);
+  background: rgba(212, 175, 55, 0.25);
+  border-color: var(--gold);
   transform: scale(1.1);
-  color: var(--brand);
-  box-shadow: var(--shadow-md), var(--brand-glow);
+  color: var(--gold);
+  box-shadow: var(--shadow-md), 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
 .btn-logout {
@@ -500,6 +489,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--gold);
 }
 
 .logout-text { font-size: 12px; }
@@ -517,7 +507,7 @@ onMounted(() => {
 
 .footer-brand-name {
   font-weight: 700;
-  color: var(--brand);
+  color: var(--gold);
   font-size: 10px;
 }
 
@@ -602,10 +592,18 @@ onMounted(() => {
   .sidebar__brand .brand-text,
   .sidebar__nav .nav-label,
   .logout-text,
-  .devpro-text,
   .brand-sub,
   .footer-brand {
     display: none;
+  }
+
+  .sidebar__brand {
+    padding: 1px 1px;
+    justify-content: flex-end;
+  }
+
+  .app-brand {
+    justify-content: flex-end;
   }
 
   .sidebar__nav {
@@ -646,16 +644,6 @@ onMounted(() => {
 
   .logout-icon {
     font-size: 16px;
-  }
-
-  .devpro-brand {
-    justify-content: center;
-    padding: 4px;
-  }
-
-  .devpro-logo {
-    width: 24px;
-    height: 24px;
   }
 
   .content {

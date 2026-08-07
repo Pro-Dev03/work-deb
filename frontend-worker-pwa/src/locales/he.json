@@ -65,6 +65,7 @@
   "actions": "פעולות",
   "created_at": "תאריך יצירה",
   "phone_hint": "הזן את מספר הטלפון כפי שמופיע במערכת",
+  "auto_checkin_detected": "נרשמת באופן אוטומטי על ידי המנהל",
   "created_by_admin": "החשבון שלך נוצר על ידי מנהל המערכת",
   "device_verify": "🔒 המכשיר שלך מתבצע אימות",
   "my_attendance_history": "היסטוריית נוכחות שלי",
@@ -170,5 +171,8 @@
   "day_hours": "שעות עבודה יום",
   "is_night_shift": "משמרת לילה",
   "shift_details": "פרטי משמרת",
-  "shift_analysis": "ניתוח משמרת"
+  "shift_analysis": "ניתוח משמרת",
+  "click_select_location_before_checkout": "לחץ על קבע את המיקום שלך קודם לפני יציאה",
+  "note": "הערה",
+  "notes_subtitle": "הערות והתראות"
 }

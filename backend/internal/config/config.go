@@ -31,7 +31,7 @@ func Load() *Config {
 		Port:          getEnv("PORT", "8080"),
 		DatabaseURL:   getEnv("DATABASE_URL", ""),
 		JWTSecret:     getEnv("JWT_SECRET", ""),
-		AllowedOrigin: getEnv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001,http://localhost:3002"),
+		AllowedOrigin: getEnv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001,http://localhost:3002,https://worktrack-admin.vercel.app"),
 		DefaultLang:   getEnv("DEFAULT_LANG", "ar"),
 		GeoapifyKey:   getEnv("GEOAPIFY_KEY", ""),
 		R2AccountID:   getEnv("R2_ACCOUNT_ID", ""),

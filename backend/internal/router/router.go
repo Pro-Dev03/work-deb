@@ -32,6 +32,7 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 	wsHandler := handlers.NewWSHandler()
 	locationHandler := handlers.NewLocationHandler(db, wsHandler)
 	geocodingHandler := handlers.NewGeocodingHandler(geocodingService)
+	notesHandler := handlers.NewNotesHandler(db)
 
 	r.GET("/health", func(c *gin.Context) {
 		lang := i18n.Detect(c)
@@ -60,7 +61,6 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 		employee := protected.Group("")
 		{
 			// نقاط العمل
-			employee.GET("/worksites", worksiteHandler.List)
 			employee.GET("/worksites/available", worksiteHandler.GetAvailableWorksites)
 
 			// الحضور
@@ -81,6 +81,10 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 
 			// الإشعارات
 			employee.GET("/notifications", notificationHandler.List)
+
+			// الملاحظات
+			employee.GET("/notes", notesHandler.GetEmployeeNotes)
+			employee.PUT("/notes/:id/read", notesHandler.MarkNoteAsRead)
 		}
 
 		// المسارات التي تتطلب اشتراكاً نشطاً (للمديرين فقط)
@@ -100,9 +104,11 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 				admin.POST("/auth/employee-phone", authHandler.CreateEmployeePhone)
 				admin.GET("/admin/employees", authHandler.ListEmployees)
 				admin.DELETE("/admin/employees/:id", authHandler.DeleteEmployee)
+				admin.PUT("/admin/employees/:id", authHandler.UpdateEmployee)
 				admin.POST("/admin/reset-device", authHandler.ResetDevice)
 
 				// نقاط العمل
+				admin.GET("/worksites", worksiteHandler.List)
 				admin.POST("/worksites", worksiteHandler.Create)
 				admin.PUT("/worksites/:id", worksiteHandler.Update)
 				admin.DELETE("/worksites/:id", worksiteHandler.Delete)
@@ -119,9 +125,19 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 				admin.GET("/attendance/employee/:id/monthly-summary", attendanceHandler.GetEmployeeMonthlySummary)
 				admin.POST("/attendance/cleanup-old-records", attendanceHandler.CleanupOldRecords)
 				admin.POST("/attendance/force-checkout", attendanceHandler.ForceCheckOut)
+				
+				// إدارة سجلات الحضور
+				admin.GET("/attendance/management", attendanceHandler.GetAttendanceManagementRecords)
+				admin.PUT("/attendance/:id/times", attendanceHandler.UpdateAttendanceTimes)
 
 				// الموقع والملاحظات الأمنية
 				admin.GET("/location/security/:id", locationHandler.GetEmployeeSecurityNotes)
+
+				// الملاحظات
+				admin.POST("/admin/notes", notesHandler.CreateNote)
+				admin.PUT("/admin/notes/:id", notesHandler.UpdateNote)
+				admin.DELETE("/admin/notes/:id", notesHandler.DeleteNote)
+				admin.GET("/admin/notes", notesHandler.GetAdminNotes)
 			}
 		}
 	}

@@ -1,0 +1,57 @@
+/**
+ * WorkTrack — Shared primitives
+ *
+ * Several uploaded components reference classes they never define
+ * locally: .badge, .btn, .btn--ghost, .btn--sm, .btn--block, .mono,
+ * .visually-hidden. That only worked before because a global stylesheet
+ * happened to supply them. Importing tokens.css alone is not enough —
+ * import this file once at the app root too, after tokens.css.
+ */
+
+.mono{ font-variant-numeric:tabular-nums; }
+.visually-hidden{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:none; cursor:pointer; border-radius:var(--radius-md);
+  font-weight:var(--font-semibold); font-size:var(--text-base);
+  padding:12px 24px; min-height:48px; font-family:inherit;
+  transition:transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+}
+.btn:active{ transform:scale(.97); }
+.btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+
+.btn--primary{
+  background:linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  color:var(--text-inverse); box-shadow:var(--shadow-md);
+}
+.btn--primary:hover:not(:disabled){ box-shadow:var(--shadow-lg); transform:translateY(-1px); }
+
+.btn--secondary{
+  background:var(--surface); color:var(--text-primary); border:1px solid var(--border);
+}
+.btn--secondary:hover:not(:disabled){ border-color:var(--primary-500); color:var(--primary-500); }
+
+.btn--ghost{
+  background:transparent; color:var(--text-secondary); border:1px solid var(--border);
+}
+.btn--ghost:hover:not(:disabled){ background:var(--surface-elevated); color:var(--text-primary); }
+
+.btn--sm{ padding:8px 16px; min-height:36px; font-size:var(--text-sm); }
+.btn--block{ width:100%; }
+
+/* ---------- Badges ---------- */
+.badge{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 12px; border-radius:var(--radius-full);
+  font-size:var(--text-xs); font-weight:var(--font-semibold);
+}
+.badge-success{ background:var(--success-100); color:var(--success-700); }
+.badge-warning{ background:var(--warning-100); color:var(--warning-700); }
+.badge-error{ background:var(--error-100); color:var(--error-700); }
+.badge-info{ background:var(--info-100); color:var(--info-700); }
+.badge-neutral{ background:var(--gray-100); color:var(--gray-600); }

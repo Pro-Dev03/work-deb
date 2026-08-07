@@ -401,6 +401,24 @@ ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEF
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
 
 -- =====================================================
+-- جدول الملاحظات
+-- =====================================================
+CREATE TABLE IF NOT EXISTS notes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    worksite_id UUID REFERENCES worksites(id) ON DELETE SET NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- إضافة عمود worksite_id إذا لم يكن موجوداً (للتوافق مع قواعد البيانات الموجودة)
+ALTER TABLE notes
+    ADD COLUMN IF NOT EXISTS worksite_id UUID REFERENCES worksites(id) ON DELETE SET NULL;
+
+-- =====================================================
 -- إنشاء الفهارس
 -- =====================================================
 CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
@@ -454,6 +472,13 @@ CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id
     ON notifications(user_id);
 
+-- فهارس جدول الملاحظات
+CREATE INDEX IF NOT EXISTS idx_notes_admin_id ON notes(admin_id);
+CREATE INDEX IF NOT EXISTS idx_notes_employee_id ON notes(employee_id);
+CREATE INDEX IF NOT EXISTS idx_notes_worksite_id ON notes(worksite_id);
+CREATE INDEX IF NOT EXISTS idx_notes_is_read ON notes(is_read);
+CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
+
 -- =====================================================
 -- تعليمات الاستخدام
 -- =====================================================
@@ -478,6 +503,8 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id
 --    - إضافة فهرس idx_worksites_is_deleted
 --    - إضافة فهارس محسّنة للأداء
 --    - استخدام الحساب البسيط الأصلي للساعات (بدون تقسيم ليلي/نهاري)
+--    - إضافة جدول الملاحظات (notes) مع دعم نقاط العمل
+--    - إضافة عمود worksite_id إلى جدول الملاحظات
 --
 -- 5. السكريبت آمن للتشغيل المتعدد - يستخدم IF NOT EXISTS و ON CONFLICT
 --

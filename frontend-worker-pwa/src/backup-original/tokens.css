@@ -1,0 +1,684 @@
+/* ==========================================================================
+   WorkTrack - نظام التصميم الديناميكي والعصري لـ DevPro
+   ========================================================================== */
+
+:root {
+  /* ==========================================================================
+     الألوان الأساسية - نظام ألوان ديناميكي
+     ========================================================================== */
+   
+  direction: rtl;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  
+  /* الألوان المحايدة - للخلفيات والنصوص */
+  --ink: #0f172a;
+  --ink-soft: #475569;
+  --ink-light: #94a3b8;
+  --canvas: #f1f5f9;
+  --surface: #ffffff;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+
+  /* ==========================================================================
+     ألوان العلامة التجارية - أزرق داكن مع لمسات ذهبية
+     ========================================================================== */
+  --brand: #1e3a8a;
+  --brand-dark: #172554;
+  --brand-light: #3b82f6;
+  --brand-tint: #dbeafe;
+  --brand-glow: rgba(59, 130, 246, 0.15);
+  
+  /* ألوان ذهبية أنيقة */
+  --gold: #d4af37;
+  --gold-dark: #b8960c;
+  --gold-light: #f4d03f;
+  --gold-tint: #fef9e7;
+  --gold-glow: rgba(212, 175, 55, 0.1);
+
+  /* ==========================================================================
+     ألوان التميز - تدرجات عصرية
+     ========================================================================== */
+  --accent: #6366f1;
+  --accent-dark: #4f46e5;
+  --accent-light: #818cf8;
+  --accent-tint: #e0e7ff;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+
+  /* ==========================================================================
+     ألوان الحالات
+     ========================================================================== */
+  --signal-in: #10b981;
+  --signal-in-tint: #d1fae5;
+  --signal-out: #ef4444;
+  --signal-out-tint: #fee2e2;
+  --signal-warning: #f59e0b;
+  --signal-warning-tint: #fef3c7;
+  --signal-info: #0ea5e9;
+  --signal-info-tint: #e0f2fe;
+
+  /* ==========================================================================
+     الأحجام والمسافات
+     ========================================================================== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  /* ==========================================================================
+     الظلال - متقدمة وديناميكية
+     ========================================================================== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+  --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.2);
+
+  /* ==========================================================================
+     الخطوط
+     ========================================================================== */
+  --font-display: 'Cairo', 'Inter', sans-serif;
+  --font-body: 'Cairo', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ==========================================================================
+     الانتقالات
+     ========================================================================== */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #app {
+  height: 100%;
+  font-size: 16px; /* أساسي للهواتف */
+}
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  padding: 0;
+  margin: 0;
+}
+
+/* ==========================================================================
+   مكونات متجاوبة - مع تأثيرات ديناميكية
+   ========================================================================== */
+
+/* أزرار كبيرة للمس */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-height: 48px; /* مهم للهواتف */
+  width: 100%;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  background-clip: padding-box;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn--primary {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: #fff;
+  box-shadow: var(--shadow-md), var(--brand-glow);
+}
+
+.btn--primary:hover {
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--ghost {
+  background: var(--surface);
+  border: 2px solid var(--line);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--ghost:hover {
+  border-color: var(--brand-light);
+  color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.btn--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.btn--success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.btn--gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: #fff;
+  box-shadow: var(--shadow-md), var(--gold-glow);
+}
+
+.btn--gold:hover {
+  box-shadow: var(--shadow-lg), var(--shadow-gold);
+  transform: translateY(-1px);
+}
+
+/* بطاقات العمل - مع تأثيرات حركية */
+.worksite-card {
+  padding: 16px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: right;
+  transition: all var(--transition-base);
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.worksite-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent) 50%, var(--gold) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.worksite-card:hover {
+  border-color: var(--brand-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.worksite-card:hover::before {
+  opacity: 1;
+}
+
+.worksite-card.active {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  box-shadow: var(--shadow-md);
+}
+
+.worksite-card.active::before {
+  opacity: 1;
+}
+
+/* بطاقات عامة - مع تأثيرات حركية */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent) 50%, var(--gold) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--line-strong);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* حقول الإدخال */
+.form-input, .form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--brand-light);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+
+/* شارات - مع تأثيرات حركية */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.badge--gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: white;
+  box-shadow: var(--shadow-sm), var(--gold-glow);
+}
+
+.badge--in {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.badge--out {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.badge:hover {
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   تحسينات للشاشات الصغيرة جداً
+   ========================================================================== */
+@media (max-width: 380px) {
+  .worksites-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .timer-time {
+    font-size: 24px !important;
+  }
+  
+  .summary {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ==========================================================================
+   تحسينات للأجهزة التي تعمل باللمس
+   ========================================================================== */
+@media (hover: none) {
+  .worksite-card:hover {
+    transform: none;
+  }
+  
+  .btn:hover {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   دعم notch (الهواتف الحديثة)
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .tabbar {
+    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ==========================================================================
+   تأثيرات حركية متقدمة
+   ========================================================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, 
+    var(--line) 0%, 
+    var(--line-strong) 50%, 
+    var(--line) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--brand-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--brand-glow), 0 0 30px var(--brand-glow);
+  }
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   أنماط إضافية للتصميم العصري
+   ========================================================================== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 50%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.active {
+  background: var(--signal-in);
+  box-shadow: 0 0 8px var(--signal-in);
+}
+
+.status-dot.inactive {
+  background: var(--signal-out);
+  box-shadow: 0 0 8px var(--signal-out);
+}
+
+.status-dot.warning {
+  background: var(--signal-warning);
+  box-shadow: 0 0 8px var(--signal-warning);
+}
+
+/* ==========================================================================
+   الوضع الداكن
+   ========================================================================== */
+[data-theme="dark"] {
+  --ink: #f1f5f9;
+  --ink-soft: #cbd5e1;
+  --ink-light: #94a3b8;
+  --canvas: #0f172a;
+  --surface: #1e293b;
+  --line: #334155;
+  --line-strong: #475569;
+  --brand-tint: #1e3a8a;
+  --gold-tint: #2a2218;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --brand-glow: rgba(59, 130, 246, 0.4);
+  --gold-glow: rgba(212, 175, 55, 0.3);
+  --accent-glow: rgba(99, 102, 241, 0.4);
+}
+
+/* ==========================================================================
+   إصلاح الأيقونات في الوضع الليلي
+   ========================================================================== */
+[data-theme="dark"] svg {
+  color: inherit;
+}
+
+[data-theme="dark"] .brand-mark svg {
+  color: var(--brand);
+}
+
+[data-theme="dark"] .tab__icon svg {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .tab--active .tab__icon svg {
+  color: var(--brand);
+}
+
+[data-theme="dark"] .avatar svg {
+  color: var(--brand);
+}
+
+/* إصلاحات إضافية للأيقونات في القوائم والأزرار */
+[data-theme="dark"] .btn svg {
+  color: inherit;
+}
+
+[data-theme="dark"] .btn:hover svg {
+  color: inherit;
+}
+
+[data-theme="dark"] .card svg {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .card:hover svg {
+  color: var(--brand);
+}
+
+/* إصلاح للأيقونات في العناصر التفاعلية */
+[data-theme="dark"] button svg,
+[data-theme="dark"] a svg {
+  color: inherit;
+}
+
+[data-theme="dark"] button:hover svg,
+[data-theme="dark"] a:hover svg {
+  color: inherit;
+}
+
+/* ==========================================================================
+   إصلاح أزرار النقر وحالات التفاعل
+   ========================================================================== */
+button:active,
+.btn:active {
+  transform: scale(0.97);
+}
+
+button:focus,
+.btn:focus,
+a:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+.btn:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+[data-theme="dark"] button:focus,
+[data-theme="dark"] .btn:focus,
+[data-theme="dark"] a:focus {
+  outline-color: var(--brand-light);
+}
+
+/* إصلاح اختيار النصوص */
+::selection {
+  background: var(--brand-tint);
+  color: var(--brand-dark);
+}
+
+[data-theme="dark"] ::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: var(--ink);
+}
+
+/* إصلاح الخطوط في العناصر النشطة */
+button:active,
+.btn:active,
+a:active {
+  font-weight: inherit;
+  color: inherit;
+}
+
+[data-theme="dark"] button:active,
+[data-theme="dark"] .btn:active,
+[data-theme="dark"] a:active {
+  color: inherit;
+}
+
+/* ==========================================================================
+   إصلاح الأيقونات الرمزية (Emoji) في الوضع الليلي
+   ========================================================================== */
+[data-theme="dark"] .alert-item__icon {
+  filter: brightness(1.3) contrast(1.2);
+}
+
+[data-theme="dark"] .note-item__icon {
+  filter: brightness(1.3) contrast(1.2);
+}
+
+/* إصلاح الشارات في الوضع الليلي */
+[data-theme="dark"] .badge--warning {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--in {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--out {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--info {
+  background: rgba(14, 165, 233, 0.2) !important;
+  color: #0ea5e9 !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+}
+
+[data-theme="dark"] .badge--gold {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #818cf8 !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+}
+
+/* ==========================================================================
+   إصلاحات إضافية لقسم الملاحظات في الوضع الليلي
+   ========================================================================== */
+[data-theme="dark"] .note-content {
+  color: var(--ink) !important;
+}
+
+[data-theme="dark"] .note-sender-name {
+  color: var(--ink) !important;
+}
+
+[data-theme="dark"] .note-sender-role {
+  color: var(--ink-soft) !important;
+}
+
+[data-theme="dark"] .page-title {
+  color: var(--brand-light) !important;
+}
+
+[data-theme="dark"] .loading {
+  color: var(--ink-soft) !important;
+}
+
+[data-theme="dark"] .empty {
+  color: var(--ink-soft) !important;
+}

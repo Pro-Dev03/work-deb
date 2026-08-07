@@ -41,7 +41,9 @@
             <tr v-for="emp in employees" :key="emp.id">
               <td>
                 <div class="table__person">
-                  <span class="table__avatar">{{ emp.full_name?.slice(0, 1) || '?' }}</span>
+                  <span class="table__avatar">
+                    <User :size="20" />
+                  </span>
                   {{ emp.full_name }}
                 </div>
               </td>
@@ -65,26 +67,47 @@
               <td class="mono">{{ formatDate(emp.created_at) }}</td>
               <td>
                 <div class="table-actions">
-                  <button 
-                    class="btn btn--primary btn--sm" 
-                    @click="showAttendanceHistory(emp)"
-                  >
-                    📊 {{ t('attendance_history') }}
-                  </button>
-                  <button 
-                    v-if="emp.is_registered"
-                    class="btn btn--warning btn--sm" 
-                    @click="confirmResetDevice(emp)"
-                  >
-                    🔄 {{ t('reset_device') }}
-                  </button>
-                  <button 
-                    class="btn btn--danger btn--sm" 
-                    @click="confirmDelete(emp)"
-                    :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
-                  >
-                    🗑️ {{ t('delete') }}
-                  </button>
+                  <div class="dropdown" :class="{ 'dropdown--active': activeDropdown === emp.id }">
+                    <button 
+                      class="dropdown-toggle"
+                      @click="toggleDropdown(emp.id)"
+                    >
+                      ⚙️
+                    </button>
+                    <div class="dropdown-menu">
+                      <button 
+                        class="dropdown-item"
+                        @click.stop="showEditEmployee(emp)"
+                      >
+                        <Edit :size="16" />
+                        <span>{{ t('edit') }}</span>
+                      </button>
+                      <button 
+                        class="dropdown-item"
+                        @click.stop="showAttendanceHistory(emp)"
+                      >
+                        <History :size="16" />
+                        <span>{{ t('attendance_history') }}</span>
+                      </button>
+                      <button 
+                        v-if="emp.is_registered"
+                        class="dropdown-item"
+                        @click.stop="confirmResetDevice(emp)"
+                      >
+                        <RefreshCw :size="16" />
+                        <span>{{ t('reset_device') }}</span>
+                      </button>
+                      <div class="dropdown-divider"></div>
+                      <button 
+                        class="dropdown-item dropdown-item--danger"
+                        @click.stop="confirmDelete(emp)"
+                        :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
+                      >
+                        <Trash2 :size="16" />
+                        <span>{{ t('delete') }}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -97,7 +120,9 @@
         <div v-for="emp in employees" :key="emp.id" class="employee-card">
           <div class="employee-card__header">
             <div class="employee-card__person">
-              <span class="table__avatar">{{ emp.full_name?.slice(0, 1) || '?' }}</span>
+              <span class="table__avatar">
+                <User :size="20" />
+              </span>
               <div class="employee-card__info">
                 <span class="employee-card__name">{{ emp.full_name }}</span>
               </div>
@@ -129,38 +154,63 @@
             </div>
           </div>
           <div class="employee-card__actions">
-            <button 
-              class="btn btn--primary btn--sm btn--compact" 
-              @click="showAttendanceHistory(emp)"
-            >
-              <span class="btn-icon">📊</span>
-              <span class="btn-text">{{ t('attendance_history') }}</span>
-            </button>
-            <button 
-              v-if="emp.is_registered"
-              class="btn btn--warning btn--sm btn--compact" 
-              @click="confirmResetDevice(emp)"
-            >
-              <span class="btn-icon">🔄</span>
-              <span class="btn-text">{{ t('reset_device') }}</span>
-            </button>
-            <button 
-              class="btn btn--danger btn--sm btn--compact" 
-              @click="confirmDelete(emp)"
-              :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
-            >
-              <span class="btn-icon">🗑️</span>
-              <span class="btn-text">{{ t('delete') }}</span>
-            </button>
+            <div class="dropdown" :class="{ 'dropdown--active': activeDropdown === emp.id }">
+              <button 
+                class="dropdown-toggle"
+                @click="toggleDropdown(emp.id)"
+              >
+                ⚙️
+              </button>
+              <div class="dropdown-menu">
+                <button 
+                  class="dropdown-item"
+                  @click.stop="showEditEmployee(emp)"
+                >
+                  <Edit :size="16" />
+                  <span>{{ t('edit') }}</span>
+                </button>
+                <button 
+                  class="dropdown-item"
+                  @click.stop="showAttendanceHistory(emp)"
+                >
+                  <History :size="16" />
+                  <span>{{ t('attendance_history') }}</span>
+                </button>
+                <button 
+                  v-if="emp.is_registered"
+                  class="dropdown-item"
+                  @click.stop="confirmResetDevice(emp)"
+                >
+                  <RefreshCw :size="16" />
+                  <span>{{ t('reset_device') }}</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button 
+                  class="dropdown-item dropdown-item--danger"
+                  @click.stop="confirmDelete(emp)"
+                  :disabled="emp.role === 'admin' && emp.email === 'admin@worktrack.com'"
+                >
+                  <Trash2 :size="16" />
+                  <span>{{ t('delete') }}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <EmployeeFormModal 
-      v-if="showModal" 
-      @close="showModal = false" 
+    <EmployeeFormModal
+      v-if="showModal"
+      @close="showModal = false"
       @employee-added="fetchEmployees"
+    />
+
+    <EditEmployeeModal
+      v-if="showEditModal"
+      :employee="employeeToEdit"
+      @close="showEditModal = false"
+      @employee-updated="fetchEmployees"
     />
 
     <!-- مودال تأكيد الحذف -->
@@ -312,10 +362,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, onUnmounted } from 'vue'
 import api from '../services/api'
 import EmployeeFormModal from '../components/EmployeeFormModal.vue'
+import EditEmployeeModal from '../components/EditEmployeeModal.vue'
 import { useI18n } from '../services/i18n'
+import { User, Settings, Edit, History, RefreshCw, Trash2 } from '@lucide/vue'
 import companyLogoUrl from '../assets/company-logo.jpg?url'
 
 const { t, currentLang } = useI18n()
@@ -329,6 +381,9 @@ const cleaning = ref(false)
 const showResetDeviceModal = ref(false)
 const employeeToResetDevice = ref(null)
 const resetting = ref(false)
+const showEditModal = ref(false)
+const employeeToEdit = ref(null)
+const activeDropdown = ref(null)
 
 // سجل الحضور
 const showAttendanceModal = ref(false)
@@ -403,6 +458,41 @@ function confirmResetDevice(emp) {
   employeeToResetDevice.value = emp
   showResetDeviceModal.value = true
 }
+
+function showEditEmployee(emp) {
+  employeeToEdit.value = emp
+  showEditModal.value = true
+}
+
+function toggleDropdown(empId) {
+  if (activeDropdown.value === empId) {
+    activeDropdown.value = null
+  } else {
+    activeDropdown.value = empId
+  }
+}
+
+function closeDropdown() {
+  activeDropdown.value = null
+}
+
+function handleClickOutside(event) {
+  // Don't close if clicking inside the dropdown menu or toggle
+  if (event.target.closest('.dropdown-menu') || event.target.closest('.dropdown-toggle')) {
+    return
+  }
+  
+  // Close if clicking outside
+  closeDropdown()
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 async function resetDevice() {
   if (!employeeToResetDevice.value) return
@@ -766,18 +856,181 @@ onMounted(fetchEmployees)
   border-radius: 50%;
   background: var(--brand-tint);
   color: var(--brand-dark);
-  font-size: 13px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
+.table__avatar :deep(svg) {
+  color: var(--brand-dark);
+  stroke: var(--brand-dark);
+}
+
 .table-actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* =============================================
+   Dropdown Menu Styles
+   ============================================= */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  width: 40px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  padding: 0;
+  font-size: 18px;
+}
+
+.dropdown-toggle:hover {
+  background: var(--brand-tint);
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.dropdown-menu {
+  position: static;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  padding: 8px 0;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.dropdown--active .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  overflow: visible;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+
+.dropdown-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropdown-item :deep(svg) {
+  color: inherit;
+  stroke: inherit;
+  flex-shrink: 0;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 8px 0;
+}
+
+.dropdown-item--danger {
+  color: var(--signal-out);
+}
+
+.dropdown-item--danger:hover {
+  background: var(--signal-out-tint);
+  color: var(--signal-out);
+}
+
+[data-theme="dark"] .dropdown-toggle {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .dropdown-toggle:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold);
+}
+
+[data-theme="dark"] .dropdown-item--danger {
+  color: var(--signal-out);
+}
+
+[data-theme="dark"] .dropdown-item--danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--signal-out);
+}
+
+.employee-card {
+  overflow: visible;
+}
+
+.mobile-cards {
+  overflow: visible;
+}
+
+.table-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.employee-card__actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+  .dropdown-menu {
+    min-width: 180px;
+    right: 0;
+  }
 }
 
 .modal-backdrop {
@@ -1104,6 +1357,7 @@ onMounted(fetchEmployees)
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .employee-card__actions .btn {

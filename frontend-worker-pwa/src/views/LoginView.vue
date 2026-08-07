@@ -6,70 +6,96 @@
     :release-text="t('release_to_refresh')"
   >
     <div class="login-page">
-      <PWAInstallButton />
       <div class="login-card">
+        <PWAInstallButton />
       <div class="login-header">
-        <div class="logo">
+        <div class="logo-mark">
           <img src="/src/assets/company-logo.jpg" alt="WorkTrack logo" class="brand-mark" />
         </div>
-        <h1 class="title">אבן יסודות</h1>
-        <p class="subtitle">Employee platform</p>
-        <p class="subtitle-small">{{ t('login') }}</p>
+        <h1>WorkTrack</h1>
+        <p>بوابة الموظف</p>
       </div>
 
-      <!-- ✅ محدد اللغة - موحد -->
-      <div class="lang-section">
+      <!-- Theme & Language Toolbar (Above Phone Input) -->
+      <div class="settings-toolbar" role="group" aria-label="إعدادات العرض">
+        <button 
+          class="settings-btn" 
+          :class="{ active: isDarkMode }"
+          @click="toggleTheme"
+          title="الوضع الليلي" 
+          aria-label="تبديل الوضع الليلي"
+        >
+          <svg v-if="!isDarkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+        
+        <!-- Language Buttons -->
         <button 
           v-for="lang in languages" 
           :key="lang.code"
-          class="lang-btn"
+          class="settings-btn settings-btn--lang"
           :class="{ active: currentLang === lang.code }"
           @click="changeLanguage(lang.code)"
+          :title="lang.name"
+          :aria-label="lang.name"
         >
-          {{ lang.flag }} {{ lang.name }}
+          {{ lang.label }}
         </button>
       </div>
 
       <form class="login-form" @submit.prevent="handleSubmit">
-        <div class="field">
-          <label>📱 {{ t('phone') }}</label>
+        <div class="form-group">
+          <label class="form-label">
+            <span class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/>
+              </svg>
+            </span>
+            رقم الهاتف
+          </label>
           <input 
             v-model="phone" 
             type="tel" 
-            placeholder="05xxxxxxxx"
+            class="form-input" 
+            placeholder="05xxxxxxxx" 
             required 
             dir="ltr"
           />
-          <span class="field-hint">{{ t('phone_hint') }}</span>
         </div>
-
-        <div v-if="error" class="error">{{ error }}</div>
-        <!-- <div v-if="debugInfo" class="debug">{{ debugInfo }}</div> -->
-
-        <button class="btn-login" type="submit" :disabled="loading">
-          {{ loading ? '⏳' : '📱' }} {{ t('login') }}
+        
+        <div v-if="error" class="error-message">{{ error }}</div>
+        
+        <button type="submit" class="btn btn--primary btn--block" :disabled="loading">
+          <svg v-if="loading" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          {{ t('login') }}
         </button>
       </form>
-
-      <div class="footer">
-        <p>{{ t('created_by_admin') }}</p>
-        <div class="devpro-logo">
-          <img src="/src/assets/company-logo.jpg" alt="DevPro Logo" class="devpro-img" />
-        </div>
-      </div>
-      <!-- <p class="footer-small">{{ t('device_verify') }}</p> -->
+      
+      <p class="form-hint">بتسجيل الدخول أنت توافق على شروط الاستخدام</p>
     </div>
     </div>
   </PullToRefresh>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../services/i18n'
 import api from '../services/api'
-import PullToRefresh from '../components/PullToRefresh.vue'
 import PWAInstallButton from '../components/PWAInstallButton.vue'
+import PullToRefresh from '../components/PullToRefresh.vue'
 
 const { t, currentLang, setLang } = useI18n()
 const router = useRouter()
@@ -77,20 +103,22 @@ const router = useRouter()
 const phone = ref('')
 const loading = ref(false)
 const error = ref('')
-const debugInfo = ref('')
+const isDarkMode = ref(false)
 
 const languages = [
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-  { code: 'he', name: 'עברית', flag: '🇮🇱' },
-  { code: 'en', name: 'English', flag: '🇬🇧' }
+  { code: 'ar', name: 'العربية', dir: 'rtl', label: 'AR' },
+  { code: 'he', name: 'עברית', dir: 'rtl', label: 'HE' },
+  { code: 'en', name: 'English', dir: 'ltr', label: 'EN' }
 ]
 
-// ✅ تغيير اللغة - يستخدم نفس المفتاح الموحد
-function changeLanguage(code) {
-  setLang(code)
-  // ✅ يتم إعادة تحميل الصفحة بعد تغيير اللغة
-  // لضمان تطبيق التغيير على جميع المكونات
-}
+onMounted(() => {
+  // Load saved theme preference
+  const savedTheme = localStorage.getItem('worktrack_theme')
+  if (savedTheme === 'dark') {
+    isDarkMode.value = true
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }
+})
 
 async function handleRefresh() {
   // إرسال رسالة للـ Service Worker لتنظيف الكاش
@@ -103,6 +131,27 @@ async function handleRefresh() {
   
   // إعادة تحميل الصفحة
   window.location.reload()
+}
+
+function changeLanguage(code) {
+  setLang(code)
+  
+  // Set direction based on language
+  const lang = languages.find(l => l.code === code)
+  if (lang) {
+    document.documentElement.setAttribute('dir', lang.dir)
+    document.documentElement.setAttribute('data-lang', lang.code)
+  }
+  
+  // إعادة تحميل الصفحة بعد تغيير اللغة
+  // لضمان تطبيق التغيير على جميع المكونات
+}
+
+function toggleTheme() {
+  isDarkMode.value = !isDarkMode.value
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('worktrack_theme', theme)
 }
 
 function getDeviceId() {
@@ -149,19 +198,16 @@ function getDeviceModel() {
 
 async function handleSubmit() {
   if (!phone.value || phone.value.length < 9) {
-    error.value = 'Please enter a valid phone number'
+    error.value = 'الرجاء إدخال رقم هاتف صحيح'
     return
   }
 
   loading.value = true
   error.value = ''
-  debugInfo.value = ''
 
   try {
     const deviceId = getDeviceId()
     const deviceModel = getDeviceModel()
-      
-    debugInfo.value = `📱 Device: ${deviceModel}\n🆔 ID: ${deviceId}`
 
     const { data } = await api.post('/auth/phone-login', {
       phone: phone.value.trim(),
@@ -169,13 +215,9 @@ async function handleSubmit() {
       device_model: deviceModel
     })
 
-    debugInfo.value = '✅ Verification successful!'
-      
     localStorage.setItem('worktrack_token', data.token)
     localStorage.setItem('worktrack_user', JSON.stringify(data.user))
-      
-    // ✅ اللغة مخزنة بالفعل في localStorage من i18n
-      
+
     setTimeout(() => {
       router.push('/attendance')
     }, 500)
@@ -185,13 +227,10 @@ async function handleSubmit() {
 
     if (e.response?.data?.device_mismatch) {
       error.value = '⚠️ Login failed. Please contact the admin.'
-      debugInfo.value = '🔒 Device not registered'
     } else if (e.response?.data?.model_mismatch) {
       error.value = '⚠️ Login failed. Please contact the admin.'
-      debugInfo.value = '🔒 Device model not registered'
     } else {
       error.value = e.response?.data?.error || '❌ Login failed. Please check the phone number.'
-      debugInfo.value = '❌ ' + (e.response?.data?.error || 'Unknown error')
     }
   } finally {
     loading.value = false
@@ -200,270 +239,232 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-.login-page {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+/* Settings Toolbar (Inside Card) - SaaS Style */
+.settings-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-5);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.settings-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f8f0;
-  background-image: url('../assets/company-logo.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  padding: 20px;
-  margin: 0;
-  min-height: 100vh;
-  width: 100%;
+  color: var(--text-secondary);
+  transition: var(--transition-base) ease;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding: 0;
 }
 
-.login-page::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(30, 58, 95, 0.4);
-  z-index: 0;
+.settings-btn--lang {
+  min-width: 28px;
+  font-size: 9px;
 }
 
-.login-page > * {
+.settings-btn:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+.settings-btn.active {
+  background: var(--primary-500);
+  color: #fff;
+}
+
+.login-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-6);
+  background: var(--background);
   position: relative;
-  z-index: 1;
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 24px;
-  padding: 40px 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  margin: 0 auto;
+  position: relative;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-5);
 }
 
-.logo {
+.logo-mark {
+  width: 300px;
+  height: 300px;
+  margin: 0 auto var(--space-3);
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
 }
 
 .brand-mark {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 300px;
+  height: 300px;
   object-fit: cover;
   background: transparent;
 }
 
-.title {
-  font-size: 28px;
-  font-weight: 800;
-  color: #1E3A5F;
-  margin: 0 0 4px 0;
-  direction: ltr;
-}
-
-.subtitle {
-  font-size: 15px;
-  color: #6B7A8A;
+.login-header h1 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
   margin: 0;
 }
 
-.subtitle-small {
-  font-size: 13px;
-  color: #8899AA;
-  margin: 4px 0 0;
+.login-header p {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
 
-.lang-section {
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Settings Toolbar (Inside Card) - SaaS Style */
+.settings-toolbar {
   display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-5);
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding: 6px;
-  background: #F0F4FA;
-  border-radius: 12px;
+  flex-wrap: wrap;
 }
 
-.lang-btn {
-  padding: 8px 16px;
+.settings-btn {
   border: none;
-  border-radius: 8px;
   background: transparent;
-  font-size: 14px;
-  font-weight: 600;
-  color: #6B7A8A;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  flex: 1;
+  border-radius: var(--radius-md);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: var(--transition-base) ease;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding: 0;
 }
 
-.lang-btn:hover {
-  background: rgba(30, 58, 95, 0.08);
-  color: #1E3A5F;
+.settings-btn--lang {
+  min-width: 28px;
+  font-size: 9px;
 }
 
-.lang-btn.active {
-  background: #1E3A5F;
-  color: white;
-  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+.settings-btn:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+.settings-btn.active {
+  background: var(--primary-500);
+  color: #fff;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
-.field {
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
-.field label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1A2A3A;
-}
-
-.field input {
-  padding: 14px 16px;
-  border: 2px solid #E2E8F0;
-  border-radius: 10px;
-  font-size: 18px;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  background: #F8FAFC;
-  text-align: center;
-  letter-spacing: 2px;
-}
-
-.field input:focus {
-  outline: none;
-  border-color: #1E3A5F;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.1);
-}
-
-.field-hint {
-  font-size: 12px;
-  color: #8899AA;
-}
-
-.error {
-  color: #C53030;
-  font-size: 14px;
-  text-align: center;
-  background: #FDE8E8;
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.debug {
-  color: #2B6CB0;
-  font-size: 13px;
-  text-align: center;
-  background: #EBF4FF;
-  padding: 10px;
-  border-radius: 8px;
-  white-space: pre-line;
-}
-
-.btn-login {
-  padding: 16px;
-  background: #1E3A5F;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 17px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  margin-top: 4px;
-}
-
-.btn-login:hover:not(:disabled) {
-  background: #0D1B3E;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(30, 58, 95, 0.3);
-}
-
-.btn-login:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.footer {
-  text-align: center;
-  font-size: 13px;
-  color: #8899AA;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #E2E8F0;
-}
-
-.devpro-logo {
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
   display: flex;
-  justify-content: center;
-  margin-top: 12px;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.devpro-img {
-  max-width: 100px;
-  height: auto;
-  border-radius: 8px;
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
-  display: block;
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  background: var(--surface);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
 
-.devpro-img:hover {
-  opacity: 1;
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-50);
 }
 
-.footer-small {
+.error-message {
+  color: var(--error-700);
+  font-size: var(--text-sm);
   text-align: center;
-  font-size: 12px;
-  color: #AABBCC;
-  margin-top: 8px;
+  background: var(--error-50);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--error-100);
 }
 
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+  margin-top: var(--space-2);
+}
+
+/* Responsive Design */
 @media (max-width: 480px) {
+  .login-page {
+    padding: var(--space-4);
+  }
+
   .login-card {
-    padding: 24px 18px;
-    max-width: 340px;
+    padding: var(--space-5);
   }
 
-  .title {
-    font-size: 22px;
+  .login-header h1 {
+    font-size: var(--text-lg);
   }
+}
 
-  .lang-btn {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-
-  .devpro-img {
-    max-width: 80px;
+@media (min-width: 768px) {
+  .login-card {
+    padding: var(--space-8);
   }
 }
 </style>

@@ -20,15 +20,38 @@
         <div class="site-card__header">
           <h3>{{ site.name }}</h3>
           <div class="site-card__actions" v-if="!site.is_unassigned">
-            <button class="btn btn--primary btn--sm" @click="openAssignModal(site)">
-              👤 {{ t('assign_employee') }}
-            </button>
-            <button class="btn btn--secondary btn--sm" @click="openEditModal(site)">
-              ✏️
-            </button>
-            <button class="btn btn--danger btn--sm" @click="confirmDelete(site)">
-              🗑️
-            </button>
+            <div class="dropdown" :class="{ 'dropdown--active': activeDropdown === site.id }">
+              <button 
+                class="dropdown-toggle"
+                @click="toggleDropdown(site.id)"
+              >
+                ⚙️
+              </button>
+              <div class="dropdown-menu">
+                <button 
+                  class="dropdown-item"
+                  @click.stop="openAssignModal(site)"
+                >
+                  <User :size="16" />
+                  <span>{{ t('assign_employee') }}</span>
+                </button>
+                <button 
+                  class="dropdown-item"
+                  @click.stop="openEditModal(site)"
+                >
+                  <Edit :size="16" />
+                  <span>{{ t('edit') }}</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button 
+                  class="dropdown-item dropdown-item--danger"
+                  @click.stop="confirmDelete(site)"
+                >
+                  <Trash2 :size="16" />
+                  <span>{{ t('delete') }}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <p class="site-card__address">{{ site.address || t('no_address') }}</p>
@@ -128,7 +151,9 @@
               @click="assignEmployee(emp.id)"
               :disabled="assigning"
             >
-              <span class="employee-item__avatar">{{ emp.full_name.slice(0, 1) }}</span>
+              <span class="employee-item__avatar">
+                <User :size="16" />
+              </span>
               <div>
                 <strong>{{ emp.full_name }}</strong>
               </div>
@@ -161,16 +186,79 @@
         </div>
       </div>
     </div>
+
+    <!-- Success Modal -->
+    <div v-if="showSuccessModal" class="modal-backdrop" @click.self="showSuccessModal = false">
+      <div class="success-modal-card">
+        <div class="success-icon-wrapper">
+          <CheckCircle :size="32" />
+        </div>
+        <h3 class="success-title">{{ t('success') }}</h3>
+        <p class="success-message">{{ successMessage }}</p>
+        <button class="btn btn--primary success-confirm-btn" @click="showSuccessModal = false">
+          {{ t('ok') }}
+        </button>
+      </div>
+    </div>
+
+    <!-- بطاقة إنهاء الدوام الاحترافية -->
+    <div v-if="showCompletionCard" class="modal-backdrop" @click.self="showCompletionCard = false">
+      <div class="completion-card">
+        <div class="completion-header">
+          <div class="completion-icon">
+            <CheckCircle :size="48" />
+          </div>
+          <h2 class="completion-title">{{ t('shift_completed') }}</h2>
+          <p class="completion-subtitle">{{ t('shift_completed_message') }}</p>
+        </div>
+        
+        <div class="completion-body">
+          <div class="completion-info-row">
+            <div class="completion-info-item">
+              <div class="completion-info-label">{{ t('employee_name') }}</div>
+              <div class="completion-info-value">{{ completionData?.employeeName }}</div>
+            </div>
+            <div class="completion-info-item">
+              <div class="completion-info-label">{{ t('worksite') }}</div>
+              <div class="completion-info-value">{{ completionData?.worksiteName }}</div>
+            </div>
+          </div>
+          
+          <div class="completion-info-row">
+            <div class="completion-info-item">
+              <div class="completion-info-label">{{ t('check_in_time') }}</div>
+              <div class="completion-info-value mono">{{ formatTime(completionData?.checkInTime) }}</div>
+            </div>
+            <div class="completion-info-item">
+              <div class="completion-info-label">{{ t('check_out_time') }}</div>
+              <div class="completion-info-value mono">{{ formatTime(completionData?.checkOutTime) }}</div>
+            </div>
+          </div>
+          
+          <div class="completion-hours-section">
+            <div class="completion-hours-label">{{ t('total_worked_hours') }}</div>
+            <div class="completion-hours-value">{{ completionData?.workedHours?.toFixed(1) || '0.0' }} {{ t('hours') }}</div>
+          </div>
+        </div>
+        
+        <div class="completion-footer">
+          <button class="btn btn--primary completion-confirm-btn" @click="showCompletionCard = false">
+            {{ t('close') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import api from '../services/api'
 import WorksiteFormModal from '../components/WorksiteFormModal.vue'
 import { useI18n } from '../services/i18n'
+import { User, CheckCircle, Edit, Trash2 } from '@lucide/vue'
 
-const { t } = useI18n()
+const { t, currentLang } = useI18n()
 const worksites = ref([])
 const employees = ref([])
 const loading = ref(false)
@@ -182,10 +270,15 @@ const showModal = ref(false)
 const showDeleteModal = ref(false)
 const showAssignModal = ref(false)
 const showForceCheckoutModal = ref(false)
+const showSuccessModal = ref(false)
+const showCompletionCard = ref(false)
+const successMessage = ref('')
+const completionData = ref(null)
 const siteToDelete = ref(null)
 const worksiteToAssign = ref(null)
 const employeeToForceCheckout = ref(null)
 const worksiteToEdit = ref(null)
+const activeDropdown = ref(null)
 
 async function fetchWorksites() {
   loading.value = true
@@ -260,8 +353,12 @@ async function assignEmployee(employeeId) {
     })
     
     showAssignModal.value = false
-    alert('✅ ' + (response.data.message || t('employee_assigned_successfully')))
+    showSuccessModal.value = true
+    successMessage.value = response.data.message || t('employee_assigned_successfully')
+    
+    // تحديث قوائم الموظفين ونقاط العمل
     await fetchWorksites()
+    await fetchEmployees()
   } catch (error) {
     console.error('❌ ' + t('failed_to_assign_employee'), error)
     const msg = error.response?.data?.error || t('failed_to_assign_employee')
@@ -286,7 +383,18 @@ async function forceCheckoutEmployee() {
     })
     
     showForceCheckoutModal.value = false
-    alert('✅ ' + (response.data.message || t('force_checkout_success')))
+    
+    // عرض البطاقة الاحترافية مع معلومات الموظف من الاستجابة
+    showCompletionCard.value = true
+    completionData.value = {
+      employeeName: response.data.employee_name || employeeToForceCheckout.value.name,
+      worksiteName: response.data.worksite_name || '—',
+      checkInTime: response.data.check_in_time,
+      checkOutTime: response.data.check_out_time,
+      workedHours: response.data.worked_hours,
+      message: response.data.message || t('force_checkout_success')
+    }
+    
     await fetchWorksites()
   } catch (error) {
     console.error('❌ ' + t('force_checkout_failed'), error)
@@ -297,7 +405,45 @@ async function forceCheckoutEmployee() {
   }
 }
 
-onMounted(fetchWorksites)
+function formatTime(dateStr) {
+  if (!dateStr) return '—'
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString(currentLang.value === 'ar' ? 'ar-SA' : 'en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  })
+}
+
+function toggleDropdown(siteId) {
+  if (activeDropdown.value === siteId) {
+    activeDropdown.value = null
+  } else {
+    activeDropdown.value = siteId
+  }
+}
+
+function closeDropdown() {
+  activeDropdown.value = null
+}
+
+function handleClickOutside(event) {
+  // Don't close if clicking inside the dropdown menu or toggle
+  if (event.target.closest('.dropdown-menu') || event.target.closest('.dropdown-toggle')) {
+    return
+  }
+
+  // Close if clicking outside
+  closeDropdown()
+}
+
+onMounted(() => {
+  fetchWorksites()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
@@ -322,11 +468,11 @@ onMounted(fetchWorksites)
 .site-card {
   padding: 18px 20px;
   transition: all var(--transition-base);
+  overflow: visible;
 }
 
 .site-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-3px);
+  z-index: 10;
 }
 
 .site-card__header {
@@ -341,6 +487,149 @@ onMounted(fetchWorksites)
 .site-card__actions {
   display: flex;
   gap: 6px;
+  position: relative;
+}
+
+/* =============================================
+   Dropdown Menu Styles
+   ============================================= */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  width: 40px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  padding: 0;
+  font-size: 18px;
+}
+
+.dropdown-toggle:hover {
+  background: var(--brand-tint);
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+.dropdown-menu {
+  position: static;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  padding: 8px 0;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.dropdown--active .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  overflow: visible;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+
+.dropdown-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropdown-item :deep(svg) {
+  color: inherit;
+  stroke: inherit;
+  flex-shrink: 0;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 8px 0;
+}
+
+.dropdown-item--danger {
+  color: var(--signal-out);
+}
+
+.dropdown-item--danger:hover {
+  background: var(--signal-out-tint);
+  color: var(--signal-out);
+}
+
+[data-theme="dark"] .dropdown-toggle {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .dropdown-toggle:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold);
+}
+
+[data-theme="dark"] .dropdown-item--danger {
+  color: var(--signal-out);
+}
+
+[data-theme="dark"] .dropdown-item--danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--signal-out);
+}
+
+.site-card {
+  overflow: visible;
+}
+
+.sites-grid {
+  overflow: visible;
 }
 
 .site-card__address {
@@ -512,9 +801,12 @@ onMounted(fetchWorksites)
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
   flex-shrink: 0;
+}
+
+.employee-item__avatar :deep(svg) {
+  color: var(--brand-dark);
+  stroke: var(--brand-dark);
 }
 
 .employee-item div { 
@@ -543,17 +835,6 @@ onMounted(fetchWorksites)
 
 @media (max-width: 600px) {
   .sites-grid { grid-template-columns: 1fr; }
-  
-  /* تصغير الأيقونات في الأزرار للهاتف */
-  .site-card__actions .btn {
-    font-size: 11px;
-    padding: 6px 10px;
-  }
-  
-  .site-card__actions .btn--sm {
-    min-width: 32px;
-    padding: 6px 8px;
-  }
   
   /* تصغير أيقونات emoji في البطاقات */
   .site-card__details {
@@ -590,6 +871,331 @@ onMounted(fetchWorksites)
   .working-employee-item .badge {
     flex: 1;
     min-width: 0;
+  }
+  
+  /* Mobile specific adjustments for dropdown */
+  .dropdown-menu {
+    min-width: 180px;
+    right: 0;
+  }
+}
+
+/* Success Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.success-modal-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--shadow-xl);
+  animation: scaleIn 0.2s ease;
+  text-align: center;
+}
+
+.success-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: var(--signal-in-tint);
+}
+
+.success-icon-wrapper :deep(svg) {
+  color: var(--signal-in);
+  stroke: var(--signal-in);
+}
+
+.success-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.success-message {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.success-confirm-btn {
+  width: 100%;
+}
+
+[data-theme="dark"] .success-icon-wrapper {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .success-icon-wrapper :deep(svg) {
+  color: var(--signal-in);
+  stroke: var(--signal-in);
+}
+
+[data-theme="dark"] .success-title {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .success-message {
+  color: var(--ink-soft);
+}
+
+/* بطاقة إنهاء الدوام الاحترافية */
+.completion-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: var(--shadow-xl);
+  animation: scaleIn 0.3s ease;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.completion-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 32px 24px;
+  text-align: center;
+  color: white;
+}
+
+.completion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.completion-icon :deep(svg) {
+  color: white;
+  stroke: white;
+  stroke-width: 2.5;
+}
+
+.completion-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: white;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.completion-subtitle {
+  font-size: 15px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 400;
+}
+
+.completion-body {
+  padding: 28px 24px;
+  background: var(--surface);
+}
+
+.completion-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.completion-info-item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.completion-info-item:hover {
+  border-color: var(--brand);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.completion-info-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.completion-info-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.completion-info-value.mono {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 14px;
+}
+
+.completion-hours-section {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #10b981;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  text-align: center;
+  margin-top: 20px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.completion-hours-label {
+  font-size: 13px;
+  color: #065f46;
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.completion-hours-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: #059669;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -1px;
+}
+
+.completion-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.completion-confirm-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.completion-confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.completion-confirm-btn:active {
+  transform: translateY(0);
+}
+
+[data-theme="dark"] .completion-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+[data-theme="dark"] .completion-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+[data-theme="dark"] .completion-info-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .completion-info-item:hover {
+  border-color: var(--brand);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .completion-info-label {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] .completion-info-value {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .completion-hours-section {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .completion-hours-label {
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .completion-hours-value {
+  color: #34d399;
+}
+
+[data-theme="dark"] .completion-footer {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .completion-confirm-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .completion-info-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .completion-card {
+    max-width: 95%;
+  }
+  
+  .completion-header {
+    padding: 24px 16px;
+  }
+  
+  .completion-body {
+    padding: 16px;
+  }
+  
+  .completion-title {
+    font-size: 20px;
+  }
+  
+  .completion-hours-value {
+    font-size: 28px;
   }
 }
 </style>

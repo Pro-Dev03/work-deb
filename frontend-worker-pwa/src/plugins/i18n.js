@@ -49,7 +49,8 @@ const messages = {
     refreshing: "جاري التحديث...",
     release_to_refresh: "أطلق للتحديث",
     pwa_install_title: "تثبيت التطبيق",
-    pwa_install_text: "ثبت التطبيق على جهازك"
+    pwa_install_text: "ثبت التطبيق على جهازك",
+    click_select_location_before_checkout: "يجب الضغط على \"تحديد موقعك\" أولاً قبل إنهاء الدوام"
   },
   he: {
     app_name: "WorkTrack", 
@@ -98,7 +99,8 @@ const messages = {
     refreshing: "מרענן...",
     release_to_refresh: "שחרר לרענון",
     pwa_install_title: "התקנת אפליקציה",
-    pwa_install_text: "התקן את האפליקציה במכשיר שלך"
+    pwa_install_text: "התקן את האפליקציה במכשיר שלך",
+    click_select_location_before_checkout: "לחץ על \"קבע את המיקום שלך\" קודם לפני יציאה"
   },
   en: {
     app_name: "WorkTrack", 
@@ -147,7 +149,8 @@ const messages = {
     refreshing: "Refreshing...",
     release_to_refresh: "Release to refresh",
     pwa_install_title: "Install App",
-    pwa_install_text: "Install the app on your device"
+    pwa_install_text: "Install the app on your device",
+    click_select_location_before_checkout: "Click \"Set your location\" first before checkout"
   }
 }
 
