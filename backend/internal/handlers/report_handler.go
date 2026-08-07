@@ -33,6 +33,7 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		)
 	`).Scan(&waitingEmployees)
 	if err != nil {
+		fmt.Printf("❌ Error fetching waiting employees: %v\n", err)
 		waitingEmployees = 0
 	}
 
@@ -48,32 +49,38 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		AND a.check_out_time IS NOT NULL
 	`).Scan(&completedToday)
 	if err != nil {
+		fmt.Printf("❌ Error fetching completed employees: %v\n", err)
 		completedToday = 0
 	}
 
 	// إحصائيات المهام - جلب جميع المهام النشطة بدون فلتر تاريخ
 	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "completed").Scan(&completed)
 	if err != nil {
+		fmt.Printf("❌ Error fetching completed tasks: %v\n", err)
 		completed = 0
 	}
 	
 	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "in_progress").Scan(&inProgress)
 	if err != nil {
+		fmt.Printf("❌ Error fetching in_progress tasks: %v\n", err)
 		inProgress = 0
 	}
 	
 	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "pending").Scan(&pending)
 	if err != nil {
+		fmt.Printf("❌ Error fetching pending tasks: %v\n", err)
 		pending = 0
 	}
 	
 	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "late").Scan(&late)
 	if err != nil {
+		fmt.Printf("❌ Error fetching late tasks: %v\n", err)
 		late = 0
 	}
 	
 	err = h.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'employee' AND is_active = TRUE`).Scan(&totalEmployees)
 	if err != nil {
+		fmt.Printf("❌ Error fetching total employees: %v\n", err)
 		totalEmployees = 0
 	}
 
@@ -81,7 +88,9 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 	var totalTasks int
 	var taskStatuses []string
 	statusRows, err := h.DB.Query(`SELECT status, COUNT(*) FROM tasks GROUP BY status`)
-	if err == nil {
+	if err != nil {
+		fmt.Printf("❌ Error fetching task status breakdown: %v\n", err)
+	} else {
 		defer statusRows.Close()
 		for statusRows.Next() {
 			var status string
@@ -91,6 +100,26 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 			totalTasks += count
 		}
 	}
+
+	// فحص عينة من المهام
+	var sampleTasks []gin.H
+	sampleRows, err := h.DB.Query(`SELECT id, title, status, created_at FROM tasks LIMIT 3`)
+	if err == nil {
+		defer sampleRows.Close()
+		for sampleRows.Next() {
+			var id, title, status, createdAt string
+			sampleRows.Scan(&id, &title, &status, &createdAt)
+			sampleTasks = append(sampleTasks, gin.H{
+				"id": id,
+				"title": title,
+				"status": status,
+				"created_at": createdAt,
+			})
+		}
+	}
+
+	fmt.Printf("📊 Task Statistics: completed=%d, in_progress=%d, pending=%d, late=%d, total=%d\n", 
+		completed, inProgress, pending, late, totalTasks)
 
 	c.JSON(http.StatusOK, gin.H{
 		"completed_today":     completed,
@@ -107,6 +136,7 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 			"tasks_late": late,
 			"total_tasks": totalTasks,
 			"task_statuses": taskStatuses,
+			"sample_tasks": sampleTasks,
 		},
 	})
 }

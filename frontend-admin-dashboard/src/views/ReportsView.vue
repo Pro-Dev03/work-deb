@@ -108,17 +108,18 @@
               <span class="debug-label">إجمالي المهام:</span>
               <span class="debug-value">{{ summary._debug.total_tasks }}</span>
             </div>
-            <div class="debug-item">
-              <span class="debug-label">الفترة:</span>
-              <span class="debug-value">{{ summary._debug.period }}</span>
-            </div>
-            <div class="debug-item full-width">
-              <span class="debug-label">شرط التاريخ:</span>
-              <span class="debug-value">{{ summary._debug.date_condition }}</span>
-            </div>
             <div class="debug-item full-width" v-if="summary._debug.task_statuses && summary._debug.task_statuses.length > 0">
               <span class="debug-label">الحالات الموجودة:</span>
               <span class="debug-value">{{ summary._debug.task_statuses.join(', ') }}</span>
+            </div>
+            <div class="debug-item full-width" v-if="summary._debug.sample_tasks && summary._debug.sample_tasks.length > 0">
+              <span class="debug-label">عينة المهام:</span>
+              <div class="debug-tasks">
+                <div v-for="task in summary._debug.sample_tasks" :key="task.id" class="debug-task">
+                  <span class="debug-task-title">{{ task.title }}</span>
+                  <span class="debug-task-status">{{ task.status }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -427,6 +428,34 @@ onMounted(() => {
   color: #333;
   font-weight: 600;
   font-family: monospace;
+}
+
+.debug-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.debug-task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: #e8e8e8;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.debug-task-title {
+  color: #333;
+  font-weight: 500;
+}
+
+.debug-task-status {
+  color: #666;
+  font-family: monospace;
+  font-size: 10px;
 }
 
 .employees-table {
