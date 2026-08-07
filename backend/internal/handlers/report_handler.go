@@ -20,20 +20,6 @@ func NewReportHandler(db *sql.DB) *ReportHandler {
 func (h *ReportHandler) DailySummary(c *gin.Context) {
 	var completed, inProgress, pending, late, totalEmployees, waitingEmployees, completedToday int
 
-	// الحصول على معامل الفترة من الاستعلام
-	period := c.DefaultQuery("period", "today")
-
-	// تحديد فترة التاريخ حسب المعامل
-	var dateCondition string
-	switch period {
-	case "week":
-		dateCondition = "created_at >= CURRENT_DATE - INTERVAL '7 days'"
-	case "month":
-		dateCondition = "created_at >= CURRENT_DATE - INTERVAL '30 days'"
-	default: // today
-		dateCondition = "created_at::date = CURRENT_DATE"
-	}
-
 	// الموظفين الذين لم يبدؤوا العمل اليوم (قيد الانتظار)
 	err := h.DB.QueryRow(`
 		SELECT COUNT(DISTINCT u.id)
@@ -65,25 +51,23 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		completedToday = 0
 	}
 
-	// إحصائيات المهام - جلب المهام حسب الفترة المحددة
-	taskQuery := fmt.Sprintf(`SELECT COUNT(*) FROM tasks WHERE status = $1 AND %s`, dateCondition)
-	
-	err = h.DB.QueryRow(taskQuery, "completed").Scan(&completed)
+	// إحصائيات المهام - جلب جميع المهام النشطة بدون فلتر تاريخ
+	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "completed").Scan(&completed)
 	if err != nil {
 		completed = 0
 	}
 	
-	err = h.DB.QueryRow(taskQuery, "in_progress").Scan(&inProgress)
+	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "in_progress").Scan(&inProgress)
 	if err != nil {
 		inProgress = 0
 	}
 	
-	err = h.DB.QueryRow(taskQuery, "pending").Scan(&pending)
+	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "pending").Scan(&pending)
 	if err != nil {
 		pending = 0
 	}
 	
-	err = h.DB.QueryRow(taskQuery, "late").Scan(&late)
+	err = h.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE status = $1`, "late").Scan(&late)
 	if err != nil {
 		late = 0
 	}
@@ -92,10 +76,6 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 	if err != nil {
 		totalEmployees = 0
 	}
-
-	// تسجيل التصحيح
-	fmt.Printf("Task Statistics Debug: completed=%d, in_progress=%d, pending=%d, late=%d, period=%s, query=%s\n", 
-		completed, inProgress, pending, late, period, dateCondition)
 
 	// فحص إضافي: استعلام جميع الحالات الموجودة في جدول المهام
 	var totalTasks int
@@ -120,14 +100,11 @@ func (h *ReportHandler) DailySummary(c *gin.Context) {
 		"total_employees":     totalEmployees,
 		"waiting_employees":   waitingEmployees,
 		"completed_employees": completedToday,
-		"period":              period,
 		"_debug": gin.H{
 			"tasks_completed": completed,
 			"tasks_in_progress": inProgress,
 			"tasks_pending": pending,
 			"tasks_late": late,
-			"date_condition": dateCondition,
-			"period": period,
 			"total_tasks": totalTasks,
 			"task_statuses": taskStatuses,
 		},
