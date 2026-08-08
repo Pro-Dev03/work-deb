@@ -1,154 +1,117 @@
 #!/usr/bin/env python3
-# سكربت Python لإدارة مستخدمي WorkTrack عبر API
-# يتطلب: requests
+# سكربت Python لإدارة مستخدمي WorkTrack عبر قاعدة البيانات مباشرة
+# يتطلب: psycopg2-binary
 
 import os
 import sys
-import json
-import requests
+import psycopg2
 from getpass import getpass
 from datetime import datetime, timedelta, timezone
-
-# الإعدادات الافتراضية
-DEFAULT_API_URL = "https://worktrack-v2.onrender.com/api/v1"
-DEFAULT_API_KEY = "dev-admin-script-key-2024"
+import hashlib
 
 def load_config():
     """قراءة الإعدادات من ملف .env"""
-    api_url = DEFAULT_API_URL
-    api_key = DEFAULT_API_KEY
-    supabase_url = ""
-    supabase_service_role_key = ""
+    database_url = ""
     
-    env_files = ["backend/.env", ".env"]
+    env_files = ["backend/.env", ".env", "../backend/.env"]
     for env_file in env_files:
         if os.path.exists(env_file):
             with open(env_file, 'r') as f:
                 for line in f:
                     line = line.strip()
-                    if line.startswith("API_URL="):
-                        api_url = line.split("=", 1)[1].strip()
-                    elif line.startswith("BACKEND_URL="):
-                        api_url = line.split("=", 1)[1].strip()
-                    elif line.startswith("ADMIN_SCRIPT_API_KEY="):
-                        api_key = line.split("=", 1)[1].strip()
-                    elif line.startswith("SUPABASE_URL="):
-                        supabase_url = line.split("=", 1)[1].strip()
-                    elif line.startswith("SUPABASE_SERVICE_ROLE_KEY="):
-                        supabase_service_role_key = line.split("=", 1)[1].strip()
-            break
+                    if line.startswith("DATABASE_URL="):
+                        database_url = line.split("=", 1)[1].strip()
+                        break
+            if database_url:
+                break
     
-    return api_url, api_key, supabase_url, supabase_service_role_key
+    if not database_url:
+        print("❌ DATABASE_URL غير موجود في ملف .env")
+        sys.exit(1)
+    
+    return database_url
 
-def make_request(method, endpoint, data=None, api_key=None):
-    """إرسال طلب API"""
-    headers = {
-        "X-API-Key": api_key,
-        "Content-Type": "application/json"
-    }
-    
-    url = f"{DEFAULT_API_URL}/admin-script/{endpoint}"
-    
+def get_db_connection(database_url):
+    """الحصول على اتصال بقاعدة البيانات"""
     try:
-        if method == "GET":
-            response = requests.get(url, headers=headers)
-        elif method == "POST":
-            response = requests.post(url, headers=headers, json=data)
-        elif method == "PUT":
-            response = requests.put(url, headers=headers, json=data)
-        elif method == "DELETE":
-            response = requests.delete(url, headers=headers, json=data)
-        
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        return {"error": f"خطأ في الاتصال: {str(e)}"}
+        conn = psycopg2.connect(database_url)
+        conn.autocommit = True
+        return conn
+    except Exception as e:
+        print(f"❌ فشل الاتصال بقاعدة البيانات: {str(e)}")
+        sys.exit(1)
 
-def delete_from_supabase_auth(user_id, supabase_url, service_role_key):
-    """حذف مستخدم من Supabase Auth"""
-    if not supabase_url or not service_role_key:
-        print("⚠️ Supabase credentials not configured, skipping Supabase Auth deletion")
-        return True
-    
-    auth_url = f"{supabase_url}/auth/v1/admin/users/{user_id}"
-    headers = {
-        "apikey": service_role_key,
-        "Authorization": f"Bearer {service_role_key}",
-        "Content-Type": "application/json"
-    }
-    
-    try:
-        response = requests.delete(auth_url, headers=headers)
-        if response.status_code >= 200 and response.status_code < 300:
-            print("✅ تم حذف المستخدم من Supabase Auth بنجاح")
-            return True
-        else:
-            print(f"⚠️ فشل حذف من Supabase Auth (status: {response.status_code})")
-            return True  # نستمر بحذف من قاعدة البيانات
-    except requests.exceptions.RequestException as e:
-        print(f"⚠️ خطأ في الاتصال بـ Supabase Auth: {str(e)}")
-        return True  # نستمر بحذف من قاعدة البيانات
+def hash_password(password):
+    """تشفير كلمة المرور"""
+    return hashlib.sha256(password.encode()).hexdigest()
 
-def list_users(api_key):
+def list_users(conn):
     """عرض جميع المستخدمين"""
     print("\nقائمة المستخدمين:")
-    print("=" * 60)
+    print("=" * 100)
     
-    result = make_request("GET", "users", api_key=api_key)
-    
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-        return
-    
-    users = result if isinstance(result, list) else []
-    
-    if not users:
-        print("لا يوجد مستخدمين")
-        return
-    
-    print(f"{'ID':<40} {'الاسم':<30} {'الإيميل':<30} {'الدور':<10} {'نشط':<5}")
-    print("-" * 120)
-    
-    for user in users:
-        user_id = user.get('id', '')
-        full_name = user.get('full_name', '')
-        email = user.get('email', '')
-        role = user.get('role', '')
-        is_active = user.get('is_active', False)
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, full_name, email, role, is_active, subscription_status, expires_at 
+            FROM users 
+            ORDER BY created_at DESC
+        """)
         
-        print(f"{user_id:<40} {full_name:<30} {email:<30} {role:<10} {'✓' if is_active else '✗':<5}")
-    
-    print("=" * 60)
-    return users
+        users = cursor.fetchall()
+        
+        if not users:
+            print("لا يوجد مستخدمين")
+            return
+        
+        print(f"{'ID':<38} {'الاسم':<25} {'الإيميل':<30} {'الدور':<10} {'نشط':<5} {'الاشتراك':<10}")
+        print("-" * 120)
+        
+        for user in users:
+            user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+            print(f"{str(user_id):<38} {full_name:<25} {email:<30} {role:<10} {'✓' if is_active else '✗':<5} {subscription_status:<10}")
+        
+        print("=" * 100)
+        return users
+        
+    except Exception as e:
+        print(f"❌ خطأ: {str(e)}")
+        return []
 
-def find_user(users, identifier):
+def find_user(conn, identifier):
     """البحث عن مستخدم"""
-    for user in users:
-        if user.get('id') == identifier or user.get('email') == identifier:
-            return user
-    return None
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, full_name, email, role, is_active, subscription_status, expires_at 
+            FROM users 
+            WHERE id = %s OR email = %s
+        """, (identifier, identifier))
+        
+        return cursor.fetchone()
+    except Exception as e:
+        print(f"❌ خطأ في البحث: {str(e)}")
+        return None
 
-def update_user_email(api_key, supabase_url, supabase_service_role_key):
+def update_user_email(conn):
     """تغيير إيميل مستخدم"""
     identifier = input("\nأدخل ID المستخدم أو الإيميل الحالي: ")
     
-    # جلب جميع المستخدمين
-    result = make_request("GET", "users", api_key=api_key)
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-        return
-    
-    users = result if isinstance(result, list) else []
-    user = find_user(users, identifier)
-    
+    user = find_user(conn, identifier)
     if not user:
         print("❌ المستخدم غير موجود")
         return
     
-    print(f"المستخدم المحدد: {user['full_name']} ({user['email']})")
-    new_email = input("أدخل الإيميل الجديد: ")
+    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    print(f"المستخدم المحدد: {full_name} ({email})")
     
+    new_email = input("أدخل الإيميل الجديد: ")
     if not new_email:
         print("❌ الإيميل لا يمكن أن يكون فارغاً")
+        return
+    
+    if "@" not in new_email or "." not in new_email:
+        print("❌ الإيميل غير صحيح")
         return
     
     confirm = input(f"تأكيد تغيير الإيميل إلى '{new_email}'؟ (n/y): ")
@@ -156,38 +119,26 @@ def update_user_email(api_key, supabase_url, supabase_service_role_key):
         print("❌ تم إلغاء العملية")
         return
     
-    data = {
-        "identifier": identifier,
-        "new_email": new_email
-    }
-    
-    result = make_request("PUT", "users/email", data=data, api_key=api_key)
-    
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-    else:
-        print(f"✅ {result.get('message', 'تم التحديث')}")
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET email = %s WHERE id = %s", (new_email, user_id))
+        print("✅ تم تحديث الإيميل بنجاح")
+    except Exception as e:
+        print(f"❌ خطأ: {str(e)}")
 
-def update_user_password(api_key):
+def update_user_password(conn):
     """تغيير كلمة مرور مستخدم"""
     identifier = input("\nأدخل ID المستخدم أو الإيميل: ")
     
-    # جلب جميع المستخدمين
-    result = make_request("GET", "users", api_key=api_key)
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-        return
-    
-    users = result if isinstance(result, list) else []
-    user = find_user(users, identifier)
-    
+    user = find_user(conn, identifier)
     if not user:
         print("❌ المستخدم غير موجود")
         return
     
-    print(f"المستخدم المحدد: {user['full_name']} ({user['email']})")
-    new_password = getpass("أدخل كلمة المرور الجديدة: ")
+    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    print(f"المستخدم المحدد: {full_name} ({email})")
     
+    new_password = getpass("أدخل كلمة المرور الجديدة: ")
     if not new_password:
         print("❌ كلمة المرور لا يمكن أن تكون فارغة")
         return
@@ -197,7 +148,6 @@ def update_user_password(api_key):
         return
     
     confirm_password = getpass("أعد إدخال كلمة المرور الجديدة: ")
-    
     if new_password != confirm_password:
         print("❌ كلمات المرور غير متطابقة")
         return
@@ -207,19 +157,15 @@ def update_user_password(api_key):
         print("❌ تم إلغاء العملية")
         return
     
-    data = {
-        "identifier": identifier,
-        "new_password": new_password
-    }
-    
-    result = make_request("PUT", "users/password", data=data, api_key=api_key)
-    
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-    else:
-        print(f"✅ {result.get('message', 'تم التحديث')}")
+    try:
+        cursor = conn.cursor()
+        hashed_password = hash_password(new_password)
+        cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (hashed_password, user_id))
+        print("✅ تم تحديث كلمة المرور بنجاح")
+    except Exception as e:
+        print(f"❌ خطأ: {str(e)}")
 
-def create_admin(api_key):
+def create_admin(conn):
     """إنشاء حساب أدمن جديد"""
     print("\n" + "=" * 60)
     print("إنشاء حساب أدمن جديد")
@@ -264,21 +210,24 @@ def create_admin(api_key):
         print("❌ تم إلغاء العملية")
         return
     
-    data = {
-        "full_name": full_name,
-        "email": email,
-        "password": password
-    }
-    
-    result = make_request("POST", "users/admin", data=data, api_key=api_key)
-    
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-    else:
-        print(f"✅ {result.get('message', 'تم الإنشاء')}")
-        print(f"🆔 معرف المستخدم: {result.get('user_id', 'غير معروف')}")
+    try:
+        cursor = conn.cursor()
+        hashed_password = hash_password(password)
+        
+        cursor.execute("""
+            INSERT INTO users (full_name, email, password_hash, role, is_active, subscription_status, created_at)
+            VALUES (%s, %s, %s, 'admin', true, 'active', NOW())
+            RETURNING id
+        """, (full_name, email, hashed_password))
+        
+        user_id = cursor.fetchone()[0]
+        print(f"✅ تم إنشاء حساب الأدمن بنجاح")
+        print(f"🆔 معرف المستخدم: {user_id}")
+        
+    except Exception as e:
+        print(f"❌ خطأ: {str(e)}")
 
-def delete_user(api_key, supabase_url, supabase_service_role_key):
+def delete_user(conn):
     """حذف حساب"""
     print("\n" + "=" * 60)
     print("حذف حساب")
@@ -286,24 +235,18 @@ def delete_user(api_key, supabase_url, supabase_service_role_key):
     
     identifier = input("أدخل ID المستخدم أو الإيميل للحذف: ")
     
-    # جلب جميع المستخدمين
-    result = make_request("GET", "users", api_key=api_key)
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-        return
-    
-    users = result if isinstance(result, list) else []
-    user = find_user(users, identifier)
-    
+    user = find_user(conn, identifier)
     if not user:
         print("❌ المستخدم غير موجود")
         return
     
+    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    
     print("المستخدم المحدد:")
-    print(f"الاسم: {user['full_name']}")
-    print(f"الإيميل: {user['email']}")
-    print(f"الدور: {user['role']}")
-    print(f"ID: {user['id']}")
+    print(f"الاسم: {full_name}")
+    print(f"الإيميل: {email}")
+    print(f"الدور: {role}")
+    print(f"ID: {user_id}")
     print()
     
     confirm = input("هل أنت متأكد من حذف هذا الحساب؟ هذا الإجراء لا يمكن التراجع عنه (n/y): ")
@@ -311,23 +254,14 @@ def delete_user(api_key, supabase_url, supabase_service_role_key):
         print("❌ تم إلغاء عملية الحذف")
         return
     
-    # حذف من Supabase Auth أولاً
-    print("🔄 جاري حذف المستخدم من Supabase Auth...")
-    delete_from_supabase_auth(user['id'], supabase_url, supabase_service_role_key)
-    
-    # استخدام ID المستخدم بدلاً من identifier
-    data = {
-        "identifier": user['id']  # استخدام ID مباشرة
-    }
-    
-    result = make_request("DELETE", "users", data=data, api_key=api_key)
-    
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-    else:
-        print(f"✅ {result.get('message', 'تم الحذف')}")
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        print("✅ تم حذف الحساب بنجاح")
+    except Exception as e:
+        print(f"❌ خطأ: {str(e)}")
 
-def update_subscription(api_key):
+def update_subscription(conn):
     """تحديث مدة الاشتراك"""
     print("\n" + "=" * 60)
     print("تحديث مدة الاشتراك")
@@ -335,20 +269,13 @@ def update_subscription(api_key):
     
     identifier = input("أدخل ID المستخدم أو الإيميل: ")
     
-    # جلب جميع المستخدمين
-    result = make_request("GET", "users", api_key=api_key)
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-        return
-    
-    users = result if isinstance(result, list) else []
-    user = find_user(users, identifier)
-    
+    user = find_user(conn, identifier)
     if not user:
         print("❌ المستخدم غير موجود")
         return
     
-    print(f"المستخدم المحدد: {user['full_name']} ({user['email']})")
+    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    print(f"المستخدم المحدد: {full_name} ({email})")
     print()
     
     # عرض التوقيت العالمي الحالي
@@ -365,9 +292,7 @@ def update_subscription(api_key):
     
     choice = input("اختر رقم (1-3): ")
     
-    data = {
-        "identifier": user['id']
-    }
+    updates = {}
     
     if choice in ["1", "3"]:
         print("\nحالات الاشتراك:")
@@ -383,10 +308,9 @@ def update_subscription(api_key):
         }
         
         if status_choice in status_map:
-            data["subscription_status"] = status_map[status_choice]
+            updates["subscription_status"] = status_map[status_choice]
     
     if choice in ["2", "3"]:
-        # إدخال مباشر لعدد الأيام
         print("\nأدخل مدة الاشتراك (بالأيام):")
         print("مثال: 7 لسبعة أيام، 30 لشهر، 365 لسنة")
         
@@ -396,9 +320,8 @@ def update_subscription(api_key):
                 print("❌ يجب أن يكون عدد الأيام أكبر من صفر")
                 return
             
-            # حساب تاريخ الانتهاء بالتوقيت العالمي
             expires_at = utc_now + timedelta(days=days)
-            data["expires_at"] = expires_at.isoformat()
+            updates["expires_at"] = expires_at
             
             print(f"\n📅 تاريخ الانتهاء المحسوب (UTC): {expires_at.strftime('%Y-%m-%d %H:%M:%S')}")
             
@@ -406,20 +329,15 @@ def update_subscription(api_key):
             print("❌ قيمة غير صحيحة، أدخل رقماً")
             return
     
-    if not data.get("subscription_status") and not data.get("expires_at"):
+    if not updates:
         print("❌ لم يتم تحديد أي تحديث")
         return
     
     print("\nملخص التحديث:")
-    if data.get("subscription_status"):
-        print(f"حالة الاشتراك: {data['subscription_status']}")
-    if data.get("expires_at"):
-        # تحويل ISO format إلى تنسيق مقروء
-        try:
-            expires_dt = datetime.fromisoformat(data['expires_at'].replace('Z', '+00:00'))
-            print(f"تاريخ الانتهاء (UTC): {expires_dt.strftime('%Y-%m-%d %H:%M:%S')}")
-        except:
-            print(f"تاريخ الانتهاء: {data['expires_at']}")
+    if updates.get("subscription_status"):
+        print(f"حالة الاشتراك: {updates['subscription_status']}")
+    if updates.get("expires_at"):
+        print(f"تاريخ الانتهاء (UTC): {updates['expires_at'].strftime('%Y-%m-%d %H:%M:%S')}")
     print()
     
     confirm = input("تأكيد التحديث؟ (n/y): ")
@@ -427,62 +345,81 @@ def update_subscription(api_key):
         print("❌ تم إلغاء العملية")
         return
     
-    result = make_request("PUT", "users/subscription", data=data, api_key=api_key)
-    
-    if "error" in result:
-        print(f"❌ خطأ: {result['error']}")
-    else:
-        print(f"✅ {result.get('message', 'تم التحديث بنجاح')}")
+    try:
+        cursor = conn.cursor()
+        
+        if updates.get("subscription_status") and updates.get("expires_at"):
+            cursor.execute("""
+                UPDATE users 
+                SET subscription_status = %s, expires_at = %s 
+                WHERE id = %s
+            """, (updates["subscription_status"], updates["expires_at"], user_id))
+        elif updates.get("subscription_status"):
+            cursor.execute("""
+                UPDATE users 
+                SET subscription_status = %s 
+                WHERE id = %s
+            """, (updates["subscription_status"], user_id))
+        elif updates.get("expires_at"):
+            cursor.execute("""
+                UPDATE users 
+                SET expires_at = %s 
+                WHERE id = %s
+            """, (updates["expires_at"], user_id))
+        
+        print("✅ تم تحديث الاشتراك بنجاح")
+        
+    except Exception as e:
+        print(f"❌ خطأ: {str(e)}")
 
 def main():
     """الوظيفة الرئيسية"""
-    global DEFAULT_API_URL
-    api_url, api_key, supabase_url, supabase_service_role_key = load_config()
-    DEFAULT_API_URL = api_url
+    database_url = load_config()
     
     print("=" * 60)
-    print("سكربت تغيير بيانات المستخدم - WorkTrack")
+    print("سكربت إدارة مستخدمي WorkTrack - قاعدة البيانات")
     print("=" * 60)
-    print(f"API URL: {api_url}")
-    if supabase_url:
-        print(f"Supabase URL: {supabase_url}")
-        print("✅ Supabase Auth deletion enabled")
-    else:
-        print("⚠️ Supabase Auth deletion disabled (credentials not configured)")
+    print(f"DATABASE URL: {database_url[:50]}...")
     print()
     
-    while True:
-        print("الخيارات:")
-        print("1. عرض جميع المستخدمين")
-        print("2. تغيير إيميل مستخدم")
-        print("3. تغيير كلمة مرور مستخدم")
-        print("4. تحديث مدة الاشتراك")
-        print("5. إنشاء حساب أدمن جديد")
-        print("6. حذف حساب")
-        print("7. خروج")
-        print()
-        
-        choice = input("اختر رقم (1-7): ")
-        
-        if choice == "1":
-            list_users(api_key)
-        elif choice == "2":
-            update_user_email(api_key, supabase_url, supabase_service_role_key)
-        elif choice == "3":
-            update_user_password(api_key)
-        elif choice == "4":
-            update_subscription(api_key)
-        elif choice == "5":
-            create_admin(api_key)
-        elif choice == "6":
-            delete_user(api_key, supabase_url, supabase_service_role_key)
-        elif choice == "7":
-            print("👋 خروج...")
-            break
-        else:
-            print("❌ اختيار غير صحيح")
-        
-        print()
+    conn = get_db_connection(database_url)
+    
+    try:
+        while True:
+            print("الخيارات:")
+            print("1. عرض جميع المستخدمين")
+            print("2. تغيير إيميل مستخدم")
+            print("3. تغيير كلمة مرور مستخدم")
+            print("4. تحديث مدة الاشتراك")
+            print("5. إنشاء حساب أدمن جديد")
+            print("6. حذف حساب")
+            print("7. خروج")
+            print()
+            
+            choice = input("اختر رقم (1-7): ")
+            
+            if choice == "1":
+                list_users(conn)
+            elif choice == "2":
+                update_user_email(conn)
+            elif choice == "3":
+                update_user_password(conn)
+            elif choice == "4":
+                update_subscription(conn)
+            elif choice == "5":
+                create_admin(conn)
+            elif choice == "6":
+                delete_user(conn)
+            elif choice == "7":
+                print("👋 خروج...")
+                break
+            else:
+                print("❌ اختيار غير صحيح")
+            
+            print()
+            
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     try:
