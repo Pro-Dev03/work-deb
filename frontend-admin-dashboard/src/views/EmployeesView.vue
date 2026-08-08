@@ -1276,9 +1276,8 @@ onMounted(fetchEmployees)
 }
 
 .attendance-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 16px;
   transition: all 0.2s ease;
@@ -1288,7 +1287,12 @@ onMounted(fetchEmployees)
 
 .attendance-card:hover {
   border-color: var(--brand);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .attendance-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 .attendance-card__header {
@@ -1344,9 +1348,8 @@ onMounted(fetchEmployees)
 
 /* تصميم بطاقات الموظفين للهاتف */
 .employee-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 16px;
   transition: all 0.2s ease;
@@ -1356,7 +1359,12 @@ onMounted(fetchEmployees)
 
 .employee-card:hover {
   border-color: var(--brand);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .employee-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 .employee-card__header {
