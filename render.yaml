@@ -39,7 +39,7 @@ services:
     runtime: static
     plan: free
     rootDir: frontend-admin-dashboard
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     publishDir: dist
     autoDeployTrigger: commit
     headers:
@@ -65,7 +65,7 @@ services:
     runtime: static
     plan: free
     rootDir: frontend-worker-pwa
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     publishDir: dist
     autoDeployTrigger: commit
     headers:
