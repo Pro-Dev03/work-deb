@@ -871,6 +871,8 @@ async function cleanupOldRecords() {
   try {
     const { data } = await api.post('/attendance/cleanup-old-records')
     alert(`${t('cleanup_success')}: ${data.deleted_count} records`)
+    // إعادة تحميل البيانات بعد التنظيف
+    await fetchEmployees()
   } catch (error) {
     console.error('❌ ' + t('cleanup_failed'), error)
     alert(error.response?.data?.error || t('cleanup_failed'))

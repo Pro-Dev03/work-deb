@@ -623,13 +623,14 @@ func (h *AuthHandler) GetDeviceInfo(c *gin.Context) {
 }
 
 // =============================================
-// 9. تعديل اسم الموظف
+// 9. تعديل بيانات الموظف
 // =============================================
 func (h *AuthHandler) UpdateEmployee(c *gin.Context) {
 	id := c.Param("id")
 
 	var req struct {
 		FullName string `json:"full_name" binding:"required"`
+		Phone    string `json:"phone"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -644,11 +645,22 @@ func (h *AuthHandler) UpdateEmployee(c *gin.Context) {
 		return
 	}
 
-	_, err = h.DB.Exec(`
-		UPDATE users 
-		SET full_name = $1, updated_at = now()
-		WHERE id = $2
-	`, req.FullName, id)
+	// بناء الاستعلام ديناميكياً بناءً على الحقول المرسلة
+	query := `UPDATE users SET full_name = $1, updated_at = now()`
+	args := []interface{}{req.FullName}
+	argCount := 1
+
+	if req.Phone != "" {
+		argCount++
+		query += `, phone = $` + strconv.Itoa(argCount)
+		args = append(args, req.Phone)
+	}
+
+	argCount++
+	query += ` WHERE id = $` + strconv.Itoa(argCount)
+	args = append(args, id)
+
+	_, err = h.DB.Exec(query, args...)
 
 	if err != nil {
 		log.Printf("❌ فشل تعديل الموظف: %v", err)
@@ -656,7 +668,7 @@ func (h *AuthHandler) UpdateEmployee(c *gin.Context) {
 		return
 	}
 
-	log.Printf("✅ تم تعديل اسم الموظف: %s -> %s", id, req.FullName)
+	log.Printf("✅ تم تعديل بيانات الموظف: %s", id)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "تم تعديل الموظف بنجاح",

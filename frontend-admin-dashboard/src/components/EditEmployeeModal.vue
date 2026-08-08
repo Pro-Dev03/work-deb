@@ -2,7 +2,7 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal card">
       <div class="modal-header">
-        <h3>✏️ تعديل اسم الموظف</h3>
+        <h3>✏️ تعديل بيانات الموظف</h3>
         <button class="modal-close" @click="$emit('close')">✕</button>
       </div>
 
@@ -20,10 +20,9 @@
           <input 
             v-model="form.phone" 
             type="tel" 
-            disabled
+            placeholder="أدخل رقم الهاتف"
             dir="ltr"
           />
-          <span class="field-hint">لا يمكن تعديل رقم الهاتف</span>
         </div>
 
         <div class="form-actions">
@@ -73,14 +72,15 @@ async function handleSubmit() {
 
   try {
     const payload = {
-      full_name: form.full_name.trim()
+      full_name: form.full_name.trim(),
+      phone: form.phone.trim()
     }
 
     console.log('📤 إرسال تعديل بيانات الموظف:', payload)
 
     const { data } = await api.put(`/admin/employees/${props.employee.id}`, payload)
 
-    success.value = `✅ تم تعديل اسم الموظف بنجاح!`
+    success.value = `✅ تم تعديل بيانات الموظف بنجاح!`
 
     setTimeout(() => {
       emit('employee-updated')
