@@ -92,10 +92,13 @@ async function handleSubmit() {
     success.value += `\n📱 رقم الهاتف: ${data.user.phone}`
     success.value += `\n🔑 سيستخدم هذا الرقم لتسجيل الدخول`
 
+    // إرسال الحدث فوراً لإعادة تحميل البيانات
+    emit('employee-added')
+    
+    // إغلاق المودال بعد فترة قصيرة لعرض رسالة النجاح
     setTimeout(() => {
-      emit('employee-added')
       emit('close')
-    }, 3000)
+    }, 1500)
   } catch (err) {
     console.error('❌ فشل الإضافة:', err.response?.data)
     error.value = err.response?.data?.error || '❌ فشل إنشاء الموظف'

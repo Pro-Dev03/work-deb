@@ -320,19 +320,25 @@ async function handleSubmit() {
       await api.put(`/worksites/${props.worksite.id}`, payload)
       success.value = '✅ تم تعديل نقطة العمل بنجاح'
       
+      // إرسال الحدث فوراً لإعادة تحميل البيانات
+      emit('worksite-updated')
+      
+      // إغلاق المودال بعد فترة قصيرة لعرض رسالة النجاح
       setTimeout(() => {
-        emit('worksite-updated')
         emit('close')
-      }, 1500)
+      }, 1000)
     } else {
       // وضع الإضافة
       await api.post('/worksites', payload)
       success.value = '✅ ' + t('worksite_added_successfully')
       
+      // إرسال الحدث فوراً لإعادة تحميل البيانات
+      emit('worksite-added')
+      
+      // إغلاق المودال بعد فترة قصيرة لعرض رسالة النجاح
       setTimeout(() => {
-        emit('worksite-added')
         emit('close')
-      }, 1500)
+      }, 1000)
     }
   } catch (err) {
     error.value = err.response?.data?.error || '❌ ' + t('save_failed')

@@ -161,10 +161,13 @@ async function handleSubmit() {
     success.value = `✅ تم تعديل أوقات الحضور بنجاح!`
     success.value += `\n⏱️ الساعات الجديدة: ${calculatedHours.value.toFixed(1)} ساعة`
 
+    // إرسال الحدث فوراً لإعادة تحميل البيانات
+    emit('attendance-updated')
+    
+    // إغلاق المودال بعد فترة قصيرة لعرض رسالة النجاح
     setTimeout(() => {
-      emit('attendance-updated')
       emit('close')
-    }, 1500)
+    }, 1000)
   } catch (err) {
     console.error('❌ فشل التعديل:', err.response?.data)
     error.value = err.response?.data?.error || '❌ فشل تعديل أوقات الحضور'
