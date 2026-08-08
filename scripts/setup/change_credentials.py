@@ -52,24 +52,63 @@ def list_users(conn):
     
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT id, full_name, email, role, is_active, subscription_status, expires_at 
-            FROM users 
-            ORDER BY created_at DESC
-        """)
         
+        # التحقق من الأعمدة الموجودة
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users'
+        """)
+        columns = [row[0] for row in cursor.fetchall()]
+        
+        # بناء الاستعلام بناءً على الأعمدة الموجودة
+        query = "SELECT id, full_name, email, role, is_active"
+        if 'subscription_status' in columns:
+            query += ", subscription_status"
+        if 'expires_at' in columns:
+            query += ", expires_at"
+        query += " FROM users ORDER BY created_at DESC"
+        
+        cursor.execute(query)
         users = cursor.fetchall()
         
         if not users:
             print("لا يوجد مستخدمين")
             return
         
-        print(f"{'ID':<38} {'الاسم':<25} {'الإيميل':<30} {'الدور':<10} {'نشط':<5} {'الاشتراك':<10}")
+        # تحديد رؤوس الجدول بناءً على الأعمدة الموجودة
+        headers = f"{'ID':<38} {'الاسم':<25} {'الإيميل':<30} {'الدور':<10} {'نشط':<5}"
+        if 'subscription_status' in columns:
+            headers += f" {'الاشتراك':<10}"
+        if 'expires_at' in columns:
+            headers += f" {'الانتهاء':<20}"
+        
+        print(headers)
         print("-" * 120)
         
         for user in users:
-            user_id, full_name, email, role, is_active, subscription_status, expires_at = user
-            print(f"{str(user_id):<38} {full_name:<25} {email:<30} {role:<10} {'✓' if is_active else '✗':<5} {subscription_status:<10}")
+            user_id = user[0]
+            full_name = user[1]
+            email = user[2]
+            role = user[3]
+            is_active = user[4]
+            
+            line = f"{str(user_id):<38} {full_name:<25} {email:<30} {role:<10} {'✓' if is_active else '✗':<5}"
+            
+            index = 5
+            if 'subscription_status' in columns:
+                subscription_status = user[index]
+                line += f" {subscription_status:<10}"
+                index += 1
+            if 'expires_at' in columns:
+                expires_at = user[index]
+                if expires_at:
+                    expires_str = expires_at.strftime('%Y-%m-%d') if hasattr(expires_at, 'strftime') else str(expires_at)[:10]
+                else:
+                    expires_str = "N/A"
+                line += f" {expires_str:<20}"
+            
+            print(line)
         
         print("=" * 100)
         return users
@@ -82,12 +121,24 @@ def find_user(conn, identifier):
     """البحث عن مستخدم"""
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT id, full_name, email, role, is_active, subscription_status, expires_at 
-            FROM users 
-            WHERE id = %s OR email = %s
-        """, (identifier, identifier))
         
+        # التحقق من الأعمدة الموجودة
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users'
+        """)
+        columns = [row[0] for row in cursor.fetchall()]
+        
+        # بناء الاستعلام بناءً على الأعمدة الموجودة
+        query = "SELECT id, full_name, email, role, is_active"
+        if 'subscription_status' in columns:
+            query += ", subscription_status"
+        if 'expires_at' in columns:
+            query += ", expires_at"
+        query += " FROM users WHERE id = %s OR email = %s"
+        
+        cursor.execute(query, (identifier, identifier))
         return cursor.fetchone()
     except Exception as e:
         print(f"❌ خطأ في البحث: {str(e)}")
@@ -102,7 +153,9 @@ def update_user_email(conn):
         print("❌ المستخدم غير موجود")
         return
     
-    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    user_id = user[0]
+    full_name = user[1]
+    email = user[2]
     print(f"المستخدم المحدد: {full_name} ({email})")
     
     new_email = input("أدخل الإيميل الجديد: ")
@@ -135,7 +188,9 @@ def update_user_password(conn):
         print("❌ المستخدم غير موجود")
         return
     
-    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    user_id = user[0]
+    full_name = user[1]
+    email = user[2]
     print(f"المستخدم المحدد: {full_name} ({email})")
     
     new_password = getpass("أدخل كلمة المرور الجديدة: ")
@@ -214,11 +269,27 @@ def create_admin(conn):
         cursor = conn.cursor()
         hashed_password = hash_password(password)
         
+        # التحقق من الأعمدة الموجودة
         cursor.execute("""
-            INSERT INTO users (full_name, email, password_hash, role, is_active, subscription_status, created_at)
-            VALUES (%s, %s, %s, 'admin', true, 'active', NOW())
-            RETURNING id
-        """, (full_name, email, hashed_password))
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users'
+        """)
+        columns = [row[0] for row in cursor.fetchall()]
+        
+        # بناء الاستعلام بناءً على الأعمدة الموجودة
+        if 'subscription_status' in columns:
+            cursor.execute("""
+                INSERT INTO users (full_name, email, password_hash, role, is_active, subscription_status, created_at)
+                VALUES (%s, %s, %s, 'admin', true, 'active', NOW())
+                RETURNING id
+            """, (full_name, email, hashed_password))
+        else:
+            cursor.execute("""
+                INSERT INTO users (full_name, email, password_hash, role, is_active, created_at)
+                VALUES (%s, %s, %s, 'admin', true, NOW())
+                RETURNING id
+            """, (full_name, email, hashed_password))
         
         user_id = cursor.fetchone()[0]
         print(f"✅ تم إنشاء حساب الأدمن بنجاح")
@@ -240,7 +311,10 @@ def delete_user(conn):
         print("❌ المستخدم غير موجود")
         return
     
-    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    user_id = user[0]
+    full_name = user[1]
+    email = user[2]
+    role = user[3]
     
     print("المستخدم المحدد:")
     print(f"الاسم: {full_name}")
@@ -274,9 +348,24 @@ def update_subscription(conn):
         print("❌ المستخدم غير موجود")
         return
     
-    user_id, full_name, email, role, is_active, subscription_status, expires_at = user
+    user_id = user[0]
+    full_name = user[1]
+    email = user[2]
     print(f"المستخدم المحدد: {full_name} ({email})")
     print()
+    
+    # التحقق من الأعمدة الموجودة
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'users'
+    """)
+    columns = [row[0] for row in cursor.fetchall()]
+    
+    if 'subscription_status' not in columns and 'expires_at' not in columns:
+        print("❌ عمود الاشتراك غير موجود في قاعدة البيانات")
+        return
     
     # عرض التوقيت العالمي الحالي
     utc_now = datetime.now(timezone.utc)
@@ -285,16 +374,23 @@ def update_subscription(conn):
     
     # اختيار نوع التحديث
     print("نوع التحديث:")
-    print("1. تغيير حالة الاشتراك فقط")
-    print("2. إدخال مدة الاشتراك (بالأيام)")
-    print("3. كل ما سبق")
+    options = []
+    if 'subscription_status' in columns:
+        print("1. تغيير حالة الاشتراك فقط")
+        options.append("1")
+    if 'expires_at' in columns:
+        print("2. إدخال مدة الاشتراك (بالأيام)" if 'subscription_status' not in columns else "2. إدخال مدة الاشتراك (بالأيام)")
+        options.append("2")
+    if 'subscription_status' in columns and 'expires_at' in columns:
+        print("3. كل ما سبق")
+        options.append("3")
     print()
     
-    choice = input("اختر رقم (1-3): ")
+    choice = input(f"اختر رقم ({', '.join(options)}): ")
     
     updates = {}
     
-    if choice in ["1", "3"]:
+    if choice in ["1", "3"] and 'subscription_status' in columns:
         print("\nحالات الاشتراك:")
         print("1. active (نشط)")
         print("2. expired (منتهي)")
@@ -310,7 +406,7 @@ def update_subscription(conn):
         if status_choice in status_map:
             updates["subscription_status"] = status_map[status_choice]
     
-    if choice in ["2", "3"]:
+    if choice in ["2", "3"] and 'expires_at' in columns:
         print("\nأدخل مدة الاشتراك (بالأيام):")
         print("مثال: 7 لسبعة أيام، 30 لشهر، 365 لسنة")
         
