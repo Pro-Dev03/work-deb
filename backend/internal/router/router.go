@@ -18,6 +18,9 @@ func Setup(db *sql.DB, cfg *config.Config) *gin.Engine {
 	// فرض HTTPS في الإنتاج
 	r.Use(middleware.HTTPSMiddleware(cfg.EnforceHTTPS()))
 
+	// رؤوس الأمان
+	r.Use(middleware.SecurityHeadersMiddleware())
+
 	r.Use(middleware.CORSMiddleware(cfg.AllowedOrigin))
 	r.Use(middleware.RateLimiter())
 
