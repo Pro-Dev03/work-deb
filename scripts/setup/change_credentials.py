@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # سكربت Python لإدارة مستخدمي WorkTrack عبر قاعدة البيانات مباشرة
-# يتطلب: psycopg2-binary
+# يتطلب: psycopg2-binary, bcrypt
 
 import os
 import sys
 import psycopg2
+import bcrypt
 from getpass import getpass
 from datetime import datetime, timedelta, timezone
-import hashlib
 
 def load_config():
     """قراءة الإعدادات من ملف .env"""
@@ -42,8 +42,11 @@ def get_db_connection(database_url):
         sys.exit(1)
 
 def hash_password(password):
-    """تشفير كلمة المرور"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """تشفير كلمة المرور باستخدام bcrypt مع مستوى أمان أعلى"""
+    # استخدام bcrypt rounds أعلى لمزيد من الأمان (12 بدلاً من 10 الافتراضي)
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 def list_users(conn):
     """عرض جميع المستخدمين"""
@@ -130,16 +133,31 @@ def find_user(conn, identifier):
         """)
         columns = [row[0] for row in cursor.fetchall()]
         
-        # بناء الاستعلام بناءً على الأعمدة الموجودة
+        # البحث بالـ email أولاً
         query = "SELECT id, full_name, email, role, is_active"
         if 'subscription_status' in columns:
             query += ", subscription_status"
         if 'expires_at' in columns:
             query += ", expires_at"
-        query += " FROM users WHERE id = %s OR email = %s"
+        query += " FROM users WHERE email = %s"
         
-        cursor.execute(query, (identifier, identifier))
+        cursor.execute(query, (identifier,))
+        result = cursor.fetchone()
+        
+        if result:
+            return result
+        
+        # إذا لم يتم العثور، البحث بالـ id
+        query = "SELECT id, full_name, email, role, is_active"
+        if 'subscription_status' in columns:
+            query += ", subscription_status"
+        if 'expires_at' in columns:
+            query += ", expires_at"
+        query += " FROM users WHERE id = %s"
+        
+        cursor.execute(query, (identifier,))
         return cursor.fetchone()
+        
     except Exception as e:
         print(f"❌ خطأ في البحث: {str(e)}")
         return None
