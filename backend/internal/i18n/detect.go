@@ -32,5 +32,5 @@ func Detect(c *gin.Context) Lang {
 		return Normalize(primary)
 	}
 
-	return Arabic
+	return English
 }

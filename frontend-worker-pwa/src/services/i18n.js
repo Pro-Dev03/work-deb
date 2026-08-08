@@ -4,49 +4,92 @@ import he from '../i18n/he.json'
 import en from '../i18n/en.json'
 
 // =============================================
-// المفتاح الموحد للغة في جميع التطبيقات
+// Unified language key for all applications
 // =============================================
 const STORAGE_KEY = 'worktrack_language'
 
 // =============================================
-// ترجمة مباشرة من ملفات JSON
+// قائمة اللغات المدعومة
+// =============================================
+const SUPPORTED_LANGUAGES = ['ar', 'he', 'en', 'fr', 'de', 'es', 'it', 'pt', 'ru', 'zh', 'ja', 'ko', 'tr', 'nl', 'sv', 'pl']
+
+// =============================================
+// Direct translation from JSON files
 // =============================================
 const messages = { ar, he, en }
 
 // =============================================
-// الحصول على اللغة المخزنة
+// تحميل ترجمات اللغات الإضافية
+// =============================================
+async function loadLanguage(lang) {
+  if (messages[lang]) return messages[lang]
+  
+  try {
+    const response = await fetch(`/i18n/${lang}.json`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const translations = await response.json()
+    messages[lang] = translations
+    return translations
+  } catch (error) {
+    console.error(`❌ Failed to load language ${lang}:`, error)
+    return messages['en'] // Fallback to English
+  }
+}
+
+// =============================================
+// Get stored language
 // =============================================
 function getStoredLang() {
   const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored && ['ar', 'he', 'en'].includes(stored)) {
+  if (stored && SUPPORTED_LANGUAGES.includes(stored)) {
     return stored
   }
-  // استخدام لغة المتصفح كافتراضي
+  // Use browser language as default
   const browserLang = navigator.language || navigator.languages?.[0] || 'ar'
   if (browserLang.startsWith('he')) return 'he'
   if (browserLang.startsWith('en')) return 'en'
+  if (browserLang.startsWith('fr')) return 'fr'
+  if (browserLang.startsWith('de')) return 'de'
+  if (browserLang.startsWith('es')) return 'es'
+  if (browserLang.startsWith('it')) return 'it'
+  if (browserLang.startsWith('pt')) return 'pt'
+  if (browserLang.startsWith('ru')) return 'ru'
+  if (browserLang.startsWith('zh')) return 'zh'
+  if (browserLang.startsWith('ja')) return 'ja'
+  if (browserLang.startsWith('ko')) return 'ko'
+  if (browserLang.startsWith('tr')) return 'tr'
+  if (browserLang.startsWith('nl')) return 'nl'
+  if (browserLang.startsWith('sv')) return 'sv'
+  if (browserLang.startsWith('pl')) return 'pl'
   return 'ar'
 }
 
 // =============================================
-// حالة الترجمة
+// Translation state
 // =============================================
 const i18nState = reactive({
   currentLang: getStoredLang(),
   
-  setLang(lang) {
-    if (['ar', 'he', 'en'].includes(lang)) {
+  async setLang(lang) {
+    if (SUPPORTED_LANGUAGES.includes(lang)) {
+      // تحميل الترجمة إذا لم تكن محملة
+      if (!messages[lang]) {
+        await loadLanguage(lang)
+      }
+      
       this.currentLang = lang
       localStorage.setItem(STORAGE_KEY, lang)
       
-      // تحديث اتجاه الصفحة
+      // Update page direction
       document.documentElement.dir = lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr'
       document.documentElement.lang = lang
       
-      // إرسال event للإشارة بتغيير اللغة
+      // Send event to indicate language change
       window.dispatchEvent(new CustomEvent('language-changed', { detail: { lang } }))
       
-      console.log(`🌍 تم تغيير اللغة إلى: ${lang}`)
+      console.log(`🌍 Language changed to: ${lang}`)
     }
   },
   
@@ -58,13 +101,13 @@ const i18nState = reactive({
       if (translation && translation[k]) {
         translation = translation[k]
       } else {
-        // البحث في اللغة الافتراضية
-        let fallbackTranslation = messages['ar']
+        // Search in default language
+        let fallbackTranslation = messages['en']
         for (const fk of keys) {
           if (fallbackTranslation && fallbackTranslation[fk]) {
             fallbackTranslation = fallbackTranslation[fk]
           } else {
-            console.warn(`⚠️ مفتاح الترجمة غير موجود: ${key}`)
+            console.warn(`⚠️ Translation key not found: ${key}`)
             return key
           }
         }
@@ -75,14 +118,20 @@ const i18nState = reactive({
   }
 })
 
+// Add a reactive translation getter
+const currentTranslations = computed(() => messages[i18nState.currentLang])
+
 // =============================================
 // تصدير الدوال
 // =============================================
 export function useI18n() {
-  const t = (key) => i18nState.t(key)
   const setLang = (lang) => i18nState.setLang(lang)
   const currentLang = computed(() => i18nState.currentLang)
-  return { t, setLang, currentLang }
+  
+  // Return a simple t function and the reactive translations
+  const t = (key) => i18nState.t(key)
+  
+  return { t, setLang, currentLang, currentTranslations }
 }
 
 export default {

@@ -21,9 +21,19 @@ var messages = map[string]map[Lang]string{
 		English: "Please enter your email and password",
 	},
 	"err_invalid_credentials": {
-		Arabic:  "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-		Hebrew:  "כתובת האימייל או הסיסמה שגויות",
-		English: "Invalid email or password",
+		Arabic:  "تم تغير كلمة السر تواصل مع الادمن",
+		Hebrew:  "הסיסמה שונתה, צור קשר עם ההנהלה",
+		English: "Password has been changed, please contact administration",
+	},
+	"err_phone_not_registered": {
+		Arabic:  "رقم الهاتف غير مسجل، يرجى التواصل مع المدير",
+		Hebrew:  "מספר הטלפון לא רשום, אנא צור קשר עם המנהל",
+		English: "Phone number not registered, please contact your manager",
+	},
+	"err_invalid_phone_credentials": {
+		Arabic:  "رقم الهاتف غير صحيح، يرجى التواصل مع المدير",
+		Hebrew:  "מספר הטלפון שגוי, אנא צור קשר עם המנהל",
+		English: "Invalid phone number, please contact your manager",
 	},
 	"err_session_create_failed": {
 		Arabic:  "تعذر إنشاء جلسة الدخول",
@@ -72,35 +82,10 @@ var messages = map[string]map[Lang]string{
 		Hebrew:  "ההתחברות אינה תקפה, נא להתחבר מחדש",
 		English: "Invalid session, please log in again",
 	},
-	"err_missing_refresh_token": {
-		Arabic:  "الرجاء إرسال refresh token",
-		Hebrew:  "נא לשלוח refresh token",
-		English: "Please provide refresh token",
-	},
-	"err_invalid_refresh_token": {
-		Arabic:  "refresh token غير صالح",
-		Hebrew:  "refresh token לא תקין",
-		English: "Invalid refresh token",
-	},
-	"err_token_rotation_failed": {
-		Arabic:  "فشل تجديد التوكن",
-		Hebrew:  "נכשל חידוש ה-token",
-		English: "Failed to rotate token",
-	},
-	"msg_logged_out": {
-		Arabic:  "تم تسجيل الخروج بنجاح",
-		Hebrew:  "התנתקת בהצלחה",
-		English: "Logged out successfully",
-	},
-	"msg_logged_out_all_devices": {
-		Arabic:  "تم تسجيل الخروج من جميع الأجهزة",
-		Hebrew:  "התנתקת מכל המכשירים",
-		English: "Logged out from all devices",
-	},
-	"msg_session_renewed": {
-		Arabic:  "تم تجديد الجلسة بنجاح",
-		Hebrew:  "הסשן חודש בהצלחה",
-		English: "Session renewed successfully",
+	"err_password_changed_relogin": {
+		Arabic:  "تم تغيير كلمة المرور، يرجى تسجيل الدخول مرة أخرى",
+		Hebrew:  "הסיסמה שונתה, אנא התחבר שוב",
+		English: "Password has been changed, please log in again",
 	},
 	"err_subscription_expired": {
 		Arabic:  "اشتراكك انتهى أو تم إيقافه، الرجاء التواصل مع الدعم",
@@ -116,6 +101,11 @@ var messages = map[string]map[Lang]string{
 		Arabic:  "طلبات كثيرة جداً، حاول لاحقاً",
 		Hebrew:  "יותר מדי בקשות, נסה שוב מאוחר יותר",
 		English: "Too many requests, please try again later",
+	},
+	"err_suspicious_activity": {
+		Arabic:  "محاولات مشبوهة - تم حظر مؤقت",
+		Hebrew:  "פעילות חשודה - נחסה זמנית",
+		English: "Suspicious activity - temporarily blocked",
 	},
 
 	// ---------- التختيم والنطاق الجغرافي (Geofence) ----------
@@ -210,7 +200,7 @@ func T(lang Lang, key string) string {
 }
 
 // Normalize تحوّل أي نص لغة وارد من العميل (query param أو هيدر) إلى Lang معروفة
-// وتتجاهل أي قيمة غير مدعومة بإرجاع العربية كافتراضي آمن
+// وتتجاهل أي قيمة غير مدعومة بإرجاع الإنجليزية كافتراضي آمن
 func Normalize(raw string) Lang {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case "he", "heb", "hebrew", "עברית":
@@ -220,6 +210,45 @@ func Normalize(raw string) Lang {
 	case "ar", "ara", "arabic", "العربية":
 		return Arabic
 	default:
-		return Arabic
+		return English
+	}
+}
+
+// GetTranslation returns the appropriate translation based on language
+// It falls back to English, then Arabic, then Hebrew if the requested language is not available
+func GetTranslation(lang Lang, ar, he, en string) string {
+	switch lang {
+	case Hebrew:
+		if he != "" {
+			return he
+		}
+		if en != "" {
+			return en
+		}
+		return ar
+	case Arabic:
+		if ar != "" {
+			return ar
+		}
+		if en != "" {
+			return en
+		}
+		return he
+	case English:
+		if en != "" {
+			return en
+		}
+		if ar != "" {
+			return ar
+		}
+		return he
+	default: // Default to English
+		if en != "" {
+			return en
+		}
+		if ar != "" {
+			return ar
+		}
+		return he
 	}
 }
