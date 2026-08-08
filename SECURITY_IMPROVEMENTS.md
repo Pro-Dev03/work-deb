@@ -4,22 +4,53 @@
 
 ## 🔒 تحسينات الأمان (Security)
 
-### 1. إصلاح XSS Vulnerability
+### 1. تحسين Rate Limiting (حرج)
+- **المشكلة:** نظام in-memory مرتفع جداً (1000 طلب/دقيقة)
+- **الحل:** تحويل إلى Redis-based rate limiting مع حدود صارمة
+- **الحدود الجديدة:**
+  - عام: 100 طلب/دقيقة (كان 1000)
+  - مصادقة: 10 طلبات/دقيقة (كان 50)
+  - عمليات حساسة: 5 طلبات (جديد)
+  - مدة الحظر: 10 دقائق (جديد)
+- **الملف:** `backend/internal/middleware/rate_limiter.go`
+- **المتطلب:** Redis يجب أن يكون متصلاً
+
+### 2. تحسين Security Headers (حرج)
+- **المشكلة:** X-Frame-Options: SAMEORIGIN (أقل أماناً)
+- **الحل:** تحديث إلى X-Frame-Options: DENY (أكثر أماناً)
+- **إضافة:** HTTPS Enforcement ذكي يعمل فقط في الإنتاج
+- **تحديث:** Content Security Policy باستخدام frame-ancestors: none
+- **الملف:** `backend/internal/middleware/security_headers.go`
+
+### 3. إضافة Security Logs System (عالي)
+- **المشكلة:** عدم وجود نظام تسجيل للأحداث الأمنية
+- **الحل:** إنشاء جدول security_logs مع فهارس محسّنة
+- **الخصائص:**
+  - تسجيل محاولات المصادقة
+  - تسجيل النشاط المشبوه
+  - كشف الأنماط المشبوهة تلقائياً
+  - فهارس متقدمة للبحث السريع
+- **الملفات:**
+  - `backend/internal/database/migrations/000018_add_security_logs.up.sql`
+  - `backend/internal/services/security_logger.go`
+
+### 4. تحسين CORS Configuration (متوسط)
+- **المشكلة:** تحذيرات أمنية غير كافية
+- **الحل:** تحذير صارم عند استخدام '*' في بيئة الإنتاج
+- **التحسين:** التحقق من بيئة التشغيل قبل السماح بـ '*'
+- **الملف:** `backend/internal/middleware/cors.go`
+
+### 5. إصلاح XSS Vulnerability (موجود سابقاً)
 - **المشكلة:** استخدام `v-html` بدون sanitization في `PWAInstallButton.vue`
 - **الحل:** استبدال `v-html` بـ `{{ }}` لمنع هجمات XSS
 - **الملف:** `frontend-admin-dashboard/src/components/PWAInstallButton.vue`
 
-### 2. تحسين CORS Settings
-- **المشكلة:** استخدام `*` في CORS يسمح لأي موقع بالوصول
-- **الحل:** إضافة تحذير عند استخدام `*` وتحسين التحقق من الدومينات المسموح بها
-- **الملف:** `backend/internal/middleware/cors.go`
-
-### 3. إصلاح WebSocket CheckOrigin
+### 6. إصلاح WebSocket CheckOrigin (موجود سابقاً)
 - **المشكلة:** WebSocket يسمح بجميع المصادر (`return true`)
 - **الحل:** إضافة التحقق من Origin مع السماح بـ localhost في التطوير فقط
 - **الملف:** `backend/internal/handlers/websocket_handler.go`
 
-### 4. httpOnly Cookies (مؤجل)
+### 7. httpOnly Cookies (مؤجل)
 - **الحالة:** يحتاج تعديلات كبيرة في backend وfrontend
 - **التوصية:** نقل التوكنات من localStorage إلى httpOnly cookies
 
@@ -81,14 +112,16 @@
 ## 📋 التوصيات المتبقية
 
 ### ذات الأولوية العالية:
-1. **إضافة httpOnly cookies** - يتطلب تعديلات كبيرة في backend وfrontend
-2. **إضافة refresh token mechanism** - لتحسين أمان الجلسات
-3. **إضافة CSRF protection** - عند استخدام cookies
+1. **إعداد Redis للإنتاج** - مطلوب لعمل Rate Limiter الجديد
+2. **إضافة httpOnly cookies** - يتطلب تعديلات كبيرة في backend وfrontend
+3. **إضافة refresh token mechanism** - لتحسين أمان الجلسات
+4. **إضافة CSRF protection** - عند استخدام cookies
 
 ### ذات الأولوية المتوسطة:
 1. **إضافة pagination** - لجميع الـ endpoints
-2. **تحسين rate limiting** - الحماية من هجمات DDoS
-3. **إضافة health check endpoint** - لمراقبة الخدمة
+2. **تطبيق Security Logger في Auth Handler** - لاستخدام نظام التسجيل الجديد
+3. **إضافة security logs endpoint** - للوصول إلى السجلات من لوحة المدير
+4. **إضافة health check endpoint** - لمراقبة الخدمة
 
 ### ذات الأولوية المنخفضة:
 1. **إضافة Prometheus metrics** - لمراقبة الأداء
@@ -97,30 +130,55 @@
 
 ## 🚀 خطوات التطبيق
 
-### 1. تشغيل الـ migrations:
+### 1. تطبيق migration قاعدة البيانات:
 ```bash
 cd backend
-go run cmd/api/main.go
+psql "YOUR_DATABASE_URL" -f internal/database/migrations/000018_add_security_logs.up.sql
 ```
 
-### 2. إضافة متغيرات البيئة الجديدة:
+### 2. إعداد Redis:
+```bash
+# تثبيت Redis
+sudo apt-get install redis-server  # Ubuntu/Debian
+brew install redis                  # macOS
+
+# بدء Redis
+redis-server
+
+# أو استخدام Redis Cloud
+# أضف متغير البيئة: REDIS_URL=your_redis_connection_string
+```
+
+### 3. إضافة متغيرات البيئة الجديدة:
 ```env
+REDIS_URL=redis://localhost:6379
 LOG_LEVEL=info
 APP_ENV=development
 ```
 
-### 3. التحقق من التحسينات:
+### 4. إعادة بناء Backend:
+```bash
+cd backend
+go mod tidy
+go build ./cmd/api
+```
+
+### 5. التحقق من التحسينات:
 - تحقق من logs لرؤية structured logging
-- تحقق من database لرؤية indexes الجديدة
+- تحقق من database لرؤية security_logs table
 - راقب الأداء بعد تطبيق connection pooling
+- اختبار Rate Limiting الجديد
 
 ## 📊 المتوقع من التحسينات
 
-- **الأمان:** تقليل مخاطر XSS و CORS attacks
+- **الأمان:** تقليل مخاطر XSS و CORS attacks و Rate Limiting محسّن
+- **الأمان:** Security Logs System للمراقبة الشاملة
+- **الأمان:** Security Headers أكثر صرامة (X-Frame-Options: DENY)
 - **الأداء:** تحسين سرعة الاستعلامات بنسبة 50-70%
 - **الاستقرار:** graceful shutdown يمنع فقدان البيانات
 - **المراقبة:** structured logging يسهل debug وmonitoring
+- **المراقبة:** Security Logs للكشف عن الأنماط المشبوهة
 
 ---
 
-تم تطبيق هذه التحسينات في 2026-08-07
+تم تطبيق هذه التحسينات في 2026-08-08

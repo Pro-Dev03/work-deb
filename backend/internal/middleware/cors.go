@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -15,11 +16,15 @@ import (
 func CORSMiddleware(allowedOrigins string) gin.HandlerFunc {
 	origins := strings.Split(allowedOrigins, ",")
 
-	// تحذير إذا كان يوجد * في الـ origins
+	// تحذير صارم إذا كان يوجد * في الـ origins
 	for _, origin := range origins {
 		trimmed := strings.TrimSpace(origin)
 		if trimmed == "*" {
-			log.Println("⚠️ تحذير أمني: استخدام '*' في CORS مسموح فقط في التطوير")
+			if os.Getenv("APP_ENV") == "production" {
+				log.Println("🚨 خطأ أمني حرج: استخدام '*' في CORS في بيئة الإنتاج!")
+			} else {
+				log.Println("⚠️ تحذير أمني: استخدام '*' في CORS مسموح فقط في التطوير")
+			}
 		}
 	}
 
