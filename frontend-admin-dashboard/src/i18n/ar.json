@@ -465,5 +465,7 @@
   "new_password": "[TODO: Translate new_password]",
   "client_modal_saving": "[TODO: Translate client_modal_saving]",
   "login_failed": "[TODO: Translate login_failed]",
-  "update_badge": "[TODO: Translate update_badge]"
+  "update_badge": "[TODO: Translate update_badge]",
+  "attendance_management": "إدارة الحضور",
+  "notes": "الملاحظات"
 }
