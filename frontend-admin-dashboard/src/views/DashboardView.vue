@@ -421,7 +421,14 @@ async function fetchData() {
       ])
       
       activeEmployees.value = employeesRes.data || []
-      worksites.value = worksitesRes.data?.data || worksitesRes.data || []
+      // Handle different response structures for worksites
+      if (worksitesRes.data?.data && Array.isArray(worksitesRes.data.data)) {
+        worksites.value = worksitesRes.data.data
+      } else if (Array.isArray(worksitesRes.data)) {
+        worksites.value = worksitesRes.data
+      } else {
+        worksites.value = []
+      }
       stats.value = statsRes.data || {}
       waitingEmployees.value = waitingRes.data || []
       completedEmployees.value = completedRes.data || []
