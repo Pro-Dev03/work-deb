@@ -35,7 +35,7 @@
       <!-- نقاط العمل -->
       <template v-if="visibleLayers.worksites">
         <l-marker
-          v-for="site in worksites.filter(s => s.latitude && s.longitude)"
+          v-for="site in (Array.isArray(worksites) ? worksites.filter(s => s.latitude && s.longitude) : [])"
           :key="site.id"
           :lat-lng="[site.latitude, site.longitude]"
         >
