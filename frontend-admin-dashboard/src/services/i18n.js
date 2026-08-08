@@ -497,6 +497,8 @@ const ar = {
   "client_modal_error_failed": "❌ فشل إنشاء العميل",
   "delete_request": "حذف الطلب",
   "delete_request_title": "تأكيد حذف طلب الخدمة",
+  "attendance_management": "إدارة الحضور",
+  "notes": "الملاحظات",
   "delete_request_message": "هل أنت متأكد من حذف طلب الخدمة هذا؟",
   "delete_request_warning": "⚠️ سيتم حذف الطلب وجميع التعيينات المرتبطة به بشكل نهائي.",
   "request_deleted_successfully": "✅ تم حذف طلب الخدمة بنجاح",
@@ -1035,7 +1037,9 @@ const he = {
   "resetting": "מאפס...",
   "reset_device_final": "כן, אפס מכשיר",
   "reset_device_success": "המכשיר אופס בהצלחה",
-  "failed_to_reset_device": "נכשל באיפוס המכשיר"
+  "failed_to_reset_device": "נכשל באיפוס המכשיר",
+  "attendance_management": "ניהול נוכחות",
+  "notes": "הערות"
 }
 
 const en = {
@@ -1550,7 +1554,9 @@ const en = {
   "resetting": "Resetting...",
   "reset_device_final": "Yes, Reset Device",
   "reset_device_success": "Device reset successfully",
-  "failed_to_reset_device": "Failed to reset device"
+  "failed_to_reset_device": "Failed to reset device",
+  "attendance_management": "Attendance Management",
+  "notes": "Notes"
 }
 
 // =============================================
