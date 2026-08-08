@@ -79,7 +79,7 @@
           <label>{{ t('employee') }}</label>
           <select v-model="filters.employee_id" @change="fetchAttendanceRecords" class="form-select">
             <option value="">{{ t('all_employees') }}</option>
-            <option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.full_name }}</option>
+            <option v-for="emp in employees" :key="emp?.id || emp?.full_name || Math.random()" :value="emp?.id">{{ emp?.full_name || '—' }}</option>
           </select>
         </div>
         <div class="filter-group">

@@ -48,13 +48,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="emp in employees" :key="emp.id">
+            <tr v-for="emp in employees" :key="emp?.id || emp?.full_name || Math.random()">
               <td>
                 <div class="table__person">
                   <span class="table__avatar">
                     <User :size="20" />
                   </span>
-                  {{ emp.full_name }}
+                  {{ emp?.full_name || '—' }}
                 </div>
               </td>
               <td class="mono">{{ emp.phone || '—' }}</td>

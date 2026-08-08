@@ -101,18 +101,18 @@
                   </label>
                 </div>
                 <div class="employees-list">
-                  <label v-for="emp in employees" :key="emp.id" class="employee-item">
+                  <label v-for="emp in employees" :key="emp?.id || emp?.full_name || Math.random()" class="employee-item">
                     <div class="employee-checkbox">
                       <input 
                         type="checkbox" 
                         v-model="selectedEmployees" 
-                        :value="emp.id"
+                        :value="emp?.id"
                         class="custom-checkbox"
                       />
 
                       <div class="employee-info">
-                        <span class="employee-name">{{ emp.full_name }}</span>
-                        <span v-if="emp.phone" class="employee-phone">{{ emp.phone }}</span>
+                        <span class="employee-name">{{ emp?.full_name || '—' }}</span>
+                        <span v-if="emp?.phone" class="employee-phone">{{ emp.phone }}</span>
                       </div>
                       <a 
                         v-if="emp.phone" 
