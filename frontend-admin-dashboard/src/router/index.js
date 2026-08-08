@@ -10,6 +10,46 @@ import SettingsView from '../views/SettingsView.vue'
 import AttendanceManagementView from '../views/AttendanceManagementView.vue'
 import NotesView from '../views/NotesView.vue'
 
+// صفحة 404 بسيطة
+const NotFoundView = {
+  template: `
+    <div class="not-found">
+      <h1>404</h1>
+      <p>الصفحة غير موجودة</p>
+      <router-link to="/dashboard">العودة للوحة التحكم</router-link>
+    </div>
+  `,
+  style: `
+    .not-found {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      font-family: system-ui, sans-serif;
+    }
+    .not-found h1 {
+      font-size: 72px;
+      margin: 0;
+      color: #666;
+    }
+    .not-found p {
+      font-size: 18px;
+      color: #999;
+      margin: 20px 0;
+    }
+    .not-found a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 16px;
+    }
+    .not-found a:hover {
+      text-decoration: underline;
+    }
+  `
+}
+
 const routes = [
   { path: '/', redirect: '/dashboard' },
   { path: '/login', component: LoginView, meta: { public: true } },
@@ -21,6 +61,7 @@ const routes = [
   { path: '/settings', component: SettingsView, meta: { requiresAuth: true } },
   { path: '/attendance-management', component: AttendanceManagementView, meta: { requiresAuth: true } },
   { path: '/notes', component: NotesView, meta: { requiresAuth: true } },
+  { path: '/:pathMatch(.*)*', component: NotFoundView }, // صفحة 404 بدلاً من redirect
 ]
 
 // استخدام MemoryHistory لـ Electron و WebHistory للويب
