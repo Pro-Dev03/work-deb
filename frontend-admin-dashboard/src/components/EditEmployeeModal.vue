@@ -82,10 +82,13 @@ async function handleSubmit() {
 
     success.value = `✅ تم تعديل بيانات الموظف بنجاح!`
 
+    // إرسال الحدث فوراً لإعادة تحميل البيانات
+    emit('employee-updated')
+    
+    // إغلاق المودال بعد فترة قصيرة لعرض رسالة النجاح
     setTimeout(() => {
-      emit('employee-updated')
       emit('close')
-    }, 1500)
+    }, 1000)
   } catch (err) {
     console.error('❌ فشل التعديل:', err.response?.data)
     error.value = err.response?.data?.error || '❌ فشل تعديل الموظف'
