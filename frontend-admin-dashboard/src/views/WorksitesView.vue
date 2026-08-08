@@ -307,8 +307,6 @@ async function deleteWorksite() {
   try {
     await api.delete(`/worksites/${siteToDelete.value.id}`)
     showDeleteModal.value = false
-    // مسح الـ cache عند حذف نقطة عمل
-    clearCacheForEndpoint('/worksites')
     await fetchWorksites()
   } catch (error) {
     console.error('❌ ' + t('failed_to_delete_worksite'), error)
@@ -368,8 +366,7 @@ async function assignEmployee(employeeId) {
     showSuccessModal.value = true
     successMessage.value = response.data.message || t('employee_assigned_successfully')
     
-    // مسح الـ cache وتحديث البيانات
-    clearCacheForEndpoint('/worksites')
+    // تحديث البيانات
     employeesCache.value = null // مسح الـ cache المحلي للموظفين
     await fetchWorksites()
     await fetchEmployees()

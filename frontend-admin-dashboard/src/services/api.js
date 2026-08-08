@@ -7,9 +7,8 @@ const api = axios.create({
 })
 
 // قائمة نقاط النهاية التي يمكن تخزينها مؤقتاً
+// تم تعطيل الـ cache للبيانات التي تتغير بشكل متكرر
 const CACHEABLE_ENDPOINTS = [
-  '/worksites',
-  '/admin/employees',
   '/reports/daily-summary'
 ]
 
@@ -44,8 +43,8 @@ api.interceptors.request.use((config) => {
     config.headers['Authorization'] = `Bearer ${token}`
   }
 
-  // عدم تطبيق الـ cache على نقاط النهاية الحساسة
-  if (NON_CACHEABLE_ENDPOINTS.some(endpoint => config.url.includes(endpoint))) {
+  // عدم تطبيق الـ cache على نقاط النهاية الحساسة أو عند طلب تجاوز الـ cache
+  if (NON_CACHEABLE_ENDPOINTS.some(endpoint => config.url.includes(endpoint)) || config.skipCache) {
     return config
   }
 

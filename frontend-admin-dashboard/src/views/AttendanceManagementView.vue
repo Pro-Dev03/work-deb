@@ -344,7 +344,7 @@ async function fetchAttendanceRecords() {
     if (filters.date_from) params.append('date_from', filters.date_from)
     if (filters.date_to) params.append('date_to', filters.date_to)
 
-    const { data } = await api.get(`/attendance/management?${params.toString()}`)
+    const { data } = await api.get(`/attendance/management?${params.toString()}`, { skipCache: true })
     attendanceRecords.value = data || []
   } catch (error) {
     console.error('❌ فشل جلب سجلات الحضور:', error)

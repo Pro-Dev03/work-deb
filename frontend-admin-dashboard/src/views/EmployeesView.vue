@@ -537,8 +537,6 @@ async function deleteEmployee() {
   try {
     await api.delete(`/admin/employees/${employeeToDelete.value.id}`)
     showDeleteModal.value = false
-    // مسح الـ cache عند حذف موظف
-    clearCacheForEndpoint('/admin/employees')
     await fetchEmployees()
   } catch (error) {
     console.error('❌ ' + t('failed_to_delete_employee'), error)
