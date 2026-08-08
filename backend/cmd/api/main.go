@@ -41,6 +41,13 @@ func main() {
 	}
 	defer db.Close()
 
+	// تهيئة Redis للـ Rate Limiting
+	if err := database.InitRedis(); err != nil {
+		utils.LogWarning("فشل الاتصال بـ Redis، سيتم تجاوز Rate Limiter", map[string]interface{}{
+			"error": err,
+		})
+	}
+
 	// تشغيل الترحيلات
 	migrationsDir := "./internal/database/migrations"
 	if err := database.Migrate(db, migrationsDir); err != nil {
