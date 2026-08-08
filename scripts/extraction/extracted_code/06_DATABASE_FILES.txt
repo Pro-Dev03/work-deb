@@ -1,0 +1,3605 @@
+================================================================================
+DATABASE SCHEMA AND MIGRATION FILES
+Extracted: 2026-07-28 14:47:54
+================================================================================
+
+Total SQL files found: 47
+
+================================================================================
+
+
+================================================================================
+FILE 1/47: COMPLETE_UNIFIED_MIGRATION.sql
+================================================================================
+
+-- =====================================================
+-- WorkTrack Database Migration - Complete Unified Migration
+-- =====================================================
+-- This migration includes all updates in a single file:
+-- 1. Translation columns for i18n support
+-- 2. Fix worksite deletion (preserve tasks and attendance records)
+-- 3. System updates and fixes
+-- 4. Tables updates
+-- 5. Create indexes
+-- 6. Security logging system (NEW)
+-- 7. Verification queries
+-- =====================================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =====================================================
+-- PART 1: Translation Columns for i18n Support
+-- =====================================================
+
+-- Users table translations
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS full_name_ar VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS full_name_he VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS full_name_en VARCHAR(150);
+
+-- Migrate existing full_name to all translation columns
+UPDATE users 
+SET 
+    full_name_ar = full_name,
+    full_name_he = full_name,
+    full_name_en = full_name
+WHERE full_name_ar IS NULL;
+
+-- Clients table translations (if table exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'clients') THEN
+        ALTER TABLE clients
+            ADD COLUMN IF NOT EXISTS name_ar VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS name_he VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS name_en VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS address_ar TEXT,
+            ADD COLUMN IF NOT EXISTS address_he TEXT,
+            ADD COLUMN IF NOT EXISTS address_en TEXT;
+
+        -- Migrate existing data to translation columns
+        UPDATE clients 
+        SET 
+            name_ar = name,
+            name_he = name,
+            name_en = name,
+            address_ar = address,
+            address_he = address,
+            address_en = address
+        WHERE name_ar IS NULL;
+    END IF;
+END $$;
+
+-- Worksites table translations
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS name_ar VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS name_he VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS name_en VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS address_ar TEXT,
+    ADD COLUMN IF NOT EXISTS address_he TEXT,
+    ADD COLUMN IF NOT EXISTS address_en TEXT;
+
+-- Migrate existing data to translation columns
+UPDATE worksites 
+SET 
+    name_ar = name,
+    name_he = name,
+    name_en = name,
+    address_ar = address,
+    address_he = address,
+    address_en = address
+WHERE name_ar IS NULL;
+
+-- Tasks table translations
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS title_ar VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS title_he VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS title_en VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS description_ar TEXT,
+    ADD COLUMN IF NOT EXISTS description_he TEXT,
+    ADD COLUMN IF NOT EXISTS description_en TEXT;
+
+-- Migrate existing data to translation columns
+UPDATE tasks 
+SET 
+    title_ar = title,
+    title_he = title,
+    title_en = title,
+    description_ar = description,
+    description_he = description,
+    description_en = description
+WHERE title_ar IS NULL;
+
+-- Service requests table translations (if table exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'service_requests') THEN
+        ALTER TABLE service_requests
+            ADD COLUMN IF NOT EXISTS title_ar VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS title_he VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS title_en VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS description_ar TEXT,
+            ADD COLUMN IF NOT EXISTS description_he TEXT,
+            ADD COLUMN IF NOT EXISTS description_en TEXT,
+            ADD COLUMN IF NOT EXISTS address_ar TEXT,
+            ADD COLUMN IF NOT EXISTS address_he TEXT,
+            ADD COLUMN IF NOT EXISTS address_en TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_ar TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_he TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_en TEXT,
+            ADD COLUMN IF NOT EXISTS client_name_ar VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS client_name_he VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS client_name_en VARCHAR(150);
+
+        -- Migrate existing data to translation columns
+        UPDATE service_requests 
+        SET 
+            title_ar = title,
+            title_he = title,
+            title_en = title,
+            description_ar = description,
+            description_he = description,
+            description_en = description,
+            address_ar = address,
+            address_he = address,
+            address_en = address,
+            location_name_ar = location_name,
+            location_name_he = location_name,
+            location_name_en = location_name,
+            client_name_ar = client_name,
+            client_name_he = client_name,
+            client_name_en = client_name
+        WHERE title_ar IS NULL;
+    END IF;
+END $$;
+
+-- Create helper function to get translated text
+CREATE OR REPLACE FUNCTION get_translation(
+    text_ar TEXT,
+    text_he TEXT,
+    text_en TEXT,
+    lang VARCHAR DEFAULT 'ar'
+) RETURNS TEXT AS $$
+BEGIN
+    CASE lang
+        WHEN 'he' THEN
+            RETURN COALESCE(text_he, text_ar, text_en, '');
+        WHEN 'en' THEN
+            RETURN COALESCE(text_en, text_ar, text_he, '');
+        ELSE
+            RETURN COALESCE(text_ar, text_he, text_en, '');
+    END CASE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
+-- PART 2: Fix Worksite Deletion - Preserve Tasks and Attendance Records
+-- =====================================================
+-- This section ensures that when a worksite is deleted:
+-- - Tasks with the deleted worksite_id will have worksite_id set to NULL (preserved)
+-- - Attendance records with the deleted worksite_id will have worksite_id set to NULL (preserved)
+-- - No data loss occurs, only the reference to the deleted worksite is removed
+
+-- First, remove NOT NULL constraint from worksite_id in tasks
+ALTER TABLE tasks ALTER COLUMN worksite_id DROP NOT NULL;
+
+-- Then change the foreign key constraint from RESTRICT to SET NULL
+-- This requires dropping the existing constraint first
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_worksite_id_fkey;
+
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE SET NULL;
+
+-- Fix attendance table to handle worksite deletion properly
+-- This ensures attendance records are preserved when worksite is deleted
+-- Remove NOT NULL constraint from worksite_id in attendance
+ALTER TABLE attendance ALTER COLUMN worksite_id DROP NOT NULL;
+
+-- Change the foreign key constraint from RESTRICT to SET NULL
+-- This allows the worksite to be deleted while keeping attendance records
+ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_worksite_id_fkey;
+
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- PART 3: System Updates and Fixes
+-- =====================================================
+
+-- Users table updates
+-- Add subscription fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (subscription_status IN ('active', 'expired', 'canceled'));
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ NULL;
+
+-- Add device and login fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_id TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_model TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS last_login_device TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code_expires TIMESTAMPTZ;
+
+-- Fix existing roles that might not match our expected roles
+UPDATE users SET role = 'employee' WHERE role NOT IN ('admin', 'employee', 'client', 'customer');
+
+-- Drop existing role constraint if exists
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- Add new role constraint
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'client', 'customer'));
+
+-- Create default admin users
+INSERT INTO users (
+  full_name,
+  email,
+  password_hash,
+  role,
+  is_active,
+  subscription_status,
+  subscription_expires_at
+)
+VALUES
+(
+  'DevPro System Administrator',
+  'admin@devpro.com',
+  crypt('devproadmin', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+),
+(
+  'DevPro Support Manager',
+  'support@devpro.com',
+  crypt('devprosupport', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NOW() + INTERVAL '1 year'
+),
+(
+  'DevPro Project Manager',
+  'manager@devpro.com',
+  crypt('devpromanager', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+)
+ON CONFLICT (email) DO UPDATE
+SET
+  password_hash = EXCLUDED.password_hash,
+  role = 'admin',
+  is_active = TRUE,
+  subscription_status = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN 'active'
+    ELSE EXCLUDED.subscription_status
+  END,
+  subscription_expires_at = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN NULL
+    ELSE EXCLUDED.subscription_expires_at
+  END,
+  updated_at = now()
+RETURNING email, role, is_active, subscription_status, subscription_expires_at;
+
+-- Worksites table updates
+-- Add assigned_employee_id if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- Add updated_at if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Tasks table updates
+-- Add updated_at if not exist
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add priority column if not exist
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent'));
+
+-- Fix tasks.client_id to use ON DELETE CASCADE
+ALTER TABLE tasks ALTER COLUMN client_id DROP NOT NULL;
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_client_id_fkey;
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_client_id_fkey 
+FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE;
+
+-- Fix attendance.task_id to use ON DELETE CASCADE
+ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_task_id_fkey;
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_task_id_fkey 
+FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE;
+
+-- =====================================================
+-- PART 4: Tables Updates
+-- =====================================================
+
+-- Attendance table updates
+-- Add updated_at if not exist
+ALTER TABLE attendance
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add photo fields to attendance if not exist
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- Add service_request_id to attendance table
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS service_request_id UUID REFERENCES service_requests(id) ON DELETE CASCADE;
+
+-- Service requests table updates
+-- Add location_name if not exist
+ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS location_name TEXT;
+
+-- Fix service_requests table to handle client deletion properly
+ALTER TABLE service_requests DROP CONSTRAINT IF EXISTS service_requests_client_id_fkey;
+ALTER TABLE service_requests 
+ADD CONSTRAINT service_requests_client_id_fkey 
+FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE;
+
+-- Notifications table updates
+-- Add type and related_id to notifications if not exist
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'info';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
+
+-- =====================================================
+-- PART 5: Create Indexes
+-- =====================================================
+
+-- Users indexes
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_subscription_status ON users(subscription_status);
+
+-- Worksites indexes
+CREATE INDEX IF NOT EXISTS idx_worksites_location
+    ON worksites(latitude, longitude);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee
+    ON worksites(assigned_employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_is_active ON worksites(is_active);
+
+-- Tasks indexes
+CREATE INDEX IF NOT EXISTS idx_tasks_worksite_id
+    ON tasks(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_user_id
+    ON tasks(assigned_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_client_id
+    ON tasks(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+
+-- Attendance indexes
+CREATE INDEX IF NOT EXISTS idx_attendance_user_id
+    ON attendance(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_task_id
+    ON attendance(task_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id
+    ON attendance(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time
+    ON attendance(check_in_time);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_service_request_id
+    ON attendance(service_request_id);
+
+-- Service requests indexes
+CREATE INDEX IF NOT EXISTS idx_service_requests_client_id
+    ON service_requests(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_status
+    ON service_requests(status);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_priority
+    ON service_requests(priority);
+
+-- Assignments indexes
+CREATE INDEX IF NOT EXISTS idx_assignments_employee_id
+    ON assignments(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id
+    ON assignments(request_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_admin_id
+    ON assignments(admin_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
+
+-- Location tracking indexes
+CREATE INDEX IF NOT EXISTS idx_location_tracking_user_id
+    ON location_tracking(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id
+    ON location_tracking(assignment_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_recorded_at
+    ON location_tracking(recorded_at);
+
+-- Notifications indexes
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id
+    ON notifications(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+
+-- =====================================================
+-- PART 6: Security Logging System (NEW)
+-- =====================================================
+-- This section adds comprehensive security logging for monitoring
+-- authentication attempts and suspicious activities
+
+-- Create security_logs table
+CREATE TABLE IF NOT EXISTS security_logs (
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    event_type VARCHAR(50) NOT NULL,
+    user_id VARCHAR(36),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    ip VARCHAR(45) NOT NULL,
+    user_agent TEXT,
+    success BOOLEAN DEFAULT false,
+    reason TEXT,
+    details TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create indexes for security_logs
+CREATE INDEX IF NOT EXISTS idx_security_logs_ip ON security_logs(ip);
+CREATE INDEX IF NOT EXISTS idx_security_logs_email ON security_logs(email);
+CREATE INDEX IF NOT EXISTS idx_security_logs_user_id ON security_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_logs_event_type ON security_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_security_logs_created_at ON security_logs(created_at);
+
+-- Create composite indexes for pattern detection
+CREATE INDEX IF NOT EXISTS idx_security_logs_ip_success_time ON security_logs(ip, success, created_at);
+CREATE INDEX IF NOT EXISTS idx_security_logs_email_success_time ON security_logs(email, success, created_at);
+
+-- Create function to check for suspicious patterns
+CREATE OR REPLACE FUNCTION check_suspicious_patterns(p_ip VARCHAR, p_email VARCHAR)
+RETURNS TABLE(is_suspicious BOOLEAN, reason TEXT) AS $$
+DECLARE
+    failed_attempts INT;
+BEGIN
+    -- Check for multiple failed attempts from same IP (15 minutes)
+    SELECT COUNT(*) INTO failed_attempts
+    FROM security_logs
+    WHERE ip = p_ip
+      AND event_type = 'auth_attempt'
+      AND success = false
+      AND created_at > NOW() - INTERVAL '15 minutes';
+    
+    IF failed_attempts > 5 THEN
+        RETURN QUERY SELECT true, 'Multiple failed attempts from IP ' || p_ip || ' (' || failed_attempts || ' attempts)';
+        RETURN;
+    END IF;
+    
+    -- Check for multiple failed attempts for same email (1 hour)
+    SELECT COUNT(*) INTO failed_attempts
+    FROM security_logs
+    WHERE email = p_email
+      AND event_type = 'auth_attempt'
+      AND success = false
+      AND created_at > NOW() - INTERVAL '1 hour';
+    
+    IF failed_attempts > 10 THEN
+        RETURN QUERY SELECT true, 'Multiple failed attempts for email ' || p_email || ' (' || failed_attempts || ' attempts)';
+        RETURN;
+    END IF;
+    
+    -- No suspicious patterns detected
+    RETURN QUERY SELECT false, 'No suspicious patterns';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create function to log security events
+CREATE OR REPLACE FUNCTION log_security_event(
+    p_event_type VARCHAR,
+    p_user_id VARCHAR,
+    p_email VARCHAR,
+    p_phone VARCHAR,
+    p_ip VARCHAR,
+    p_user_agent TEXT,
+    p_success BOOLEAN,
+    p_reason TEXT,
+    p_details TEXT
+) RETURNS VOID AS $$
+BEGIN
+    INSERT INTO security_logs (
+        event_type, user_id, email, phone, ip, user_agent, success, reason, details
+    ) VALUES (
+        p_event_type, p_user_id, p_email, p_phone, p_ip, p_user_agent, p_success, p_reason, p_details
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
+-- PART 7: Verification Queries
+-- =====================================================
+
+-- Check if translation columns were added successfully
+SELECT 
+    table_name,
+    column_name, 
+    data_type 
+FROM information_schema.columns 
+WHERE table_schema = 'public'
+    AND table_name IN ('users', 'clients', 'worksites', 'tasks', 'service_requests')
+    AND (column_name LIKE '%_ar' OR column_name LIKE '%_he' OR column_name LIKE '%_en')
+ORDER BY table_name, column_name;
+
+-- Check if the worksite deletion fix was applied correctly for tasks table
+-- Expected: delete_rule should be 'SET NULL'
+SELECT
+    tc.table_name,
+    tc.constraint_name,
+    tc.is_deferrable,
+    tc.initially_deferred,
+    rc.match_option,
+    rc.update_rule,
+    rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc 
+    ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_schema = 'public'
+    AND tc.table_name = 'tasks'
+    AND tc.constraint_name = 'tasks_worksite_id_fkey';
+
+-- Check if the attendance worksite deletion fix was applied correctly
+-- Expected: delete_rule should be 'SET NULL'
+SELECT
+    tc.table_name,
+    tc.constraint_name,
+    tc.is_deferrable,
+    tc.initially_deferred,
+    rc.match_option,
+    rc.update_rule,
+    rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc 
+    ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_schema = 'public'
+    AND tc.table_name = 'attendance'
+    AND tc.constraint_name = 'attendance_worksite_id_fkey';
+
+-- Check ON DELETE CASCADE constraints for critical relationships
+-- Expected: delete_rule should be 'CASCADE' for all
+SELECT
+    tc.table_name,
+    tc.constraint_name,
+    rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc 
+    ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_schema = 'public'
+    AND tc.constraint_name IN (
+        'tasks_client_id_fkey',
+        'attendance_task_id_fkey',
+        'attendance_service_request_id_fkey',
+        'service_requests_client_id_fkey'
+    )
+ORDER BY tc.table_name, tc.constraint_name;
+
+-- Verify role constraint
+SELECT
+    conname as constraint_name,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint
+WHERE conrelid = 'users'::regclass AND conname = 'users_role_check';
+
+-- Check default admin users
+SELECT email, role, is_active, subscription_status, subscription_expires_at 
+FROM users 
+WHERE role = 'admin' 
+ORDER BY email;
+
+-- Verify security_logs table creation
+SELECT 
+    table_name,
+    column_name, 
+    data_type,
+    is_nullable
+FROM information_schema.columns 
+WHERE table_schema = 'public'
+    AND table_name = 'security_logs'
+ORDER BY ordinal_position;
+
+-- Verify security_logs indexes
+SELECT 
+    indexname,
+    indexdef
+FROM pg_indexes
+WHERE tablename = 'security_logs'
+ORDER BY indexname;
+
+-- Verify security functions
+SELECT 
+    routine_name,
+    routine_type
+FROM information_schema.routines
+WHERE routine_schema = 'public'
+    AND routine_name IN ('check_suspicious_patterns', 'log_security_event')
+ORDER BY routine_name;
+
+-- =====================================================
+-- Migration Complete
+-- =====================================================
+-- Summary of changes:
+-- 1. Added translation columns for i18n support (ar/he/en)
+-- 2. Fixed worksite deletion to preserve tasks and attendance (SET NULL)
+-- 3. Fixed ON DELETE CASCADE for critical relationships:
+--    - tasks.client_id → CASCADE
+--    - attendance.task_id → CASCADE
+--    - attendance.service_request_id → CASCADE
+--    - service_requests.client_id → CASCADE
+-- 4. Added subscription and device management fields
+-- 5. Created default admin users
+-- 6. Added comprehensive indexing
+-- 7. Added security logging system with pattern detection
+-- 8. Created security monitoring functions
+-- =====================================================
+
+
+================================================================================
+FILE 2/47: backend/fix_customer_role.sql
+================================================================================
+
+-- =====================================================
+-- WorkTrack Database Schema - DevPro Version
+-- Compatible with current project structure
+-- =====================================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =====================================================
+-- Update users table with missing fields
+-- =====================================================
+
+-- Add subscription fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (subscription_status IN ('active', 'expired', 'canceled'));
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ NULL;
+
+-- Add updated_at if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add device and login fields (from migration 000007)
+-- =====================================================
+ALTER TABLE users ADD COLUMN IF NOT EXISTS device_id TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS device_model TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_device TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_code TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_code_expires TIMESTAMPTZ;
+
+-- =====================================================
+-- Update role constraint to include ALL roles (admin, employee, customer, client)
+-- =====================================================
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'customer', 'client'));
+
+-- =====================================================
+-- Update users table to allow nullable email for customers
+-- =====================================================
+-- Drop the NOT NULL constraint on email to allow NULL values
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+
+-- Add unique constraint on email (only for non-null values)
+-- This allows multiple NULL emails
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users(email) WHERE email IS NOT NULL;
+
+-- =====================================================
+-- Add missing updated_at to worksites table
+-- =====================================================
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add assigned_employee_id to worksites if not exist
+-- =====================================================
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- Add missing updated_at to tasks table
+-- =====================================================
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add photo fields to attendance (from migration 000007)
+-- =====================================================
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- =====================================================
+-- Add missing updated_at to attendance table
+-- =====================================================
+ALTER TABLE attendance
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add type and related_id to notifications (from migration 000007)
+-- =====================================================
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'info';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
+
+-- =====================================================
+-- Create service_requests table (from migration 000007)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS service_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    client_name VARCHAR(150),
+    client_phone VARCHAR(30),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    address TEXT,
+    phone VARCHAR(30),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'assigned', 'in_progress', 'completed', 'cancelled')),
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    photos TEXT[],
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add location_name if not exist
+ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS location_name TEXT;
+
+-- =====================================================
+-- Create assignments table (from migration 000007)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    admin_notes TEXT,
+    employee_notes TEXT,
+    client_rating INTEGER CHECK (client_rating BETWEEN 1 AND 5),
+    client_feedback TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'assigned'
+        CHECK (status IN ('assigned', 'accepted', 'in_progress', 'completed', 'rejected'))
+);
+
+-- =====================================================
+-- Create location_tracking table (from migration 000007)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS location_tracking (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assignment_id UUID REFERENCES assignments(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    accuracy DOUBLE PRECISION,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- Create indexes for performance
+-- =====================================================
+
+-- Users indexes
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_subscription_status ON users(subscription_status);
+
+-- Worksites indexes
+CREATE INDEX IF NOT EXISTS idx_worksites_location ON worksites(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee ON worksites(assigned_employee_id);
+CREATE INDEX IF NOT EXISTS idx_worksites_is_active ON worksites(is_active);
+
+-- Tasks indexes
+CREATE INDEX IF NOT EXISTS idx_tasks_worksite_id ON tasks(worksite_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_user_id ON tasks(assigned_user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_client_id ON tasks(client_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+
+-- Attendance indexes
+CREATE INDEX IF NOT EXISTS idx_attendance_user_id ON attendance(user_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_task_id ON attendance(task_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id ON attendance(worksite_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time ON attendance(check_in_time);
+CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+
+-- Service requests indexes
+CREATE INDEX IF NOT EXISTS idx_service_requests_client_id ON service_requests(client_id);
+CREATE INDEX IF NOT EXISTS idx_service_requests_status ON service_requests(status);
+CREATE INDEX IF NOT EXISTS idx_service_requests_priority ON service_requests(priority);
+
+-- Assignments indexes
+CREATE INDEX IF NOT EXISTS idx_assignments_employee_id ON assignments(employee_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id ON assignments(request_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_admin_id ON assignments(admin_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
+
+-- Location tracking indexes
+CREATE INDEX IF NOT EXISTS idx_location_tracking_user_id ON location_tracking(user_id);
+CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id ON location_tracking(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_location_tracking_recorded_at ON location_tracking(recorded_at);
+
+-- Notifications indexes
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+
+-- =====================================================
+-- Create default admin users
+-- =====================================================
+INSERT INTO users (
+  full_name,
+  email,
+  password_hash,
+  role,
+  is_active,
+  subscription_status,
+  subscription_expires_at
+)
+VALUES
+(
+  'DevPro System Administrator',
+  'admin@devpro.com',
+  crypt('devproadmin', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+),
+(
+  'DevPro Support Manager',
+  'support@devpro.com',
+  crypt('devprosupport', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NOW() + INTERVAL '1 year'
+),
+(
+  'DevPro Project Manager',
+  'manager@devpro.com',
+  crypt('devpromanager', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+)
+ON CONFLICT (email) DO UPDATE
+SET
+  password_hash = EXCLUDED.password_hash,
+  role = 'admin',
+  is_active = TRUE,
+  subscription_status = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN 'active'
+    ELSE EXCLUDED.subscription_status
+  END,
+  subscription_expires_at = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN NULL
+    ELSE EXCLUDED.subscription_expires_at
+  END,
+  updated_at = now()
+RETURNING email, role, is_active, subscription_status, subscription_expires_at;
+
+-- =====================================================
+-- Verification query
+-- =====================================================
+SELECT
+    conname as constraint_name,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint
+WHERE conrelid = 'users'::regclass AND conname = 'users_role_check';
+
+
+
+================================================================================
+FILE 3/47: backend/fix_service_requests_client_delete.sql
+================================================================================
+
+-- Fix service_requests table to handle client deletion properly
+-- This script changes the foreign key constraint from ON DELETE CASCADE to ON DELETE SET NULL
+-- and makes client_id nullable so service requests can exist without a client
+
+-- Step 1: Drop the existing foreign key constraint
+ALTER TABLE service_requests DROP CONSTRAINT IF EXISTS service_requests_client_id_fkey;
+
+-- Step 2: Make client_id nullable (if it's currently NOT NULL)
+ALTER TABLE service_requests ALTER COLUMN client_id DROP NOT NULL;
+
+-- Step 3: Add the new foreign key constraint with ON DELETE SET NULL
+ALTER TABLE service_requests 
+ADD CONSTRAINT service_requests_client_id_fkey 
+FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Verification query
+SELECT 
+    conname as constraint_name,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint
+WHERE conrelid = 'service_requests'::regclass AND conname = 'service_requests_client_id_fkey';
+
+
+
+================================================================================
+FILE 4/47: backend/internal/database/migrations/000001_create_users.down.sql
+================================================================================
+
+DROP TABLE IF EXISTS users;
+
+
+
+================================================================================
+FILE 5/47: backend/internal/database/migrations/000001_create_users.up.sql
+================================================================================
+
+-- تفعيل توليد UUID تلقائياً (مطلوب لكل الجداول التي تعتمد uuid_generate_v4)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- جدول المستخدمين: يضم كلاً من المدير (admin) والموظف (employee) في جدول واحد
+-- ويُفرَّق بينهما عبر عمود role فقط، لتبسيط منطق تسجيل الدخول (Endpoint واحد للجميع)
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    full_name VARCHAR(150) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    phone VARCHAR(30),
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'employee' CHECK (role IN ('admin', 'employee')),
+    avatar_url TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+
+================================================================================
+FILE 6/47: backend/internal/database/migrations/000002_create_worksites.down.sql
+================================================================================
+
+DROP TABLE IF EXISTS worksites;
+
+
+
+================================================================================
+FILE 7/47: backend/internal/database/migrations/000002_create_worksites.up.sql
+================================================================================
+
+-- نقاط العمل (Geofence Zones) — هذا الجدول هو أساس ميزة منع التختيم خارج النطاق.
+-- radius_meters هو نصف القطر المسموح به حول (latitude, longitude) لتلك النقطة
+CREATE TABLE IF NOT EXISTS worksites (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    address TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    radius_meters INTEGER NOT NULL DEFAULT 100,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+
+================================================================================
+FILE 8/47: backend/internal/database/migrations/000003_create_clients.down.sql
+================================================================================
+
+DROP TABLE IF EXISTS clients;
+
+
+
+================================================================================
+FILE 9/47: backend/internal/database/migrations/000003_create_clients.up.sql
+================================================================================
+
+-- العملاء: الجهة التي تُنفَّذ لصالحها المهمة (لا تعتمد على أي جدول آخر)
+CREATE TABLE IF NOT EXISTS clients (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    phone VARCHAR(30),
+    email VARCHAR(150),
+    address TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+
+================================================================================
+FILE 10/47: backend/internal/database/migrations/000004_create_tasks.down.sql
+================================================================================
+
+DROP TABLE IF EXISTS tasks;
+
+
+
+================================================================================
+FILE 11/47: backend/internal/database/migrations/000004_create_tasks.up.sql
+================================================================================
+
+-- المهام: تربط بين عميل + نقطة عمل (worksite) + موظف مكلَّف
+-- الربط بـ worksite_id هو ما يُفعِّل التحقق من النطاق الجغرافي عند التختيم لاحقاً
+CREATE TABLE IF NOT EXISTS tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(200) NOT NULL,
+    title_ar VARCHAR(200),
+    title_he VARCHAR(200),
+    title_en VARCHAR(200),
+    description TEXT,
+    description_ar TEXT,
+    description_he TEXT,
+    description_en TEXT,
+    client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+    worksite_id UUID NOT NULL REFERENCES worksites(id) ON DELETE RESTRICT,
+    assigned_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'in_progress', 'completed', 'late', 'cancelled')),
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    scheduled_start TIMESTAMPTZ,
+    scheduled_end TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    language VARCHAR(10) NOT NULL DEFAULT 'en'
+);
+
+
+
+================================================================================
+FILE 12/47: backend/internal/database/migrations/000005_create_attendance.down.sql
+================================================================================
+
+DROP TABLE IF EXISTS attendance;
+
+
+
+================================================================================
+FILE 13/47: backend/internal/database/migrations/000005_create_attendance.up.sql
+================================================================================
+
+-- سجل الحضور/الانصراف — كل سجل يحفظ موقع الموظف الفعلي والمسافة عن نقطة العمل
+-- لحظة كل تختيم (بدء/إنهاء)، كإثبات أنه تم داخل النطاق المسموح
+CREATE TABLE IF NOT EXISTS attendance (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    task_id UUID REFERENCES tasks(id) ON DELETE SET NULL,
+    worksite_id UUID NOT NULL REFERENCES worksites(id) ON DELETE RESTRICT,
+
+    check_in_time TIMESTAMPTZ,
+    check_in_lat DOUBLE PRECISION,
+    check_in_lng DOUBLE PRECISION,
+    check_in_distance_meters DOUBLE PRECISION,
+
+    check_out_time TIMESTAMPTZ,
+    check_out_lat DOUBLE PRECISION,
+    check_out_lng DOUBLE PRECISION,
+    check_out_distance_meters DOUBLE PRECISION,
+
+    photo_url TEXT,
+    photo_uploaded_at TIMESTAMPTZ,
+    photo_notes TEXT,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'in_progress'
+        CHECK (status IN ('in_progress', 'completed')),
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+
+================================================================================
+FILE 14/47: backend/internal/database/migrations/000006_create_notifications.down.sql
+================================================================================
+
+DROP TABLE IF EXISTS notifications;
+
+
+
+================================================================================
+FILE 15/47: backend/internal/database/migrations/000006_create_notifications.up.sql
+================================================================================
+
+-- إشعارات لكل مستخدم (مثال: إشعار عند محاولة تختيم مرفوضة خارج النطاق)
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(200) NOT NULL,
+    body TEXT,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+
+================================================================================
+FILE 16/47: backend/internal/database/migrations/000007_extend_production_schema.up.sql
+================================================================================
+
+-- Completes the production schema used by the current WorkTrack API.
+-- Safe to run on an existing database: it does not delete tables, rows, or users.
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Phone-login and device fields required by the authentication handlers.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS device_id TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS device_model TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_device TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_code TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_code_expires TIMESTAMPTZ;
+
+-- The original migration allowed only admin and employee roles. Client accounts
+-- are required by the service-request flow.
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'client'));
+
+-- Evidence-photo fields required by the attendance upload handler.
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- Notification type is used for geofence and operational alerts.
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'info';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
+
+CREATE TABLE IF NOT EXISTS service_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    client_name VARCHAR(150),
+    client_phone VARCHAR(30),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    address TEXT,
+    phone VARCHAR(30),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'assigned', 'in_progress', 'completed', 'cancelled')),
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    photos TEXT[],
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    admin_notes TEXT,
+    employee_notes TEXT,
+    client_rating INTEGER CHECK (client_rating BETWEEN 1 AND 5),
+    client_feedback TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'assigned'
+        CHECK (status IN ('assigned', 'accepted', 'in_progress', 'completed', 'rejected'))
+);
+
+CREATE TABLE IF NOT EXISTS location_tracking (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assignment_id UUID REFERENCES assignments(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    accuracy DOUBLE PRECISION,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_service_requests_client_id ON service_requests(client_id);
+CREATE INDEX IF NOT EXISTS idx_service_requests_status ON service_requests(status);
+CREATE INDEX IF NOT EXISTS idx_assignments_employee_id ON assignments(employee_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id ON assignments(request_id);
+CREATE INDEX IF NOT EXISTS idx_location_tracking_user_id ON location_tracking(user_id);
+CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id ON location_tracking(assignment_id);
+
+
+
+================================================================================
+FILE 17/47: backend/internal/database/migrations/000008_add_subscription_fields.down.sql
+================================================================================
+
+-- إزالة حقول الاشتراك من جدول المستخدمين
+ALTER TABLE users
+DROP COLUMN IF EXISTS subscription_status,
+DROP COLUMN IF EXISTS subscription_expires_at;
+
+
+
+================================================================================
+FILE 18/47: backend/internal/database/migrations/000008_add_subscription_fields.up.sql
+================================================================================
+
+-- إضافة حقول الاشتراك إلى جدول المستخدمين
+ALTER TABLE users
+ADD COLUMN subscription_status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (subscription_status IN ('active', 'expired', 'canceled')),
+ADD COLUMN subscription_expires_at TIMESTAMPTZ NULL;
+
+
+
+================================================================================
+FILE 19/47: backend/internal/database/migrations/000009_add_missing_columns.down.sql
+================================================================================
+
+-- التراجع عن إضافة الأعمدة المفقودة
+
+-- حذف الفهارس
+DROP INDEX IF EXISTS idx_worksites_assigned_employee;
+DROP INDEX IF EXISTS idx_attendance_worksite_id;
+
+-- حذف الأعمدة (اختياري - عادة نحتفظ بها للتوافق)
+-- ALTER TABLE worksites DROP COLUMN IF EXISTS assigned_employee_id;
+-- ALTER TABLE attendance DROP COLUMN IF EXISTS updated_at;
+-- ALTER TABLE attendance DROP COLUMN IF EXISTS photo_url;
+-- ALTER TABLE attendance DROP COLUMN IF EXISTS photo_uploaded_at;
+-- ALTER TABLE attendance DROP COLUMN IF EXISTS photo_notes;
+
+
+================================================================================
+FILE 20/47: backend/internal/database/migrations/000009_add_missing_columns.up.sql
+================================================================================
+
+-- إضافة الأعمدة المفقودة للتوافق مع الإصدارات السابقة
+
+-- إضافة عمود assigned_employee_id إلى جدول worksites
+ALTER TABLE worksites 
+ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- إضافة عمود updated_at إلى جدول attendance
+ALTER TABLE attendance
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- إضافة حقول الصور إلى جدول attendance إذا لم تكن موجودة
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- إنشاء الفهارس المفقودة
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee ON worksites(assigned_employee_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id ON attendance(worksite_id);
+
+
+================================================================================
+FILE 21/47: backend/internal/database/migrations/000010_add_check_out_notes.down.sql
+================================================================================
+
+-- حذف عمود ملاحظات إنهاء الدوام
+ALTER TABLE attendance DROP COLUMN IF EXISTS check_out_notes;
+
+
+
+================================================================================
+FILE 22/47: backend/internal/database/migrations/000010_add_check_out_notes.up.sql
+================================================================================
+
+-- إضافة عمود لملاحظات إنهاء الدوام
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS check_out_notes TEXT;
+
+
+
+================================================================================
+FILE 23/47: backend/internal/database/migrations/000011_add_default_admin_users.down.sql
+================================================================================
+
+-- Remove default admin users
+-- This removes the default admin accounts created in the up migration
+
+DELETE FROM users 
+WHERE email IN (
+  'admin@devpro.com',
+  'support@devpro.com', 
+  'manager@devpro.com'
+);
+
+
+
+================================================================================
+FILE 24/47: backend/internal/database/migrations/000011_add_default_admin_users.up.sql
+================================================================================
+
+-- Add default admin users for WorkTrack v2
+-- This migration creates default admin accounts for initial setup
+
+-- Enable pgcrypto extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Insert default admin users
+INSERT INTO users (
+  full_name,
+  email,
+  phone,
+  password_hash,
+  role,
+  is_active,
+  subscription_status,
+  subscription_expires_at,
+  created_at,
+  updated_at
+)
+VALUES
+(
+  'DevPro System Administrator',
+  'admin@devpro.com',
+  '+1234567890',
+  crypt('devproadmin', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL,
+  now(),
+  now()
+),
+(
+  'DevPro Support Manager',
+  'support@devpro.com',
+  '+1234567891',
+  crypt('devprosupport', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NOW() + INTERVAL '1 year',
+  now(),
+  now()
+),
+(
+  'DevPro Project Manager',
+  'manager@devpro.com',
+  '+1234567892',
+  crypt('devpromanager', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL,
+  now(),
+  now()
+)
+ON CONFLICT (email) DO UPDATE
+SET
+  password_hash = EXCLUDED.password_hash,
+  role = 'admin',
+  is_active = TRUE,
+  subscription_status = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN 'active'
+    ELSE EXCLUDED.subscription_status
+  END,
+  subscription_expires_at = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN NULL
+    ELSE EXCLUDED.subscription_expires_at
+  END,
+  updated_at = now()
+RETURNING email, role, is_active, subscription_status, subscription_expires_at;
+
+
+
+================================================================================
+FILE 25/47: backend/internal/database/migrations/000012_fix_customer_role_constraint.down.sql
+================================================================================
+
+-- العودة إلى constraint القديم (بدون customer/client)
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- إضافة constraint القديم
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee'));
+
+
+================================================================================
+FILE 26/47: backend/internal/database/migrations/000012_fix_customer_role_constraint.up.sql
+================================================================================
+
+-- تحديث constraint دور المستخدم للسماح بالأدوار الجديدة
+-- هذا الـ migration ضروري لأن الباك إند يحاول إنشاء مستخدمين بدور customer/client
+
+-- حذف constraint القديم إذا كان موجوداً
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- إضافة constraint جديد يشمل جميع الأدوار المطلوبة
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'customer', 'client'));
+
+
+================================================================================
+FILE 27/47: backend/internal/database/migrations/000013_add_location_name.down.sql
+================================================================================
+
+-- Remove location_name field from service_requests table
+
+ALTER TABLE service_requests DROP COLUMN IF EXISTS location_name;
+
+
+================================================================================
+FILE 28/47: backend/internal/database/migrations/000013_add_location_name.up.sql
+================================================================================
+
+-- Add location_name field to service_requests table  
+-- This field will store the human-readable location name from reverse geocoding
+
+ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS location_name TEXT;
+
+
+================================================================================
+FILE 29/47: backend/internal/database/migrations/000014_complete_schema.down.sql
+================================================================================
+
+-- =====================================================
+-- Rollback for complete schema migration
+-- =====================================================
+
+-- Remove default admin users
+DELETE FROM users WHERE email IN ('admin@devpro.com', 'support@devpro.com', 'manager@devpro.com');
+
+-- Drop indexes
+DROP INDEX IF EXISTS idx_notifications_type;
+DROP INDEX IF EXISTS idx_notifications_is_read;
+DROP INDEX IF EXISTS idx_notifications_user_id;
+DROP INDEX IF EXISTS idx_location_tracking_recorded_at;
+DROP INDEX IF EXISTS idx_location_tracking_assignment_id;
+DROP INDEX IF EXISTS idx_location_tracking_user_id;
+DROP INDEX IF EXISTS idx_assignments_status;
+DROP INDEX IF EXISTS idx_assignments_admin_id;
+DROP INDEX IF EXISTS idx_assignments_request_id;
+DROP INDEX IF EXISTS idx_assignments_employee_id;
+DROP INDEX IF EXISTS idx_service_requests_priority;
+DROP INDEX IF EXISTS idx_service_requests_status;
+DROP INDEX IF EXISTS idx_service_requests_client_id;
+DROP INDEX IF EXISTS idx_attendance_status;
+DROP INDEX IF EXISTS idx_attendance_check_in_time;
+DROP INDEX IF EXISTS idx_attendance_worksite_id;
+DROP INDEX IF EXISTS idx_attendance_task_id;
+DROP INDEX IF EXISTS idx_attendance_user_id;
+DROP INDEX IF EXISTS idx_tasks_status;
+DROP INDEX IF EXISTS idx_tasks_client_id;
+DROP INDEX IF EXISTS idx_tasks_assigned_user_id;
+DROP INDEX IF EXISTS idx_tasks_worksite_id;
+DROP INDEX IF EXISTS idx_worksites_is_active;
+DROP INDEX IF EXISTS idx_worksites_assigned_employee;
+DROP INDEX IF EXISTS idx_worksites_location;
+DROP INDEX IF EXISTS idx_users_subscription_status;
+DROP INDEX IF EXISTS idx_users_role;
+DROP INDEX IF EXISTS idx_users_phone;
+
+-- Drop tables
+DROP TABLE IF EXISTS location_tracking;
+DROP TABLE IF EXISTS assignments;
+DROP TABLE IF EXISTS service_requests;
+
+-- Remove location_name from service_requests if table still exists
+-- (This is a safety measure in case the table wasn't dropped)
+ALTER TABLE service_requests DROP COLUMN IF EXISTS location_name;
+
+-- Remove columns from notifications
+ALTER TABLE notifications DROP COLUMN IF EXISTS related_id;
+ALTER TABLE notifications DROP COLUMN IF EXISTS type;
+
+-- Remove columns from attendance
+ALTER TABLE attendance DROP COLUMN IF EXISTS updated_at;
+ALTER TABLE attendance DROP COLUMN IF EXISTS photo_notes;
+ALTER TABLE attendance DROP COLUMN IF EXISTS photo_uploaded_at;
+ALTER TABLE attendance DROP COLUMN IF EXISTS photo_url;
+
+-- Remove columns from tasks
+ALTER TABLE tasks DROP COLUMN IF EXISTS updated_at;
+
+-- Remove columns from worksites
+ALTER TABLE worksites DROP COLUMN IF EXISTS assigned_employee_id;
+ALTER TABLE worksites DROP COLUMN IF EXISTS updated_at;
+
+-- Remove columns from users
+ALTER TABLE users DROP COLUMN IF EXISTS login_code_expires;
+ALTER TABLE users DROP COLUMN IF EXISTS login_code;
+ALTER TABLE users DROP COLUMN IF EXISTS last_login_device;
+ALTER TABLE users DROP COLUMN IF EXISTS phone_verified;
+ALTER TABLE users DROP COLUMN IF EXISTS device_model;
+ALTER TABLE users DROP COLUMN IF EXISTS device_id;
+ALTER TABLE users DROP COLUMN IF EXISTS updated_at;
+ALTER TABLE users DROP COLUMN IF EXISTS subscription_expires_at;
+ALTER TABLE users DROP COLUMN IF EXISTS subscription_status;
+
+-- Reset role constraint
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'client'));
+
+
+================================================================================
+FILE 30/47: backend/internal/database/migrations/000014_complete_schema.up.sql
+================================================================================
+
+-- =====================================================
+-- WorkTrack Database Schema - DevPro Version
+-- Compatible with current project structure
+-- This migration completes the production schema with missing fields and improvements
+-- =====================================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =====================================================
+-- Update users table with missing fields
+-- =====================================================
+
+-- Add subscription fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (subscription_status IN ('active', 'expired', 'canceled'));
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ NULL;
+
+-- Add updated_at if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add device and login fields (from migration 000007)
+-- =====================================================
+ALTER TABLE users ADD COLUMN IF NOT EXISTS device_id TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS device_model TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_device TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_code TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_code_expires TIMESTAMPTZ;
+
+-- =====================================================
+-- Update role constraint to include ALL roles (admin, employee, customer, client)
+-- =====================================================
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'customer', 'client'));
+
+-- =====================================================
+-- Add missing updated_at to worksites table
+-- =====================================================
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add assigned_employee_id to worksites if not exist
+-- =====================================================
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- Add missing updated_at to tasks table
+-- =====================================================
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add photo fields to attendance (from migration 000007)
+-- =====================================================
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- =====================================================
+-- Add missing updated_at to attendance table
+-- =====================================================
+ALTER TABLE attendance
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Add type and related_id to notifications (from migration 000007)
+-- =====================================================
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'info';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
+
+-- =====================================================
+-- Create service_requests table (from migration 000007)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS service_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    client_name VARCHAR(150),
+    client_phone VARCHAR(30),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    address TEXT,
+    phone VARCHAR(30),
+    location_name TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'assigned', 'in_progress', 'completed', 'cancelled')),
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    photos TEXT[],
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add location_name if table already exists and column is missing
+ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS location_name TEXT;
+
+-- =====================================================
+-- Create assignments table (from migration 000007)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    admin_notes TEXT,
+    employee_notes TEXT,
+    client_rating INTEGER CHECK (client_rating BETWEEN 1 AND 5),
+    client_feedback TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'assigned'
+        CHECK (status IN ('assigned', 'accepted', 'in_progress', 'completed', 'rejected'))
+);
+
+-- =====================================================
+-- Create location_tracking table (from migration 000007)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS location_tracking (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assignment_id UUID REFERENCES assignments(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    accuracy DOUBLE PRECISION,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- Create indexes for performance
+-- =====================================================
+
+-- Users indexes
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_subscription_status ON users(subscription_status);
+
+-- Worksites indexes
+CREATE INDEX IF NOT EXISTS idx_worksites_location ON worksites(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee ON worksites(assigned_employee_id);
+CREATE INDEX IF NOT EXISTS idx_worksites_is_active ON worksites(is_active);
+
+-- Tasks indexes
+CREATE INDEX IF NOT EXISTS idx_tasks_worksite_id ON tasks(worksite_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_user_id ON tasks(assigned_user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_client_id ON tasks(client_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+
+-- Attendance indexes
+CREATE INDEX IF NOT EXISTS idx_attendance_user_id ON attendance(user_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_task_id ON attendance(task_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id ON attendance(worksite_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time ON attendance(check_in_time);
+CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+
+-- Service requests indexes
+CREATE INDEX IF NOT EXISTS idx_service_requests_client_id ON service_requests(client_id);
+CREATE INDEX IF NOT EXISTS idx_service_requests_status ON service_requests(status);
+CREATE INDEX IF NOT EXISTS idx_service_requests_priority ON service_requests(priority);
+
+-- Assignments indexes
+CREATE INDEX IF NOT EXISTS idx_assignments_employee_id ON assignments(employee_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id ON assignments(request_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_admin_id ON assignments(admin_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
+
+-- Location tracking indexes
+CREATE INDEX IF NOT EXISTS idx_location_tracking_user_id ON location_tracking(user_id);
+CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id ON location_tracking(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_location_tracking_recorded_at ON location_tracking(recorded_at);
+
+-- Notifications indexes
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+
+-- =====================================================
+-- Create default admin users
+-- =====================================================
+INSERT INTO users (
+  full_name,
+  email,
+  password_hash,
+  role,
+  is_active,
+  subscription_status,
+  subscription_expires_at
+)
+VALUES
+(
+  'DevPro System Administrator',
+  'admin@devpro.com',
+  crypt('devproadmin', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+),
+(
+  'DevPro Support Manager',
+  'support@devpro.com',
+  crypt('devprosupport', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NOW() + INTERVAL '1 year'
+),
+(
+  'DevPro Project Manager',
+  'manager@devpro.com',
+  crypt('devpromanager', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+)
+ON CONFLICT (email) DO UPDATE
+SET
+  password_hash = EXCLUDED.password_hash,
+  role = 'admin',
+  is_active = TRUE,
+  subscription_status = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN 'active'
+    ELSE EXCLUDED.subscription_status
+  END,
+  subscription_expires_at = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN NULL
+    ELSE EXCLUDED.subscription_expires_at
+  END,
+  updated_at = now()
+RETURNING email, role, is_active, subscription_status, subscription_expires_at;
+
+
+================================================================================
+FILE 31/47: backend/internal/database/migrations/000015_add_service_request_to_attendance.down.sql
+================================================================================
+
+-- Remove service_request_id from attendance table
+
+ALTER TABLE attendance DROP COLUMN IF EXISTS service_request_id;
+
+
+
+================================================================================
+FILE 32/47: backend/internal/database/migrations/000015_add_service_request_to_attendance.up.sql
+================================================================================
+
+-- Add service_request_id to attendance table
+-- This will link attendance records to service requests
+
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS service_request_id UUID REFERENCES service_requests(id) ON DELETE SET NULL;
+
+
+
+================================================================================
+FILE 33/47: backend/internal/database/migrations/000016_add_language_field.down.sql
+================================================================================
+
+-- =====================================================
+-- Remove language field from tasks table
+-- =====================================================
+ALTER TABLE tasks
+    DROP COLUMN IF EXISTS language;
+
+-- =====================================================
+-- Remove language field from service_requests table
+-- =====================================================
+ALTER TABLE service_requests
+    DROP COLUMN IF EXISTS language;
+
+
+
+================================================================================
+FILE 34/47: backend/internal/database/migrations/000016_add_language_field.up.sql
+================================================================================
+
+-- =====================================================
+-- Add language field to tasks table
+-- =====================================================
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS language VARCHAR(10) NOT NULL DEFAULT 'en';
+
+-- =====================================================
+-- Add language field to service_requests table
+-- =====================================================
+ALTER TABLE service_requests
+    ADD COLUMN IF NOT EXISTS language VARCHAR(10) NOT NULL DEFAULT 'en';
+
+
+
+================================================================================
+FILE 35/47: backend/internal/database/migrations/000017_allow_null_worksite_in_attendance.down.sql
+================================================================================
+
+-- التراجع عن تعديل عمود worksite_id
+
+-- إعادة القيد الأجنبي إلى RESTRICT
+ALTER TABLE attendance DROP CONSTRAINT attendance_worksite_id_fkey;
+
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE RESTRICT;
+
+-- إضافة قيد NOT NULL
+ALTER TABLE attendance ALTER COLUMN worksite_id SET NOT NULL;
+
+
+================================================================================
+FILE 36/47: backend/internal/database/migrations/000017_allow_null_worksite_in_attendance.up.sql
+================================================================================
+
+-- تعديل عمود worksite_id للسماح بـ NULL للحفاظ على سجلات الحضور عند حذف موقع العمل
+-- هذا يسمح بفك ارتباط سجلات الحضور من مواقع العمل المحذوفة دون فقدان البيانات
+
+-- أولاً إزالة القيد NOT NULL
+ALTER TABLE attendance ALTER COLUMN worksite_id DROP NOT NULL;
+
+-- ثم تغيير قيد ON DELETE من RESTRICT إلى SET NULL
+-- يتطلب إزالة القيد الأجنبي أولاً ثم إضافته مرة أخرى
+ALTER TABLE attendance DROP CONSTRAINT attendance_worksite_id_fkey;
+
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE SET NULL;
+
+
+================================================================================
+FILE 37/47: backend/internal/database/migrations/000018_add_translations_and_fix_worksite_delete.down.sql
+================================================================================
+
+-- =====================================================
+-- Rollback: Remove Translation Columns + Restore Worksite Deletion Constraint
+-- =====================================================
+
+-- =====================================================
+-- PART 1: Restore Worksite Deletion Constraint
+-- =====================================================
+
+-- Restore the foreign key constraint to ON DELETE RESTRICT
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_worksite_id_fkey;
+
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE RESTRICT;
+
+-- Restore NOT NULL constraint (note: this will fail if there are NULL values)
+-- ALTER TABLE tasks ALTER COLUMN worksite_id SET NOT NULL;
+
+-- =====================================================
+-- PART 2: Remove Translation Columns
+-- =====================================================
+
+-- Drop the helper function
+DROP FUNCTION IF EXISTS get_translation(TEXT, TEXT, TEXT, VARCHAR);
+
+-- Remove translation columns from service_requests (if table exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'service_requests') THEN
+        ALTER TABLE service_requests
+            DROP COLUMN IF EXISTS client_name_en,
+            DROP COLUMN IF EXISTS client_name_he,
+            DROP COLUMN IF EXISTS client_name_ar,
+            DROP COLUMN IF EXISTS location_name_en,
+            DROP COLUMN IF EXISTS location_name_he,
+            DROP COLUMN IF EXISTS location_name_ar,
+            DROP COLUMN IF EXISTS address_en,
+            DROP COLUMN IF EXISTS address_he,
+            DROP COLUMN IF EXISTS address_ar,
+            DROP COLUMN IF EXISTS description_en,
+            DROP COLUMN IF EXISTS description_he,
+            DROP COLUMN IF EXISTS description_ar,
+            DROP COLUMN IF EXISTS title_en,
+            DROP COLUMN IF EXISTS title_he,
+            DROP COLUMN IF EXISTS title_ar;
+    END IF;
+END $$;
+
+-- Remove translation columns from tasks
+ALTER TABLE tasks
+    DROP COLUMN IF EXISTS description_en,
+    DROP COLUMN IF EXISTS description_he,
+    DROP COLUMN IF EXISTS description_ar,
+    DROP COLUMN IF EXISTS title_en,
+    DROP COLUMN IF EXISTS title_he,
+    DROP COLUMN IF EXISTS title_ar;
+
+-- Remove translation columns from worksites
+ALTER TABLE worksites
+    DROP COLUMN IF EXISTS address_en,
+    DROP COLUMN IF EXISTS address_he,
+    DROP COLUMN IF EXISTS address_ar,
+    DROP COLUMN IF EXISTS name_en,
+    DROP COLUMN IF EXISTS name_he,
+    DROP COLUMN IF EXISTS name_ar;
+
+-- Remove translation columns from clients (if table exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'clients') THEN
+        ALTER TABLE clients
+            DROP COLUMN IF EXISTS address_en,
+            DROP COLUMN IF EXISTS address_he,
+            DROP COLUMN IF EXISTS address_ar,
+            DROP COLUMN IF EXISTS name_en,
+            DROP COLUMN IF EXISTS name_he,
+            DROP COLUMN IF EXISTS name_ar;
+    END IF;
+END $$;
+
+-- Remove translation columns from users
+ALTER TABLE users
+    DROP COLUMN IF EXISTS full_name_en,
+    DROP COLUMN IF EXISTS full_name_he,
+    DROP COLUMN IF EXISTS full_name_ar;
+
+
+================================================================================
+FILE 38/47: backend/internal/database/migrations/000018_add_translations_and_fix_worksite_delete.up.sql
+================================================================================
+
+-- =====================================================
+-- Migration: Add Translation Columns for Complete i18n Support
+-- =====================================================
+-- This migration adds translation columns for all text fields
+-- to support Arabic, Hebrew, and English translations
+
+-- =====================================================
+-- Users table translations
+-- =====================================================
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS full_name_ar VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS full_name_he VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS full_name_en VARCHAR(150);
+
+-- Migrate existing full_name to all translation columns
+UPDATE users 
+SET 
+    full_name_ar = full_name,
+    full_name_he = full_name,
+    full_name_en = full_name
+WHERE full_name_ar IS NULL;
+
+-- =====================================================
+-- Clients table translations (if table exists)
+-- =====================================================
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'clients') THEN
+        ALTER TABLE clients
+            ADD COLUMN IF NOT EXISTS name_ar VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS name_he VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS name_en VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS address_ar TEXT,
+            ADD COLUMN IF NOT EXISTS address_he TEXT,
+            ADD COLUMN IF NOT EXISTS address_en TEXT;
+
+        -- Migrate existing data to translation columns
+        UPDATE clients 
+        SET 
+            name_ar = name,
+            name_he = name,
+            name_en = name,
+            address_ar = address,
+            address_he = address,
+            address_en = address
+        WHERE name_ar IS NULL;
+    END IF;
+END $$;
+
+-- =====================================================
+-- Worksites table translations
+-- =====================================================
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS name_ar VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS name_he VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS name_en VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS address_ar TEXT,
+    ADD COLUMN IF NOT EXISTS address_he TEXT,
+    ADD COLUMN IF NOT EXISTS address_en TEXT;
+
+-- Migrate existing data to translation columns
+UPDATE worksites 
+SET 
+    name_ar = name,
+    name_he = name,
+    name_en = name,
+    address_ar = address,
+    address_he = address,
+    address_en = address
+WHERE name_ar IS NULL;
+
+-- =====================================================
+-- Tasks table translations
+-- =====================================================
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS title_ar VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS title_he VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS title_en VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS description_ar TEXT,
+    ADD COLUMN IF NOT EXISTS description_he TEXT,
+    ADD COLUMN IF NOT EXISTS description_en TEXT;
+
+-- Migrate existing data to translation columns
+UPDATE tasks 
+SET 
+    title_ar = title,
+    title_he = title,
+    title_en = title,
+    description_ar = description,
+    description_he = description,
+    description_en = description
+WHERE title_ar IS NULL;
+
+-- =====================================================
+-- Service requests table translations (if table exists)
+-- =====================================================
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'service_requests') THEN
+        ALTER TABLE service_requests
+            ADD COLUMN IF NOT EXISTS title_ar VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS title_he VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS title_en VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS description_ar TEXT,
+            ADD COLUMN IF NOT EXISTS description_he TEXT,
+            ADD COLUMN IF NOT EXISTS description_en TEXT,
+            ADD COLUMN IF NOT EXISTS address_ar TEXT,
+            ADD COLUMN IF NOT EXISTS address_he TEXT,
+            ADD COLUMN IF NOT EXISTS address_en TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_ar TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_he TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_en TEXT,
+            ADD COLUMN IF NOT EXISTS client_name_ar VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS client_name_he VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS client_name_en VARCHAR(150);
+
+        -- Migrate existing data to translation columns
+        UPDATE service_requests 
+        SET 
+            title_ar = title,
+            title_he = title,
+            title_en = title,
+            description_ar = description,
+            description_he = description,
+            description_en = description,
+            address_ar = address,
+            address_he = address,
+            address_en = address,
+            location_name_ar = location_name,
+            location_name_he = location_name,
+            location_name_en = location_name,
+            client_name_ar = client_name,
+            client_name_he = client_name,
+            client_name_en = client_name
+        WHERE title_ar IS NULL;
+    END IF;
+END $$;
+
+-- =====================================================
+-- Create helper function to get translated text
+-- =====================================================
+CREATE OR REPLACE FUNCTION get_translation(
+    text_ar TEXT,
+    text_he TEXT,
+    text_en TEXT,
+    lang VARCHAR DEFAULT 'ar'
+) RETURNS TEXT AS $$
+BEGIN
+    CASE lang
+        WHEN 'he' THEN
+            RETURN COALESCE(text_he, text_ar, text_en, '');
+        WHEN 'en' THEN
+            RETURN COALESCE(text_en, text_ar, text_he, '');
+        ELSE
+            RETURN COALESCE(text_ar, text_he, text_en, '');
+    END CASE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
+-- Verification queries
+-- =====================================================
+-- Check if columns were added successfully
+SELECT 
+    table_name,
+    column_name, 
+    data_type 
+FROM information_schema.columns 
+WHERE table_schema = 'public'
+    AND table_name IN ('users', 'clients', 'worksites', 'tasks', 'service_requests')
+    AND (column_name LIKE '%_ar' OR column_name LIKE '%_he' OR column_name LIKE '%_en')
+ORDER BY table_name, column_name;
+
+
+================================================================================
+FILE 39/47: backend/internal/database/migrations/000019_fix_worksite_deletion.down.sql
+================================================================================
+
+-- =====================================================
+-- Rollback: Restore Worksite Deletion Constraint
+-- =====================================================
+
+-- Restore the foreign key constraint to ON DELETE RESTRICT
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_worksite_id_fkey;
+
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE RESTRICT;
+
+-- Restore NOT NULL constraint (note: this will fail if there are NULL values)
+-- ALTER TABLE tasks ALTER COLUMN worksite_id SET NOT NULL;
+
+
+================================================================================
+FILE 40/47: backend/internal/database/migrations/000019_fix_worksite_deletion.up.sql
+================================================================================
+
+-- =====================================================
+-- Migration: Fix Worksite Deletion - Preserve Tasks and Attendance
+-- =====================================================
+-- This migration changes the worksite_id constraint in tasks table 
+-- from ON DELETE RESTRICT to ON DELETE SET NULL
+-- This allows worksite deletion while preserving tasks and attendance records
+
+-- First, remove NOT NULL constraint from worksite_id in tasks
+ALTER TABLE tasks ALTER COLUMN worksite_id DROP NOT NULL;
+
+-- Then change the foreign key constraint from RESTRICT to SET NULL
+-- This requires dropping the existing constraint first
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_worksite_id_fkey;
+
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- Verification query
+-- =====================================================
+-- Check if the foreign key constraint was updated correctly
+SELECT
+    tc.table_name,
+    tc.constraint_name,
+    tc.is_deferrable,
+    tc.initially_deferred,
+    rc.match_option,
+    rc.update_rule,
+    rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc 
+    ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_schema = 'public'
+    AND tc.table_name = 'tasks'
+    AND tc.constraint_name = 'tasks_worksite_id_fkey';
+
+
+================================================================================
+FILE 41/47: backend/internal/database/migrations/000020_add_security_logs.down.sql
+================================================================================
+
+-- حذف جدول security_logs وفهارسه
+DROP INDEX IF EXISTS idx_security_logs_email_success_time;
+DROP INDEX IF EXISTS idx_security_logs_ip_success_time;
+DROP INDEX IF EXISTS idx_security_logs_created_at;
+DROP INDEX IF EXISTS idx_security_logs_event_type;
+DROP INDEX IF EXISTS idx_security_logs_user_id;
+DROP INDEX IF EXISTS idx_security_logs_email;
+DROP INDEX IF EXISTS idx_security_logs_ip;
+DROP TABLE IF EXISTS security_logs;
+
+
+================================================================================
+FILE 42/47: backend/internal/database/migrations/000020_add_security_logs.up.sql
+================================================================================
+
+-- إنشاء جدول security_logs لتسجيل أحداث الأمان
+CREATE TABLE IF NOT EXISTS security_logs (
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    event_type VARCHAR(50) NOT NULL,
+    user_id VARCHAR(36),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    ip VARCHAR(45) NOT NULL,
+    user_agent TEXT,
+    success BOOLEAN DEFAULT false,
+    reason TEXT,
+    details TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- إنشاء فهارس للبحث السريع
+CREATE INDEX IF NOT EXISTS idx_security_logs_ip ON security_logs(ip);
+CREATE INDEX IF NOT EXISTS idx_security_logs_email ON security_logs(email);
+CREATE INDEX IF NOT EXISTS idx_security_logs_user_id ON security_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_logs_event_type ON security_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_security_logs_created_at ON security_logs(created_at);
+
+-- إنشاء فهرس مركب للبحث عن الأنماط المشبوهة
+CREATE INDEX IF NOT EXISTS idx_security_logs_ip_success_time ON security_logs(ip, success, created_at);
+CREATE INDEX IF NOT EXISTS idx_security_logs_email_success_time ON security_logs(email, success, created_at);
+
+
+================================================================================
+FILE 43/47: backend/internal/database/migrations/000021_fix_on_delete_cascade.down.sql
+================================================================================
+
+-- =====================================================
+-- Rollback: Restore previous ON DELETE behavior
+-- =====================================================
+
+-- Restore tasks.client_id to SET NULL
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_client_id_fkey;
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_client_id_fkey 
+FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Restore attendance.task_id to SET NULL
+ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_task_id_fkey;
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_task_id_fkey 
+FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL;
+
+-- Restore attendance.service_request_id to SET NULL
+ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_service_request_id_fkey;
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_service_request_id_fkey 
+FOREIGN KEY (service_request_id) REFERENCES service_requests(id) ON DELETE SET NULL;
+
+
+================================================================================
+FILE 44/47: backend/internal/database/migrations/000021_fix_on_delete_cascade.up.sql
+================================================================================
+
+-- =====================================================
+-- Migration: Fix ON DELETE CASCADE Constraints
+-- =====================================================
+-- This migration ensures proper CASCADE behavior for critical relationships
+-- When a user is deleted, their related data should be automatically cleaned up
+
+-- =====================================================
+-- Fix tasks.client_id to use ON DELETE CASCADE
+-- =====================================================
+-- First, make sure the column can be NULL temporarily to avoid constraint violations
+ALTER TABLE tasks ALTER COLUMN client_id DROP NOT NULL;
+
+-- Drop existing constraint
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_client_id_fkey;
+
+-- Add new constraint with CASCADE
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_client_id_fkey 
+FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE;
+
+-- =====================================================
+-- Fix attendance.task_id to use ON DELETE CASCADE
+-- =====================================================
+-- Drop existing constraint
+ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_task_id_fkey;
+
+-- Add new constraint with CASCADE
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_task_id_fkey 
+FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE;
+
+-- =====================================================
+-- Fix attendance.service_request_id to use ON DELETE CASCADE
+-- =====================================================
+-- Drop existing constraint
+ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_service_request_id_fkey;
+
+-- Add new constraint with CASCADE
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_service_request_id_fkey 
+FOREIGN KEY (service_request_id) REFERENCES service_requests(id) ON DELETE CASCADE;
+
+-- =====================================================
+-- Verification queries
+-- =====================================================
+-- Check all foreign key constraints with their delete rules
+SELECT
+    tc.table_name,
+    tc.constraint_name,
+    rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc 
+    ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_schema = 'public'
+    AND tc.table_name IN ('tasks', 'attendance', 'notifications', 'service_requests', 'assignments', 'location_tracking')
+ORDER BY tc.table_name, tc.constraint_name;
+
+
+================================================================================
+FILE 45/47: supabase/schema-for-supabase-fixed.sql
+================================================================================
+
+-- =====================================================
+-- WorkTrack Database Schema - DevPro Version
+-- Compatible with current project structure
+-- =====================================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =====================================================
+-- Users table
+-- =====================================================
+
+-- Create users table if not exists
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    full_name VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    phone VARCHAR(30),
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'employee',
+    avatar_url TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add subscription fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (subscription_status IN ('active', 'expired', 'canceled'));
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ NULL;
+
+-- Add device and login fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_id TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_model TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS last_login_device TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code_expires TIMESTAMPTZ;
+
+-- Fix existing roles that might not match our expected roles
+UPDATE users SET role = 'employee' WHERE role NOT IN ('admin', 'employee', 'client');
+
+-- Drop existing role constraint if exists
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- Add new role constraint
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'client'));
+
+-- =====================================================
+-- Create default admin users
+-- =====================================================
+INSERT INTO users (
+  full_name,
+  email,
+  password_hash,
+  role,
+  is_active,
+  subscription_status,
+  subscription_expires_at
+)
+VALUES
+(
+  'DevPro System Administrator',
+  'admin@devpro.com',
+  crypt('devproadmin', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+),
+(
+  'DevPro Support Manager',
+  'support@devpro.com',
+  crypt('devprosupport', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NOW() + INTERVAL '1 year'
+),
+(
+  'DevPro Project Manager',
+  'manager@devpro.com',
+  crypt('devpromanager', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+)
+ON CONFLICT (email) DO UPDATE
+SET
+  password_hash = EXCLUDED.password_hash,
+  role = 'admin',
+  is_active = TRUE,
+  subscription_status = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN 'active'
+    ELSE EXCLUDED.subscription_status
+  END,
+  subscription_expires_at = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN NULL
+    ELSE EXCLUDED.subscription_expires_at
+  END,
+  updated_at = now()
+RETURNING email, role, is_active, subscription_status, subscription_expires_at;
+
+-- =====================================================
+-- Clients table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS clients (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    phone VARCHAR(30),
+    email VARCHAR(150),
+    address TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- Worksites table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS worksites (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    address TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    radius_meters INTEGER NOT NULL DEFAULT 100
+        CHECK (radius_meters > 0),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add assigned_employee_id if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- Add updated_at if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Tasks table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+    worksite_id UUID NOT NULL REFERENCES worksites(id) ON DELETE RESTRICT,
+    assigned_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'in_progress', 'completed', 'late', 'cancelled')),
+    scheduled_start TIMESTAMPTZ,
+    scheduled_end TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add updated_at if not exist
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Attendance table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS attendance (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    task_id UUID REFERENCES tasks(id) ON DELETE SET NULL,
+    worksite_id UUID NOT NULL REFERENCES worksites(id) ON DELETE RESTRICT,
+
+    check_in_time TIMESTAMPTZ,
+    check_in_lat DOUBLE PRECISION,
+    check_in_lng DOUBLE PRECISION,
+    check_in_distance_meters DOUBLE PRECISION,
+
+    check_out_time TIMESTAMPTZ,
+    check_out_lat DOUBLE PRECISION,
+    check_out_lng DOUBLE PRECISION,
+    check_out_distance_meters DOUBLE PRECISION,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'in_progress'
+        CHECK (status IN ('in_progress', 'completed')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add updated_at if not exist
+ALTER TABLE attendance
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add photo fields to attendance if not exist
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- Add service_request_id to attendance table
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS service_request_id UUID REFERENCES service_requests(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- Service requests table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS service_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    client_name VARCHAR(150),
+    client_phone VARCHAR(30),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    address TEXT,
+    phone VARCHAR(30),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'assigned', 'in_progress', 'completed', 'cancelled')),
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    photos TEXT[],
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add location_name if not exist
+ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS location_name TEXT;
+
+-- =====================================================
+-- Assignments table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    request_id UUID NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    admin_notes TEXT,
+    employee_notes TEXT,
+    client_rating INTEGER CHECK (client_rating BETWEEN 1 AND 5),
+    client_feedback TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'assigned'
+        CHECK (status IN ('assigned', 'accepted', 'in_progress', 'completed', 'rejected'))
+);
+
+-- =====================================================
+-- Location tracking table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS location_tracking (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assignment_id UUID REFERENCES assignments(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    accuracy DOUBLE PRECISION,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- Notifications table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(200) NOT NULL,
+    body TEXT,
+    type VARCHAR(50) NOT NULL DEFAULT 'info',
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    related_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add type and related_id to notifications if not exist
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'info';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
+
+-- =====================================================
+-- Create indexes
+-- =====================================================
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_location
+    ON worksites(latitude, longitude);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee
+    ON worksites(assigned_employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_worksite_id
+    ON tasks(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_user_id
+    ON tasks(assigned_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_user_id
+    ON attendance(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_task_id
+    ON attendance(task_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id
+    ON attendance(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time
+    ON attendance(check_in_time);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_service_request_id
+    ON attendance(service_request_id);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_client_id
+    ON service_requests(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_status
+    ON service_requests(status);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_employee_id
+    ON assignments(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id
+    ON assignments(request_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_user_id
+    ON location_tracking(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id
+    ON location_tracking(assignment_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id
+    ON notifications(user_id);
+
+-- =====================================================
+-- Verification query
+-- =====================================================
+SELECT 
+    conname as constraint_name,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint 
+WHERE conrelid = 'users'::regclass AND conname = 'users_role_check';
+
+
+
+================================================================================
+FILE 46/47: supabase_migrations/supabase_complete_migration.sql
+================================================================================
+
+-- =====================================================
+-- WorkTrack Database Migration - Complete Unified Migration
+-- =====================================================
+-- This migration includes all updates in a single file:
+-- 1. Translation columns for i18n support
+-- 2. Fix worksite deletion (preserve tasks and attendance records)
+-- 3. System updates and fixes
+-- 4. Tables updates
+-- 5. Create indexes
+-- 6. Verification queries
+-- =====================================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =====================================================
+-- PART 1: Translation Columns for i18n Support
+-- =====================================================
+
+-- Users table translations
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS full_name_ar VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS full_name_he VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS full_name_en VARCHAR(150);
+
+-- Migrate existing full_name to all translation columns
+UPDATE users 
+SET 
+    full_name_ar = full_name,
+    full_name_he = full_name,
+    full_name_en = full_name
+WHERE full_name_ar IS NULL;
+
+-- Clients table translations (if table exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'clients') THEN
+        ALTER TABLE clients
+            ADD COLUMN IF NOT EXISTS name_ar VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS name_he VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS name_en VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS address_ar TEXT,
+            ADD COLUMN IF NOT EXISTS address_he TEXT,
+            ADD COLUMN IF NOT EXISTS address_en TEXT;
+
+        -- Migrate existing data to translation columns
+        UPDATE clients 
+        SET 
+            name_ar = name,
+            name_he = name,
+            name_en = name,
+            address_ar = address,
+            address_he = address,
+            address_en = address
+        WHERE name_ar IS NULL;
+    END IF;
+END $$;
+
+-- Worksites table translations
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS name_ar VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS name_he VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS name_en VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS address_ar TEXT,
+    ADD COLUMN IF NOT EXISTS address_he TEXT,
+    ADD COLUMN IF NOT EXISTS address_en TEXT;
+
+-- Migrate existing data to translation columns
+UPDATE worksites 
+SET 
+    name_ar = name,
+    name_he = name,
+    name_en = name,
+    address_ar = address,
+    address_he = address,
+    address_en = address
+WHERE name_ar IS NULL;
+
+-- Tasks table translations
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS title_ar VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS title_he VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS title_en VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS description_ar TEXT,
+    ADD COLUMN IF NOT EXISTS description_he TEXT,
+    ADD COLUMN IF NOT EXISTS description_en TEXT;
+
+-- Migrate existing data to translation columns
+UPDATE tasks 
+SET 
+    title_ar = title,
+    title_he = title,
+    title_en = title,
+    description_ar = description,
+    description_he = description,
+    description_en = description
+WHERE title_ar IS NULL;
+
+-- Service requests table translations (if table exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'service_requests') THEN
+        ALTER TABLE service_requests
+            ADD COLUMN IF NOT EXISTS title_ar VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS title_he VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS title_en VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS description_ar TEXT,
+            ADD COLUMN IF NOT EXISTS description_he TEXT,
+            ADD COLUMN IF NOT EXISTS description_en TEXT,
+            ADD COLUMN IF NOT EXISTS address_ar TEXT,
+            ADD COLUMN IF NOT EXISTS address_he TEXT,
+            ADD COLUMN IF NOT EXISTS address_en TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_ar TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_he TEXT,
+            ADD COLUMN IF NOT EXISTS location_name_en TEXT,
+            ADD COLUMN IF NOT EXISTS client_name_ar VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS client_name_he VARCHAR(150),
+            ADD COLUMN IF NOT EXISTS client_name_en VARCHAR(150);
+
+        -- Migrate existing data to translation columns
+        UPDATE service_requests 
+        SET 
+            title_ar = title,
+            title_he = title,
+            title_en = title,
+            description_ar = description,
+            description_he = description,
+            description_en = description,
+            address_ar = address,
+            address_he = address,
+            address_en = address,
+            location_name_ar = location_name,
+            location_name_he = location_name,
+            location_name_en = location_name,
+            client_name_ar = client_name,
+            client_name_he = client_name,
+            client_name_en = client_name
+        WHERE title_ar IS NULL;
+    END IF;
+END $$;
+
+-- Create helper function to get translated text
+CREATE OR REPLACE FUNCTION get_translation(
+    text_ar TEXT,
+    text_he TEXT,
+    text_en TEXT,
+    lang VARCHAR DEFAULT 'ar'
+) RETURNS TEXT AS $$
+BEGIN
+    CASE lang
+        WHEN 'he' THEN
+            RETURN COALESCE(text_he, text_ar, text_en, '');
+        WHEN 'en' THEN
+            RETURN COALESCE(text_en, text_ar, text_he, '');
+        ELSE
+            RETURN COALESCE(text_ar, text_he, text_en, '');
+    END CASE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
+-- PART 2: Fix Worksite Deletion - Preserve Tasks and Attendance Records
+-- =====================================================
+-- This section ensures that when a worksite is deleted:
+-- - Tasks with the deleted worksite_id will have worksite_id set to NULL (preserved)
+-- - Attendance records with the deleted worksite_id will have worksite_id set to NULL (preserved)
+-- - No data loss occurs, only the reference to the deleted worksite is removed
+
+-- First, remove NOT NULL constraint from worksite_id in tasks
+ALTER TABLE tasks ALTER COLUMN worksite_id DROP NOT NULL;
+
+-- Then change the foreign key constraint from RESTRICT to SET NULL
+-- This requires dropping the existing constraint first
+ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_worksite_id_fkey;
+
+ALTER TABLE tasks 
+ADD CONSTRAINT tasks_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE SET NULL;
+
+-- Fix attendance table to handle worksite deletion properly
+-- This ensures attendance records are preserved when worksite is deleted
+-- Remove NOT NULL constraint from worksite_id in attendance
+ALTER TABLE attendance ALTER COLUMN worksite_id DROP NOT NULL;
+
+-- Change the foreign key constraint from RESTRICT to SET NULL
+-- This allows the worksite to be deleted while keeping attendance records
+ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_worksite_id_fkey;
+
+ALTER TABLE attendance 
+ADD CONSTRAINT attendance_worksite_id_fkey 
+FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- PART 3: System Updates and Fixes
+-- =====================================================
+
+-- Users table updates
+-- Add subscription fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (subscription_status IN ('active', 'expired', 'canceled'));
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ NULL;
+
+-- Add device and login fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_id TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_model TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS last_login_device TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code TEXT;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code_expires TIMESTAMPTZ;
+
+-- Fix existing roles that might not match our expected roles
+UPDATE users SET role = 'employee' WHERE role NOT IN ('admin', 'employee', 'client', 'customer');
+
+-- Drop existing role constraint if exists
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- Add new role constraint
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'client', 'customer'));
+
+-- Create default admin users
+INSERT INTO users (
+  full_name,
+  email,
+  password_hash,
+  role,
+  is_active,
+  subscription_status,
+  subscription_expires_at
+)
+VALUES
+(
+  'DevPro System Administrator',
+  'admin@devpro.com',
+  crypt('devproadmin', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+),
+(
+  'DevPro Support Manager',
+  'support@devpro.com',
+  crypt('devprosupport', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NOW() + INTERVAL '1 year'
+),
+(
+  'DevPro Project Manager',
+  'manager@devpro.com',
+  crypt('devpromanager', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+)
+ON CONFLICT (email) DO UPDATE
+SET
+  password_hash = EXCLUDED.password_hash,
+  role = 'admin',
+  is_active = TRUE,
+  subscription_status = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN 'active'
+    ELSE EXCLUDED.subscription_status
+  END,
+  subscription_expires_at = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN NULL
+    ELSE EXCLUDED.subscription_expires_at
+  END,
+  updated_at = now()
+RETURNING email, role, is_active, subscription_status, subscription_expires_at;
+
+-- Worksites table updates
+-- Add assigned_employee_id if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- Add updated_at if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Tasks table updates
+-- Add updated_at if not exist
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add priority column if not exist
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent'));
+
+-- =====================================================
+-- PART 4: Tables Updates
+-- =====================================================
+
+-- Attendance table updates
+-- Add updated_at if not exist
+ALTER TABLE attendance
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add photo fields to attendance if not exist
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- Add service_request_id to attendance table
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS service_request_id UUID REFERENCES service_requests(id) ON DELETE SET NULL;
+
+-- Service requests table updates
+-- Add location_name if not exist
+ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS location_name TEXT;
+
+-- Fix service_requests table to handle client deletion properly
+ALTER TABLE service_requests DROP CONSTRAINT IF EXISTS service_requests_client_id_fkey;
+ALTER TABLE service_requests ALTER COLUMN client_id DROP NOT NULL;
+ALTER TABLE service_requests 
+ADD CONSTRAINT service_requests_client_id_fkey 
+FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Notifications table updates
+-- Add type and related_id to notifications if not exist
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'info';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
+
+-- =====================================================
+-- PART 5: Create Indexes
+-- =====================================================
+
+-- Users indexes
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_subscription_status ON users(subscription_status);
+
+-- Worksites indexes
+CREATE INDEX IF NOT EXISTS idx_worksites_location
+    ON worksites(latitude, longitude);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee
+    ON worksites(assigned_employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_is_active ON worksites(is_active);
+
+-- Tasks indexes
+CREATE INDEX IF NOT EXISTS idx_tasks_worksite_id
+    ON tasks(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_user_id
+    ON tasks(assigned_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_client_id
+    ON tasks(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+
+-- Attendance indexes
+CREATE INDEX IF NOT EXISTS idx_attendance_user_id
+    ON attendance(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_task_id
+    ON attendance(task_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id
+    ON attendance(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time
+    ON attendance(check_in_time);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_service_request_id
+    ON attendance(service_request_id);
+
+-- Service requests indexes
+CREATE INDEX IF NOT EXISTS idx_service_requests_client_id
+    ON service_requests(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_status
+    ON service_requests(status);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_priority
+    ON service_requests(priority);
+
+-- Assignments indexes
+CREATE INDEX IF NOT EXISTS idx_assignments_employee_id
+    ON assignments(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id
+    ON assignments(request_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_admin_id
+    ON assignments(admin_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
+
+-- Location tracking indexes
+CREATE INDEX IF NOT EXISTS idx_location_tracking_user_id
+    ON location_tracking(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id
+    ON location_tracking(assignment_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_recorded_at
+    ON location_tracking(recorded_at);
+
+-- Notifications indexes
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id
+    ON notifications(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+
+-- =====================================================
+-- PART 6: Verification Queries
+-- =====================================================
+
+-- Check if translation columns were added successfully
+SELECT 
+    table_name,
+    column_name, 
+    data_type 
+FROM information_schema.columns 
+WHERE table_schema = 'public'
+    AND table_name IN ('users', 'clients', 'worksites', 'tasks', 'service_requests')
+    AND (column_name LIKE '%_ar' OR column_name LIKE '%_he' OR column_name LIKE '%_en')
+ORDER BY table_name, column_name;
+
+-- Check if the worksite deletion fix was applied correctly for tasks table
+-- Expected: delete_rule should be 'SET NULL'
+SELECT
+    tc.table_name,
+    tc.constraint_name,
+    tc.is_deferrable,
+    tc.initially_deferred,
+    rc.match_option,
+    rc.update_rule,
+    rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc 
+    ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_schema = 'public'
+    AND tc.table_name = 'tasks'
+    AND tc.constraint_name = 'tasks_worksite_id_fkey';
+
+-- Check if the attendance worksite deletion fix was applied correctly
+-- Expected: delete_rule should be 'SET NULL'
+SELECT
+    tc.table_name,
+    tc.constraint_name,
+    tc.is_deferrable,
+    tc.initially_deferred,
+    rc.match_option,
+    rc.update_rule,
+    rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc 
+    ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_schema = 'public'
+    AND tc.table_name = 'attendance'
+    AND tc.constraint_name = 'attendance_worksite_id_fkey';
+
+-- Verify role constraint
+SELECT
+    conname as constraint_name,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint
+WHERE conrelid = 'users'::regclass AND conname = 'users_role_check';
+
+-- Check default admin users
+SELECT email, role, is_active, subscription_status, subscription_expires_at 
+FROM users 
+WHERE role = 'admin' 
+ORDER BY email;
+
+
+================================================================================
+FILE 47/47: worktrack_database_schema_updated.sql
+================================================================================
+
+-- =====================================================
+-- WorkTrack Database Schema - DevPro Version
+-- Compatible with current project structure
+-- Updated: July 23, 2026
+-- =====================================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =====================================================
+-- Users table
+-- =====================================================
+
+-- Create users table if not exists
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    full_name VARCHAR(150) NOT NULL,
+    email VARCHAR(150), -- Changed to nullable to support customers without email
+    phone VARCHAR(30),
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'employee',
+    avatar_url TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add unique constraint on email (only for non-null values)
+-- This allows multiple NULL emails
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users(email) WHERE email IS NOT NULL;
+
+-- Add subscription fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (subscription_status IN ('active', 'expired', 'canceled'));
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ NULL;
+
+-- Add device and login fields if not exist
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_id TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS device_model TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS last_login_device TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code TEXT;
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS login_code_expires TIMESTAMPTZ;
+
+-- Fix existing roles that might not match our expected roles
+UPDATE users SET role = 'employee' WHERE role NOT IN ('admin', 'employee', 'client', 'customer');
+
+-- Drop existing role constraint if exists
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- Add new role constraint
+ALTER TABLE users ADD CONSTRAINT users_role_check
+    CHECK (role IN ('admin', 'employee', 'client', 'customer'));
+
+-- =====================================================
+-- Create default admin users
+-- =====================================================
+INSERT INTO users (
+  full_name,
+  email,
+  password_hash,
+  role,
+  is_active,
+  subscription_status,
+  subscription_expires_at
+)
+VALUES
+(
+  'DevPro System Administrator',
+  'admin@devpro.com',
+  crypt('devproadmin', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+),
+(
+  'DevPro Support Manager',
+  'support@devpro.com',
+  crypt('devprosupport', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NOW() + INTERVAL '1 year'
+),
+(
+  'DevPro Project Manager',
+  'manager@devpro.com',
+  crypt('devpromanager', gen_salt('bf', 12)),
+  'admin',
+  TRUE,
+  'active',
+  NULL
+)
+ON CONFLICT (email) DO UPDATE
+SET
+  password_hash = EXCLUDED.password_hash,
+  role = 'admin',
+  is_active = TRUE,
+  subscription_status = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN 'active'
+    ELSE EXCLUDED.subscription_status
+  END,
+  subscription_expires_at = CASE
+    WHEN users.email IN ('admin@devpro.com', 'manager@devpro.com') THEN NULL
+    ELSE EXCLUDED.subscription_expires_at
+  END,
+  updated_at = now()
+RETURNING email, role, is_active, subscription_status, subscription_expires_at;
+
+-- =====================================================
+-- Clients table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS clients (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    phone VARCHAR(30),
+    email VARCHAR(150),
+    address TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- Worksites table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS worksites (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    address TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    radius_meters INTEGER NOT NULL DEFAULT 100
+        CHECK (radius_meters > 0),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add assigned_employee_id if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS assigned_employee_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- Add updated_at if not exist
+ALTER TABLE worksites
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- =====================================================
+-- Tasks table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+    worksite_id UUID NOT NULL REFERENCES worksites(id) ON DELETE RESTRICT,
+    assigned_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'in_progress', 'completed', 'late', 'cancelled')),
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    scheduled_start TIMESTAMPTZ,
+    scheduled_end TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add updated_at if not exist
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add priority column if not exist
+ALTER TABLE tasks
+    ADD COLUMN IF NOT EXISTS priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent'));
+
+-- =====================================================
+-- Attendance table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS attendance (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    task_id UUID REFERENCES tasks(id) ON DELETE SET NULL,
+    worksite_id UUID NOT NULL REFERENCES worksites(id) ON DELETE RESTRICT,
+
+    check_in_time TIMESTAMPTZ,
+    check_in_lat DOUBLE PRECISION,
+    check_in_lng DOUBLE PRECISION,
+    check_in_distance_meters DOUBLE PRECISION,
+
+    check_out_time TIMESTAMPTZ,
+    check_out_lat DOUBLE PRECISION,
+    check_out_lng DOUBLE PRECISION,
+    check_out_distance_meters DOUBLE PRECISION,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'in_progress'
+        CHECK (status IN ('in_progress', 'completed')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add updated_at if not exist
+ALTER TABLE attendance
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add photo fields to attendance if not exist
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_uploaded_at TIMESTAMPTZ;
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS photo_notes TEXT;
+
+-- Add service_request_id to attendance table
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS service_request_id UUID REFERENCES service_requests(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- Service requests table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS service_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    client_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    client_name VARCHAR(150),
+    client_phone VARCHAR(30),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    address TEXT,
+    phone VARCHAR(30),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'assigned', 'in_progress', 'completed', 'cancelled')),
+    priority VARCHAR(20) NOT NULL DEFAULT 'normal'
+        CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    photos TEXT[],
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add location_name if not exist
+ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS location_name TEXT;
+
+-- Fix service_requests table to handle client deletion properly
+ALTER TABLE service_requests DROP CONSTRAINT IF EXISTS service_requests_client_id_fkey;
+ALTER TABLE service_requests ALTER COLUMN client_id DROP NOT NULL;
+ALTER TABLE service_requests 
+ADD CONSTRAINT service_requests_client_id_fkey 
+FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL;
+
+-- =====================================================
+-- Assignments table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    request_id UUID NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    admin_notes TEXT,
+    employee_notes TEXT,
+    client_rating INTEGER CHECK (client_rating BETWEEN 1 AND 5),
+    client_feedback TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'assigned'
+        CHECK (status IN ('assigned', 'accepted', 'in_progress', 'completed', 'rejected'))
+);
+
+-- =====================================================
+-- Location tracking table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS location_tracking (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    assignment_id UUID REFERENCES assignments(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    accuracy DOUBLE PRECISION,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- Notifications table
+-- =====================================================
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(200) NOT NULL,
+    body TEXT,
+    type VARCHAR(50) NOT NULL DEFAULT 'info',
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    related_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Add type and related_id to notifications if not exist
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'info';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id UUID;
+
+-- =====================================================
+-- Create indexes
+-- =====================================================
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_subscription_status ON users(subscription_status);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_location
+    ON worksites(latitude, longitude);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_assigned_employee
+    ON worksites(assigned_employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_worksites_is_active ON worksites(is_active);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_worksite_id
+    ON tasks(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_user_id
+    ON tasks(assigned_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_client_id
+    ON tasks(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_user_id
+    ON attendance(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_task_id
+    ON attendance(task_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_worksite_id
+    ON attendance(worksite_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_check_in_time
+    ON attendance(check_in_time);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_service_request_id
+    ON attendance(service_request_id);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_client_id
+    ON service_requests(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_status
+    ON service_requests(status);
+
+CREATE INDEX IF NOT EXISTS idx_service_requests_priority
+    ON service_requests(priority);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_employee_id
+    ON assignments(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id
+    ON assignments(request_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_admin_id
+    ON assignments(admin_id);
+
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_user_id
+    ON location_tracking(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_assignment_id
+    ON location_tracking(assignment_id);
+
+CREATE INDEX IF NOT EXISTS idx_location_tracking_recorded_at
+    ON location_tracking(recorded_at);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id
+    ON notifications(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+
+-- =====================================================
+-- Verification query
+-- =====================================================
+SELECT
+    conname as constraint_name,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint
+WHERE conrelid = 'users'::regclass AND conname = 'users_role_check';
+
+

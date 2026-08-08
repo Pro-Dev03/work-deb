@@ -1,0 +1,361 @@
+================================================================================
+WORKTRACK PROJECT STRUCTURE SUMMARY
+Generated: 2026-07-28 14:47:51
+================================================================================
+
+BACKEND (Go)
+----------------------------------------
+├── .dockerignore
+├── .env
+├── .env.example
+├── Dockerfile
+├── cmd
+│   └── api
+│       └── main.go
+├── fix_customer_role.sql
+├── fix_service_requests_client_delete.sql
+├── go.mod
+├── go.sum
+├── internal
+│   ├── config
+│   │   └── config.go
+│   ├── database
+│   │   ├── migrations
+│   │   ├── postgres.go
+│   │   └── redis.go
+│   ├── handlers
+│   │   ├── attendance_handler.go
+│   │   ├── auth_handler.go
+│   │   ├── auth_handler.go.bak.final
+│   │   ├── auth_handler.go.bak.fix
+│   │   ├── auth_handler.go.bak.fmt
+│   │   ├── auth_handler.go.bak.model
+│   │   ├── auth_handler.go.bak.phone
+│   │   ├── auth_handler.go.bak.ultra
+│   │   ├── client_handler.go
+│   │   ├── geocoding_handler.go
+│   │   ├── location_handler.go
+│   │   ├── notification_handler.go
+│   │   ├── report_handler.go
+│   │   ├── service_handler.go
+│   │   ├── task_handler.go
+│   │   ├── upload_handler.go
+│   │   ├── websocket_handler.go
+│   │   └── worksite_handler.go
+│   ├── i18n
+│   │   ├── detect.go
+│   │   └── i18n.go
+│   ├── middleware
+│   │   ├── auth_middleware.go
+│   │   ├── cors.go
+│   │   ├── error_handler.go
+│   │   ├── rate_limiter.go
+│   │   ├── role_middleware.go
+│   │   ├── security_headers.go
+│   │   └── subscription_middleware.go
+│   ├── models
+│   │   ├── attendance.go
+│   │   ├── client.go
+│   │   ├── notification.go
+│   │   ├── task.go
+│   │   ├── user.go
+│   │   └── worksite.go
+│   ├── router
+│   │   └── router.go
+│   └── services
+│       ├── attendance_service.go
+│       ├── auth_service.go
+│       ├── cache_service.go
+│       ├── geocoding_service.go
+│       ├── geofence_service.go
+│       ├── notification_service.go
+│       ├── security_logger.go
+│       └── storage_service.go
+├── pkg
+│   └── utils
+│       ├── datetime.go
+│       ├── errors.go
+│       ├── haversine.go
+│       ├── logger.go
+│       └── validator.go
+├── render.yaml
+├── tests
+│   ├── api_integration_test.go
+│   ├── auth_test.go
+│   ├── geofence_test.go
+│   └── integration_test.go
+├── uploads
+└── worktrack-api
+
+
+FRONTEND - ADMIN DASHBOARD (Vue.js)
+----------------------------------------
+├── .env.example
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   ├── .htaccess
+│   ├── 404.html
+│   ├── _headers
+│   ├── _redirects
+│   ├── company-logo.jpg
+│   ├── devpro-logo.jpg
+│   ├── favicon.ico
+│   ├── icon-128x128.png
+│   ├── icon-192x192.png
+│   ├── icon-256x256.png
+│   ├── icon-512x512.png
+│   ├── icon.ico
+│   ├── icon.png
+│   ├── manifest.json
+│   └── service-worker.js
+├── src
+│   ├── App.vue
+│   ├── assets
+│   │   ├── company-icon.jpg
+│   │   ├── company-logo.jpg
+│   │   └── devpro-logo.jpg
+│   ├── components
+│   │   ├── ActivityFeed.vue
+│   │   ├── ClientFormModal.vue
+│   │   ├── CompanyBrand.vue
+│   │   ├── CustomerFormModal.vue
+│   │   ├── EmployeeFormModal.vue
+│   │   ├── GeofenceRing.vue
+│   │   ├── LanguageSwitcher.vue
+│   │   ├── LiveMap.vue
+│   │   ├── LocationSearch.vue
+│   │   ├── NotificationDropdown.vue
+│   │   ├── OpenInMaps.vue
+│   │   ├── PWAInstallButton.vue
+│   │   ├── PullToRefresh.vue
+│   │   ├── RealMap.vue
+│   │   ├── StatsCard.vue
+│   │   ├── SwipeNav.vue
+│   │   ├── TaskCreateModal.vue
+│   │   ├── TaskDistributionChart.vue
+│   │   └── WorksiteFormModal.vue
+│   ├── config
+│   │   └── company.js
+│   ├── i18n
+│   │   ├── ar.json
+│   │   ├── en.json
+│   │   └── he.json
+│   ├── locales
+│   │   ├── ar.json
+│   │   ├── en.json
+│   │   └── he.json
+│   ├── main.js
+│   ├── plugins
+│   ├── router
+│   │   └── index.js
+│   ├── services
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── i18n.js
+│   │   └── websocket.js
+│   ├── store
+│   │   ├── auth.js
+│   │   ├── dashboard.js
+│   │   └── notifications.js
+│   ├── styles
+│   │   └── tokens.css
+│   ├── tests
+│   │   ├── components.test.js
+│   │   ├── setup.js
+│   │   └── utils.test.js
+│   ├── utils
+│   │   └── numberFormatter.js
+│   └── views
+│       ├── AssignedRequestsView.vue
+│       ├── ClientsView.vue
+│       ├── CustomersView.vue
+│       ├── DashboardView.vue
+│       ├── EmployeesView.vue
+│       ├── LoginView.vue
+│       ├── NotificationsView.vue
+│       ├── ReportsView.vue
+│       ├── ServiceRequestsView.vue
+│       ├── SettingsView.vue
+│       ├── SubscriptionStatusView.vue
+│       ├── TasksView.vue
+│       └── WorksitesView.vue
+└── vite.config.js
+
+
+FRONTEND - CLIENT PORTAL (Vue.js)
+----------------------------------------
+├── .env.example
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   ├── .htaccess
+│   ├── 404.html
+│   ├── _headers
+│   ├── _redirects
+│   ├── company-logo.jpg
+│   ├── devpro-logo.jpg
+│   ├── favicon.ico
+│   ├── icon-128x128.png
+│   ├── icon-192x192.png
+│   ├── icon-256x256.png
+│   ├── icon-512x512.png
+│   ├── icon.ico
+│   ├── icon.png
+│   ├── manifest.json
+│   └── service-worker.js
+├── src
+│   ├── App.vue
+│   ├── assets
+│   │   └── company-icon.jpg
+│   ├── components
+│   │   ├── ActivityFeed.vue
+│   │   ├── LanguageSwitcher.vue
+│   │   ├── NotificationDropdown.vue
+│   │   ├── PWAInstallButton.vue
+│   │   ├── ReportCard.vue
+│   │   └── StarRating.vue
+│   ├── locales
+│   │   ├── ar.json
+│   │   ├── en.json
+│   │   └── he.json
+│   ├── main.js
+│   ├── plugins
+│   │   └── i18n.js
+│   ├── router
+│   │   └── index.js
+│   ├── services
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── geocoding.js
+│   │   ├── i18n.js
+│   │   └── websocket.js
+│   ├── store
+│   │   ├── auth.js
+│   │   ├── notifications.js
+│   │   ├── reports.js
+│   │   └── services.js
+│   ├── styles
+│   │   └── tokens.css
+│   ├── tests
+│   │   ├── requests.test.js
+│   │   └── setup.js
+│   └── views
+│       ├── LoginView.vue
+│       ├── NewRequestView.vue
+│       ├── RatingView.vue
+│       ├── ServiceHistoryView.vue
+│       └── ServiceReportView.vue
+└── vite.config.js
+
+
+FRONTEND - WORKER PWA (Vue.js)
+----------------------------------------
+├── .env.example
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   ├── .htaccess
+│   ├── 404.html
+│   ├── _headers
+│   ├── _redirects
+│   ├── company-logo.jpg
+│   ├── devpro-logo.jpg
+│   ├── favicon.ico
+│   ├── icon-128x128.png
+│   ├── icon-192x192.png
+│   ├── icon-256x256.png
+│   ├── icon-512x512.png
+│   ├── icon.ico
+│   ├── icon.png
+│   ├── manifest.json
+│   └── service-worker.js
+├── src
+│   ├── App.vue
+│   ├── assets
+│   │   ├── company-icon.jpg
+│   │   ├── company-logo.jpg
+│   │   └── devpro-logo.jpg
+│   ├── components
+│   │   ├── ActivityFeed.vue
+│   │   ├── GeofenceRing.vue
+│   │   ├── GeolocationCheck.vue
+│   │   ├── LanguageSwitcher.vue
+│   │   ├── MapPicker.vue
+│   │   ├── NotificationDropdown.vue
+│   │   ├── PWAInstallButton.vue
+│   │   ├── PhotoUpload.vue
+│   │   ├── PullToRefresh.vue
+│   │   ├── SwipeNav.vue
+│   │   └── TaskCard.vue
+│   ├── i18n
+│   │   ├── ar.json
+│   │   ├── en.json
+│   │   └── he.json
+│   ├── locales
+│   │   ├── ar.json
+│   │   ├── en.json
+│   │   └── he.json
+│   ├── main.js
+│   ├── plugins
+│   │   └── i18n.js
+│   ├── router
+│   │   └── index.js
+│   ├── services
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── geolocation.js
+│   │   ├── i18n.js
+│   │   └── websocket.js
+│   ├── store
+│   │   ├── auth.js
+│   │   ├── notifications.js
+│   │   └── tasks.js
+│   ├── styles
+│   │   └── tokens.css
+│   ├── tests
+│   │   ├── attendance.test.js
+│   │   ├── setup.js
+│   │   └── tasks.test.js
+│   └── views
+│       ├── AttendanceView.vue
+│       ├── LoginView.vue
+│       ├── NotificationsView.vue
+│       ├── ProfileView.vue
+│       ├── TaskDetailView.vue
+│       └── TasksListView.vue
+└── vite.config.js
+
+
+ROOT CONFIGURATION FILES
+----------------------------------------
+  COMPLETE_UNIFIED_MIGRATION.sql
+  Complete_User_Guide.html
+  Complete_User_Guide.md
+  DEPLOYMENT_GUIDE.md
+  DEPLOYMENT_SUMMARY.md
+  FREE_SOLUTIONS_GUIDE.md
+  MANUAL_MIGRATION_GUIDE.md
+  PWA_TROUBLESHOOTING.md
+  QUICK_START.md
+  README.md
+  SECURITY_DEPLOYMENT_GUIDE.md
+  SECURITY_MONITORING_GUIDE.md
+  VITEST_GUIDE.md
+  WorkTrack_Marketing_Guide.md
+  convert-to-pdf.js
+  devpro-logo.jpg
+  extract_project_structure.py
+  html-to-pdf.js
+  package-lock.json
+  package.json
+  render.yaml
+  worktrack_database_schema_updated.sql
+  מדריך_המשתמש_המלא.html
+  מדריך_המשתמש_המלא.md
+  دليل_المستخدم_الشامل.html
+  دليل_المستخدم_الشامل.md
+  دليل_المستخدم_الشامل.pdf
