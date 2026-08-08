@@ -20,7 +20,7 @@ services:
       - key: ALLOWED_ORIGINS
         value: "https://worker-0dev.onrender.com,https://work-dev.onrender.com"
       - key: DEFAULT_LANG
-        value: ar
+        value: en
       - key: GEOAPIFY_KEY
         value: 6d3d2681365646f68b4ab8e2cd85038f
       - key: R2_ACCOUNT_ID
