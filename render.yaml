@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: worktrack-api
+    name: work-dev-api
     runtime: docker
     plan: free
     rootDir: backend
@@ -18,11 +18,11 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: "https://worktrack-admin.onrender.com,https://worktrack-client-portal.onrender.com,https://worktrack-worker.onrender.com,https://worktrack-worker-pwa.onrender.com,https://worktrack-client.onrender.com"
+        value: "https://worker-0dev.onrender.com,https://work-dev.onrender.com"
       - key: DEFAULT_LANG
         value: ar
       - key: GEOAPIFY_KEY
-        sync: false
+        value: 6d3d2681365646f68b4ab8e2cd85038f
       - key: R2_ACCOUNT_ID
         sync: false
       - key: R2_ACCESS_KEY
@@ -31,9 +31,11 @@ services:
         sync: false
       - key: R2_BUCKET_NAME
         sync: false
+      - key: REDIS_URL
+        value: redis://red-d9rbebqjnfac73fb1700:6379
 
   - type: web
-    name: worktrack-admin
+    name: work-dev
     runtime: static
     plan: free
     rootDir: frontend-admin-dashboard
@@ -56,10 +58,10 @@ services:
       - key: ELECTRON
         value: "false"
       - key: VITE_API_BASE_URL
-        value: https://worktrack-api-n3ns.onrender.com/api/v1
+        value: https://work-dev-api.onrender.com/api/v1
 
   - type: web
-    name: worktrack-worker
+    name: worker-0dev
     runtime: static
     plan: free
     rootDir: frontend-worker-pwa
@@ -82,30 +84,4 @@ services:
       - key: ELECTRON
         value: "false"
       - key: VITE_API_BASE_URL
-        value: https://worktrack-api-n3ns.onrender.com/api/v1
-
-  - type: web
-    name: worktrack-client-portal
-    runtime: static
-    plan: free
-    rootDir: frontend-client-portal
-    buildCommand: npm install && npm run build
-    publishDir: dist
-    autoDeployTrigger: commit
-    headers:
-      - path: /assets/*
-        name: Cache-Control
-        value: public, max-age=31536000, immutable
-      - path: /index.html
-        name: Cache-Control
-        value: no-cache, no-store, must-revalidate
-      - path: /*
-        name: Cache-Control
-        value: public, max-age=3600
-    envVars:
-      - key: NODE_VERSION
-        value: "18"
-      - key: ELECTRON
-        value: "false"
-      - key: VITE_API_BASE_URL
-        value: https://worktrack-api-n3ns.onrender.com/api/v1
+        value: https://work-dev-api.onrender.com/api/v1
